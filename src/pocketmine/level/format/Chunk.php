@@ -448,40 +448,6 @@ class Chunk{
 	}
 
 	/**
-	 * Performs basic sky light population on the chunk.
-	 * This does not cater for adjacent sky light, this performs direct sky light population only. This may cause some strange visual artifacts
-	 * if the chunk is light-populated after being terrain-populated.
-	 *
-	 * TODO: fast adjacent light spread
-	 */
-	public function populateSkyLight(){
-		$maxY = $this->getMaxY();
-
-		$this->setAllBlockSkyLight(0);
-
-		for($x = 0; $x < 16; ++$x){
-			for($z = 0; $z < 16; ++$z){
-				$heightMap = $this->getHeightMap($x, $z);
-
-				for($y = $maxY; $y >= $heightMap; --$y){
-					$this->setBlockSkyLight($x, $y, $z, 15);
-				}
-
-				$light = 15;
-				for(; $y >= 0; --$y){
-					if($light > 0){
-						$light -= BlockFactory::$lightFilter[$this->getBlockId($x, $y, $z)];
-						if($light <= 0){
-							break;
-						}
-					}
-					$this->setBlockSkyLight($x, $y, $z, $light);
-				}
-			}
-		}
-	}
-
-	/**
 	 * Returns the biome ID at the specified X/Z chunk block coordinates
 	 *
 	 * @param int $x 0-15
