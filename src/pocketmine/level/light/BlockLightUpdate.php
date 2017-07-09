@@ -29,7 +29,7 @@ class BlockLightUpdate extends LightUpdate{
 		return $this->level->getBlockLightAt($x, $y, $z);
 	}
 
-	public function setLight(int $x, int $y, int $z, int $level){
-		$this->level->setBlockLightAt($x, $y, $z, $level);
+	public function setLight(int $x, int $y, int $z, int $level) : bool{
+		return $this->level->setBlockLightAt($x, $y, $z, $level);
 	}
 }

@@ -29,7 +29,7 @@ class SkyLightUpdate extends LightUpdate{
 		return $this->level->getBlockSkyLightAt($x, $y, $z);
 	}
 
-	public function setLight(int $x, int $y, int $z, int $level){
-		$this->level->setBlockSkyLightAt($x, $y, $z, $level);
+	public function setLight(int $x, int $y, int $z, int $level) : bool{
+		return $this->level->setBlockSkyLightAt($x, $y, $z, $level);
 	}
 }

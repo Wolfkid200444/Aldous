@@ -2100,9 +2100,11 @@ class Level implements ChunkManager, Metadatable{
 	 * @param int $y
 	 * @param int $z
 	 * @param int $level 0-15
+	 *
+	 * @return bool
 	 */
-	public function setBlockSkyLightAt(int $x, int $y, int $z, int $level){
-		$this->getChunk($x >> 4, $z >> 4, true)->setBlockSkyLight($x & 0x0f, $y, $z & 0x0f, $level & 0x0f);
+	public function setBlockSkyLightAt(int $x, int $y, int $z, int $level) : bool{
+		return $this->getChunk($x >> 4, $z >> 4, true)->setBlockSkyLight($x & 0x0f, $y, $z & 0x0f, $level & 0x0f);
 	}
 
 	/**
@@ -2125,9 +2127,11 @@ class Level implements ChunkManager, Metadatable{
 	 * @param int $y
 	 * @param int $z
 	 * @param int $level 0-15
+	 *
+	 * @return bool
 	 */
-	public function setBlockLightAt(int $x, int $y, int $z, int $level){
-		$this->getChunk($x >> 4, $z >> 4, true)->setBlockLight($x & 0x0f, $y, $z & 0x0f, $level & 0x0f);
+	public function setBlockLightAt(int $x, int $y, int $z, int $level) : bool{
+		return $this->getChunk($x >> 4, $z >> 4, true)->setBlockLight($x & 0x0f, $y, $z & 0x0f, $level & 0x0f);
 	}
 
 	/**

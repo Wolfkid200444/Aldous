@@ -112,10 +112,12 @@ class SimpleChunkManager implements ChunkManager{
 		return 0;
 	}
 
-	public function setBlockLightAt(int $x, int $y, int $z, int $level){
+	public function setBlockLightAt(int $x, int $y, int $z, int $level) : bool{
 		if($chunk = $this->getChunk($x >> 4, $z >> 4)){
-			$chunk->setBlockLight($x & 0xf, $y, $z & 0xf, $level);
+			return $chunk->setBlockLight($x & 0xf, $y, $z & 0xf, $level);
 		}
+
+		return false;
 	}
 
 	public function getBlockSkyLightAt(int $x, int $y, int $z) : int{
@@ -126,10 +128,12 @@ class SimpleChunkManager implements ChunkManager{
 		return 0;
 	}
 
-	public function setBlockSkyLightAt(int $x, int $y, int $z, int $level){
+	public function setBlockSkyLightAt(int $x, int $y, int $z, int $level) : bool{
 		if($chunk = $this->getChunk($x >> 4, $z >> 4)){
-			$chunk->setBlockSkyLight($x & 0xf, $y, $z & 0xf, $level);
+			return $chunk->setBlockSkyLight($x & 0xf, $y, $z & 0xf, $level);
 		}
+
+		return false;
 	}
 
 	/**
