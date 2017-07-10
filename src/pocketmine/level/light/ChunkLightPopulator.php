@@ -59,16 +59,16 @@ class ChunkLightPopulator{
 		for($x = $this->chunkX << 4, $maxX = $x + 16; $x < $maxX; ++$x){
 			for($z = $this->chunkZ << 4, $maxZ = $z + 16; $z < $maxZ; ++$z){
 				$heightMap = $chunk->getHeightMap($x & 0x0f, $z & 0x0f);
+				$heightMapMax = max(
+					$this->level->getHeightMap($x + 1, $z),
+					$this->level->getHeightMap($x - 1, $z),
+					$this->level->getHeightMap($x, $z + 1),
+					$this->level->getHeightMap($x, $z - 1)
+				);
 
 				for($y = $maxY; $y >= 0; --$y){
 					if($y >= $heightMap){
-						if(
-							$y === $heightMap or
-							$y < $this->level->getHeightMap($x + 1, $z) or
-							$y < $this->level->getHeightMap($x - 1, $z) or
-							$y < $this->level->getHeightMap($x, $z + 1) or
-							$y < $this->level->getHeightMap($x, $z - 1)
-						){
+						if($y === $heightMap or $y < $heightMapMax){
 							$this->skyLightUpdates->setAndUpdateLight($x, $y, $z, 15);
 						}else{
 							$chunk->setBlockSkyLight($x & 0x0f, $y, $z & 0x0f, 15);
