@@ -136,6 +136,20 @@ class SimpleChunkManager implements ChunkManager{
 		return false;
 	}
 
+	public function getHeightMap(int $x, int $z) : int{
+		if($chunk = $this->getChunk($x >> 4, $z >> 4)){
+			return $chunk->getHeightMap($x & 0x0f, $z & 0x0f);
+		}
+
+		return 0;
+	}
+
+	public function setHeightMap(int $x, int $z, int $value){
+		if($chunk = $this->getChunk($x >> 4, $z >> 4)){
+			$chunk->setHeightMap($x & 0x0f, $z & 0x0f, $value);
+		}
+	}
+
 	/**
 	 * @param int $chunkX
 	 * @param int $chunkZ

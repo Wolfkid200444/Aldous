@@ -2140,27 +2140,8 @@ class Level implements ChunkManager, Metadatable{
 	 *
 	 * @return int
 	 */
-	public function getBiomeId(int $x, int $z) : int{
-		return $this->getChunk($x >> 4, $z >> 4, true)->getBiomeId($x & 0x0f, $z & 0x0f);
-	}
-
-	/**
-	 * @param int $x
-	 * @param int $z
-	 *
-	 * @return int
-	 */
 	public function getHeightMap(int $x, int $z) : int{
 		return $this->getChunk($x >> 4, $z >> 4, true)->getHeightMap($x & 0x0f, $z & 0x0f);
-	}
-
-	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $biomeId
-	 */
-	public function setBiomeId(int $x, int $z, int $biomeId){
-		$this->getChunk($x >> 4, $z >> 4, true)->setBiomeId($x & 0x0f, $z & 0x0f, $biomeId);
 	}
 
 	/**
@@ -2170,6 +2151,25 @@ class Level implements ChunkManager, Metadatable{
 	 */
 	public function setHeightMap(int $x, int $z, int $value){
 		$this->getChunk($x >> 4, $z >> 4, true)->setHeightMap($x & 0x0f, $z & 0x0f, $value);
+	}
+
+	/**
+	 * @param int $x
+	 * @param int $z
+	 *
+	 * @return int
+	 */
+	public function getBiomeId(int $x, int $z) : int{
+		return $this->getChunk($x >> 4, $z >> 4, true)->getBiomeId($x & 0x0f, $z & 0x0f);
+	}
+
+	/**
+	 * @param int $x
+	 * @param int $z
+	 * @param int $biomeId
+	 */
+	public function setBiomeId(int $x, int $z, int $biomeId){
+		$this->getChunk($x >> 4, $z >> 4, true)->setBiomeId($x & 0x0f, $z & 0x0f, $biomeId);
 	}
 
 	/**

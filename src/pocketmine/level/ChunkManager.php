@@ -115,6 +115,21 @@ interface ChunkManager{
 	public function setBlockSkyLightAt(int $x, int $y, int $z, int $level) : bool;
 
 	/**
+	 * @param int $x
+	 * @param int $z
+	 *
+	 * @return int
+	 */
+	public function getHeightMap(int $x, int $z) : int;
+
+	/**
+	 * @param int $x
+	 * @param int $z
+	 * @param int $value
+	 */
+	public function setHeightMap(int $x, int $z, int $value);
+
+	/**
 	 * @param int $chunkX
 	 * @param int $chunkZ
 	 *

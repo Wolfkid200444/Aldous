@@ -113,8 +113,7 @@ class Chunk{
 			$this->heightMap = \SplFixedArray::fromArray($heightMap);
 		}else{
 			assert(count($heightMap) === 0, "Wrong HeightMap value count, expected 256, got " . count($heightMap));
-			$val = ($this->height * 16);
-			$this->heightMap = \SplFixedArray::fromArray(array_fill(0, 256, $val));
+			$this->heightMap = \SplFixedArray::fromArray(array_fill(0, 256, 0));
 		}
 
 		if(strlen($biomeIds) === 256){

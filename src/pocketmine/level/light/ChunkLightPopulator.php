@@ -56,30 +56,27 @@ class ChunkLightPopulator{
 
 		$maxY = $chunk->getMaxY();
 
-		$realX = $this->chunkX << 4;
-		$realZ = $this->chunkZ << 4;
-		for($x = 0; $x < 16; ++$x){
-			for($z = 0; $z < 16; ++$z){
-				$heightMap = $chunk->getHeightMap($x, $z);
+		for($x = $this->chunkX << 4, $maxX = $x + 16; $x < $maxX; ++$x){
+			for($z = $this->chunkZ << 4, $maxZ = $z + 16; $z < $maxZ; ++$z){
+				$heightMap = $chunk->getHeightMap($x & 0x0f, $z & 0x0f);
 
 				for($y = $maxY; $y >= 0; --$y){
 					if($y >= $heightMap){
 						if(
 							$y === $heightMap or
-							($x < 15 and $y < $chunk->getHeightMap($x + 1, $z)) or
-							($x > 0 and $y < $chunk->getHeightMap($x - 1, $z)) or
-							($z < 15 and $y < $chunk->getHeightMap($x, $z + 1)) or
-							($z > 0 and $y < $chunk->getHeightMap($x, $z - 1))
+							$y < $this->level->getHeightMap($x + 1, $z) or
+							$y < $this->level->getHeightMap($x - 1, $z) or
+							$y < $this->level->getHeightMap($x, $z + 1) or
+							$y < $this->level->getHeightMap($x, $z - 1)
 						){
-							$this->skyLightUpdates->setAndUpdateLight($realX + $x, $y, $realZ + $z, 15);
+							$this->skyLightUpdates->setAndUpdateLight($x, $y, $z, 15);
 						}else{
-							$chunk->setBlockSkyLight($x, $y, $z, 15);
+							$chunk->setBlockSkyLight($x & 0x0f, $y, $z & 0x0f, 15);
 						}
 					}
 
-					if(($blockLight = BlockFactory::$light[$chunk->getBlockId($x, $y, $z)]) > 0){
-						$this->blockLightUpdates->setAndUpdateLight($realX + $x, $y, $realZ + $z, $blockLight);
-						//$chunk->setBlockLight($x, $y, $z, $blockLight);
+					if(($blockLight = BlockFactory::$light[$chunk->getBlockId($x & 0x0f, $y, $z & 0x0f)]) > 0){
+						$this->blockLightUpdates->setAndUpdateLight($x, $y, $z, $blockLight);
 					}
 				}
 			}
@@ -87,5 +84,6 @@ class ChunkLightPopulator{
 
 		$this->blockLightUpdates->execute();
 		$this->skyLightUpdates->execute();
+
 	}
 }
