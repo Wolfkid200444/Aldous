@@ -132,11 +132,9 @@ abstract class LightUpdate{
 		$potentialLight = $newAdjacentLevel - BlockFactory::$lightFilter[$this->level->getBlockIdAt($x, $y, $z)];
 
 		if($current < $potentialLight and $this->setLight($x, $y, $z, $potentialLight)){
-			if(!isset($this->spreadVisited[$index = Level::blockHash($x, $y, $z)])){
+			if(!isset($this->spreadVisited[$index = Level::blockHash($x, $y, $z)]) and $potentialLight > 1){
 				$this->spreadVisited[$index] = true;
-				if($potentialLight > 1){
-					$this->spreadQueue->enqueue([$x, $y, $z]);
-				}
+				$this->spreadQueue->enqueue([$x, $y, $z]);
 			}
 		}
 	}
