@@ -25,6 +25,7 @@ namespace pocketmine\level\light;
 
 use pocketmine\block\BlockFactory;
 use pocketmine\level\ChunkManager;
+use pocketmine\level\format\SubChunk;
 use pocketmine\level\Level;
 
 //TODO: make light updates asynchronous
@@ -42,6 +43,16 @@ abstract class LightUpdate{
 	protected $removalQueue;
 	/** @var bool[] */
 	protected $removalVisited = [];
+
+	/** @var SubChunk */
+	protected $currentSubChunk;
+
+	/** @var int */
+	protected $currentSubX;
+	/** @var int */
+	protected $currentSubY;
+	/** @var int */
+	protected $currentSubZ;
 
 	public function __construct(ChunkManager $level){
 		$this->level = $level;
@@ -62,16 +73,18 @@ abstract class LightUpdate{
 			throw new \InvalidArgumentException("Already have a visit ready for this block");
 		}
 
-		$oldLevel = $this->getLight($x, $y, $z);
+		if($this->checkCurrentSubChunk($x, $y, $z)){
+			$oldLevel = $this->getLight($x, $y, $z);
 
-		if($oldLevel !== $newLevel){
-			$this->setLight($x, $y, $z, $newLevel);
-			if($oldLevel < $newLevel){ //light increased
-				$this->spreadVisited[$index] = true;
-				$this->spreadQueue->enqueue([$x, $y, $z]);
-			}else{ //light removed
-				$this->removalVisited[$index] = true;
-				$this->removalQueue->enqueue([$x, $y, $z, $oldLevel]);
+			if($oldLevel !== $newLevel){
+				$this->setLight($x, $y, $z, $newLevel);
+				if($oldLevel < $newLevel){ //light increased
+					$this->spreadVisited[$index] = true;
+					$this->spreadQueue->enqueue([$x, $y, $z]);
+				}else{ //light removed
+					$this->removalVisited[$index] = true;
+					$this->removalQueue->enqueue([$x, $y, $z, $oldLevel]);
+				}
 			}
 		}
 	}
@@ -91,6 +104,7 @@ abstract class LightUpdate{
 		while(!$this->spreadQueue->isEmpty()){
 			list($x, $y, $z) = $this->spreadQueue->dequeue();
 
+			$this->checkCurrentSubChunk($x, $y, $z);
 			$newAdjacentLight = $this->getLight($x, $y, $z);
 			if($newAdjacentLight <= 0){
 				continue;
@@ -106,7 +120,7 @@ abstract class LightUpdate{
 	}
 
 	protected function computeRemoveLight(int $x, int $y, int $z, int $oldAdjacentLevel){
-		if($this->level->isInWorld($x, $y, $z)){
+		if($this->checkCurrentSubChunk($x, $y, $z)){
 			$current = $this->getLight($x, $y, $z);
 
 			if($current !== 0 and $current < $oldAdjacentLevel){
@@ -127,14 +141,34 @@ abstract class LightUpdate{
 		}
 	}
 
-	protected function computeSpreadLight(int $x, int $y, int $z, int $newAdjacentLevel){
-		$current = $this->getLight($x, $y, $z);
-		$potentialLight = $newAdjacentLevel - BlockFactory::$lightFilter[$this->level->getBlockIdAt($x, $y, $z)];
+	private function checkCurrentSubChunk(int $x, int $y, int $z) : bool{
+		if($this->currentSubChunk === null or ($x >> 4) !== $this->currentSubX or ($y >> 4) !== $this->currentSubY or ($z >> 4) !== $this->currentSubZ){
+			$this->currentSubX = $x >> 4;
+			$this->currentSubY = $y >> 4;
+			$this->currentSubZ = $z >> 4;
+			$chunk = $this->level->getChunk($this->currentSubX, $this->currentSubZ);
+			if($chunk !== null){
+				$this->currentSubChunk = $chunk->getSubChunk($this->currentSubY, true);
+				return $this->currentSubChunk !== null; //will be null if out of bounds
+			}
 
-		if($current < $potentialLight and $this->setLight($x, $y, $z, $potentialLight)){
-			if(!isset($this->spreadVisited[$index = Level::blockHash($x, $y, $z)]) and $potentialLight > 1){
-				$this->spreadVisited[$index] = true;
-				$this->spreadQueue->enqueue([$x, $y, $z]);
+			$this->currentSubChunk = null;
+			return false;
+		}
+
+		return true;
+	}
+
+	protected function computeSpreadLight(int $x, int $y, int $z, int $newAdjacentLevel){
+		if($this->checkCurrentSubChunk($x, $y, $z)){
+			$current = $this->getLight($x, $y, $z);
+			$potentialLight = $newAdjacentLevel - BlockFactory::$lightFilter[$this->currentSubChunk->getBlockId($x & 0x0f, $y & 0x0f, $z & 0x0f)];
+
+			if($current < $potentialLight and $this->setLight($x, $y, $z, $potentialLight)){
+				if(!isset($this->spreadVisited[$index = Level::blockHash($x, $y, $z)]) and $potentialLight > 1){
+					$this->spreadVisited[$index] = true;
+					$this->spreadQueue->enqueue([$x, $y, $z]);
+				}
 			}
 		}
 	}
