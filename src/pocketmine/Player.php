@@ -68,7 +68,7 @@ use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\event\player\PlayerToggleSprintEvent;
 use pocketmine\event\player\PlayerTransferEvent;
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\forms\BaseForm;
+use pocketmine\forms\Form;
 use pocketmine\inventory\CraftingGrid;
 use pocketmine\inventory\Inventory;
 use pocketmine\inventory\PlayerCursorInventory;
@@ -328,7 +328,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 	/** @var int */
 	protected $formIdCounter = 0;
-	/** @var BaseForm[] */
+	/** @var Form[] */
 	protected $forms = [];
 
 	/**
@@ -3363,7 +3363,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->dataPacket($pk);
 	}
 
-	public function sendForm(BaseForm $form) : void{
+	public function sendForm(Form $form) : void{
 		$id =  $this->formIdCounter++;
 
 		$pk = new ModalFormRequestPacket();
