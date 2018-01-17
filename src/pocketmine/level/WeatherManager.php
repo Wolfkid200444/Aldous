@@ -77,7 +77,7 @@ class WeatherManager{
 			$this->level->broadcastLevelEvent(null, $this->rainLevel > 0.0 ? LevelEventPacket::EVENT_START_RAIN : LevelEventPacket::EVENT_STOP_RAIN, (int) ($this->rainLevel * 65535.0));
 		}
 		if($oldLightningLevel != $this->lightningLevel){
-			$this->level->broadcastLevelEvent(null, $this->rainLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($this->rainLevel * 65535.0));
+			$this->level->broadcastLevelEvent(null, $this->lightningLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($this->lightningLevel * 65535.0));
 		}
 
 		return true;
