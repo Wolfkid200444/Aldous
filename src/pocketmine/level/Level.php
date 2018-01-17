@@ -372,7 +372,8 @@ class Level implements ChunkManager, Metadatable{
 		$this->weatherManager = new WeatherManager($this);
 		$this->weatherManager->setRainLevel($this->provider->getRainLevel());
 		$this->weatherManager->setLightningLevel($this->provider->getLightningLevel());
-		$this->weatherManager->setWeatherCycleTime($this->provider->getRainTime()); //lightning time is not used
+		$this->weatherManager->setRainCycleTime($this->provider->getRainTime());
+		$this->weatherManager->setLightningCycleTime($this->provider->getLightningTime());
 
 		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, (int) $this->server->getProperty("chunk-ticking.tick-radius", 4)));
 		$this->chunksPerTick = (int) $this->server->getProperty("chunk-ticking.per-tick", 40);
@@ -1077,8 +1078,8 @@ class Level implements ChunkManager, Metadatable{
 
 		$this->provider->setRainLevel($this->weatherManager->getRainLevel());
 		$this->provider->setLightningLevel($this->weatherManager->getLightningLevel());
-		$this->provider->setRainTime($this->weatherManager->getWeatherCycleTime());
-		$this->provider->setLightningTime($this->weatherManager->getWeatherCycleTime()); //Lightning time is pointless in MCPE, but set it for compatibility anyway
+		$this->provider->setRainTime($this->weatherManager->getRainCycleTime());
+		$this->provider->setLightningTime($this->weatherManager->getLightningCycleTime());
 
 		$this->saveChunks();
 		if($this->provider instanceof BaseLevelProvider){

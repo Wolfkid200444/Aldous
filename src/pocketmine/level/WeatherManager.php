@@ -37,7 +37,9 @@ class WeatherManager{
 	/** @var float */
 	private $lightningLevel = 0.0;
 	/** @var int */
-	private $weatherCycleTime = 0;
+	private $rainCycleTime = 0;
+	/** @var int */
+	private $lightningCycleTime = 0;
 
 	/** @var int */
 	private $tickRate = 1;
@@ -47,37 +49,43 @@ class WeatherManager{
 	}
 
 	public function tick(int $tickDiff = 1) : bool{
-		if($this->weatherCycleTime > 0){
-			$this->weatherCycleTime -= $tickDiff * $this->tickRate;
-			return false;
-		}
-
 		$oldRainLevel = $this->rainLevel;
-		$oldLightningLevel = $this->lightningLevel;
+		$oldLightningLevel = $this->getRealLightningLevel();
 
-		//TODO: events
-		if($this->rainLevel > 0){
-			$this->weatherCycleTime = $this->generateClearWeatherTime();
-			$this->rainLevel = 0.0;
-			$this->lightningLevel = 0.0;
+		if($this->rainCycleTime > 0){
+			$this->rainCycleTime -= $tickDiff * $this->tickRate;
 		}else{
-			$this->weatherCycleTime = $this->generateRainyWeatherTime();
-			$weatherStrengthBase = lcg_value();
-
-			if(lcg_value() < 0.1){ //lightning 10% chance
-				$this->rainLevel = 1.0;
-				$this->lightningLevel = $weatherStrengthBase * 0.4 + 0.3;
+			if($this->rainLevel > 0){
+				$this->rainCycleTime = $this->generateClearWeatherTime();
+				$this->rainLevel = 0.0;
 			}else{
-				$this->rainLevel = $weatherStrengthBase * 0.5 + 0.3;
-				$this->lightningLevel = 0.0;
+				$this->rainCycleTime = $this->generateRainTime();
+				$this->rainLevel = lcg_value();
 			}
 		}
+
+		if($this->lightningCycleTime > 0){
+			$this->lightningCycleTime -= $tickDiff * $this->tickRate;
+		}else{
+			if($this->lightningLevel > 0){
+				$this->lightningCycleTime = $this->generateClearWeatherTime();
+				$this->lightningLevel = 0.0;
+			}else{
+				$this->lightningCycleTime = $this->generateLightningTime();
+				$this->lightningLevel = lcg_value();
+			}
+		}
+
+		//TODO: events
+
 
 		if($oldRainLevel != $this->rainLevel){
 			$this->level->broadcastLevelEvent(null, $this->rainLevel > 0.0 ? LevelEventPacket::EVENT_START_RAIN : LevelEventPacket::EVENT_STOP_RAIN, (int) ($this->rainLevel * 65535.0));
 		}
-		if($oldLightningLevel != $this->lightningLevel){
-			$this->level->broadcastLevelEvent(null, $this->lightningLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($this->lightningLevel * 65535.0));
+
+		$newLightningLevel = $this->getRealLightningLevel();
+		if($oldLightningLevel != $newLightningLevel){
+			$this->level->broadcastLevelEvent(null, $newLightningLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($newLightningLevel * 65535.0));
 		}
 
 		return true;
@@ -95,8 +103,15 @@ class WeatherManager{
 	 * Generates a random duration for rainy weather to last for (in ticks).
 	 * @return int
 	 */
-	protected function generateRainyWeatherTime() : int{
+	protected function generateRainTime() : int{
 		return mt_rand(0, 11999) + 12000;
+	}
+
+	/**
+	 * @return int
+	 */
+	protected function generateLightningTime() : int{
+		return mt_rand(0, 11999) + 3600;
 	}
 
 	/**
@@ -128,6 +143,10 @@ class WeatherManager{
 		return $this->lightningLevel;
 	}
 
+	public function getRealLightningLevel() : float{
+		return $this->rainLevel * $this->lightningLevel;
+	}
+
 	public function isLightning() : bool{
 		return $this->lightningLevel > 0;
 	}
@@ -147,16 +166,24 @@ class WeatherManager{
 	 * Returns the time until the next weather change.
 	 * @return int
 	 */
-	public function getWeatherCycleTime() : int{
-		return $this->weatherCycleTime;
+	public function getRainCycleTime() : int{
+		return $this->rainCycleTime;
 	}
 
 	/**
 	 * Sets the time until the next weather change.
 	 * @param int $ticks
 	 */
-	public function setWeatherCycleTime(int $ticks) : void{
-		$this->weatherCycleTime = $ticks;
+	public function setRainCycleTime(int $ticks) : void{
+		$this->rainCycleTime = $ticks;
+	}
+
+	public function getLightningCycleTime() : int{
+		return $this->lightningCycleTime;
+	}
+
+	public function setLightningCycleTime(int $ticks) : void{
+		$this->lightningCycleTime = $ticks;
 	}
 
 	public function getTickRate() : int{
