@@ -173,6 +173,8 @@ class Level implements ChunkManager, Metadatable{
 	private $time;
 	/** @var bool */
 	public $stopTime = false;
+	/** @var WeatherManager */
+	private $weatherManager;
 
 	/** @var float */
 	private $sunAnglePercentage = 0.0;
@@ -366,6 +368,11 @@ class Level implements ChunkManager, Metadatable{
 		$this->neighbourBlockUpdateQueue = new \SplQueue();
 
 		$this->time = $this->provider->getTime();
+
+		$this->weatherManager = new WeatherManager($this);
+		$this->weatherManager->setRainLevel($this->provider->getRainLevel());
+		$this->weatherManager->setLightningLevel($this->provider->getLightningLevel());
+		$this->weatherManager->setWeatherCycleTime($this->provider->getRainTime()); //lightning time is not used
 
 		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, (int) $this->server->getProperty("chunk-ticking.tick-radius", 4)));
 		$this->chunksPerTick = (int) $this->server->getProperty("chunk-ticking.per-tick", 40);
@@ -729,6 +736,8 @@ class Level implements ChunkManager, Metadatable{
 
 		$this->checkTime();
 
+		$this->weatherManager->tick($this->tickRate);
+
 		$this->sunAnglePercentage = $this->computeSunAnglePercentage(); //Sun angle depends on the current time
 		$this->skyLightReduction = $this->computeSkyLightReduction(); //Sky light reduction depends on the sun angle
 
@@ -1065,6 +1074,12 @@ class Level implements ChunkManager, Metadatable{
 		$this->server->getPluginManager()->callEvent(new LevelSaveEvent($this));
 
 		$this->provider->setTime($this->time);
+
+		$this->provider->setRainLevel($this->weatherManager->getRainLevel());
+		$this->provider->setLightningLevel($this->weatherManager->getLightningLevel());
+		$this->provider->setRainTime($this->weatherManager->getWeatherCycleTime());
+		$this->provider->setLightningTime($this->weatherManager->getWeatherCycleTime()); //Lightning time is pointless in MCPE, but set it for compatibility anyway
+
 		$this->saveChunks();
 		if($this->provider instanceof BaseLevelProvider){
 			$this->provider->saveLevelData();
@@ -2990,6 +3005,10 @@ class Level implements ChunkManager, Metadatable{
 		$pk = new SetDifficultyPacket();
 		$pk->difficulty = $this->getDifficulty();
 		$this->server->broadcastPacket($targets, $pk);
+	}
+
+	public function getWeatherManager() : WeatherManager{
+		return $this->weatherManager;
 	}
 
 	public function populateChunk(int $x, int $z, bool $force = false) : bool{

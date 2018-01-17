@@ -2043,8 +2043,8 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$pk->hasAchievementsDisabled = true;
 		$pk->time = $this->level->getTime();
 		$pk->eduMode = false;
-		$pk->rainLevel = 0; //TODO: implement these properly
-		$pk->lightningLevel = 0;
+		$pk->rainLevel = $this->level->getWeatherManager()->getRainLevel();
+		$pk->lightningLevel = $this->level->getWeatherManager()->getLightningLevel();
 		$pk->commandsEnabled = true;
 		$pk->levelId = "";
 		$pk->worldName = $this->server->getMotd();
