@@ -163,6 +163,17 @@ class WeatherManager{
 	}
 
 	/**
+	 * Returns a the chance of a lightning bolt spawning under the current weather conditions.
+	 * Larger return value = lower chance of lightning strike.
+	 *
+	 * @return int
+	 */
+	public function getLightningStrikeChance() : int{
+		$lightningLevel = $this->getRealLightningLevel();
+		return (int) (((1 - $lightningLevel) * 100000 + $lightningLevel * 3000) / $this->tickRate);
+	}
+
+	/**
 	 * Returns the time until the next weather change.
 	 * @return int
 	 */
