@@ -148,7 +148,7 @@ class WeatherManager{
 	}
 
 	public function isLightning() : bool{
-		return $this->lightningLevel > 0;
+		return $this->getRealLightningLevel() > 0;
 	}
 
 	/**
