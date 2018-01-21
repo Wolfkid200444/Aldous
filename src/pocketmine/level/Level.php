@@ -1350,7 +1350,7 @@ class Level implements ChunkManager, Metadatable{
 	public function computeSkyLightReduction() : int{
 		$percentage = max(0, min(1, -(cos($this->getSunAngleRadians()) * 2 - 0.5)));
 
-		//TODO: check rain and thunder level
+		$percentage = 1 - (1 - $percentage) * (1 - ($this->weatherManager->getRainLevel() * 5 / 16)) * (1 - ($this->weatherManager->getRealLightningLevel() * 5 / 16));
 
 		return (int) ($percentage * 11);
 	}
