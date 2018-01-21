@@ -298,7 +298,7 @@ class McRegion extends BaseLevelProvider{
 
 	public function setRainLevel(float $level) : void{
 		$this->levelData->setFloat("rainLevel", $level); //PocketMine/MCPE
-		$this->levelData->setByte("raining", (int) $level); //PC vanilla
+		$this->levelData->setByte("raining", (int) ceil($level)); //PC vanilla
 	}
 
 	public function getLightningTime() : int{
@@ -319,7 +319,7 @@ class McRegion extends BaseLevelProvider{
 
 	public function setLightningLevel(float $level) : void{
 		$this->levelData->setFloat("lightningLevel", $level); //PocketMine/MCPE
-		$this->levelData->setByte("thundering", (int) $level); //PC vanilla
+		$this->levelData->setByte("thundering", (int) ceil($level)); //PC vanilla
 	}
 
 	public function doGarbageCollection(){
