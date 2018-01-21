@@ -60,7 +60,7 @@ class WeatherManager{
 				$this->rainLevel = 0.0;
 			}else{
 				$this->rainCycleTime = $this->generateRainTime();
-				$this->rainLevel = lcg_value();
+				$this->rainLevel = mt_rand() / mt_getrandmax();
 			}
 		}
 
@@ -72,7 +72,7 @@ class WeatherManager{
 				$this->lightningLevel = 0.0;
 			}else{
 				$this->lightningCycleTime = $this->generateLightningTime();
-				$this->lightningLevel = lcg_value();
+				$this->lightningLevel = mt_rand() / mt_getrandmax();
 			}
 		}
 
