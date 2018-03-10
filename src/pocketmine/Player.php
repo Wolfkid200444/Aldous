@@ -77,6 +77,7 @@ use pocketmine\inventory\transaction\action\InventoryAction;
 use pocketmine\inventory\transaction\CraftingTransaction;
 use pocketmine\inventory\transaction\InventoryTransaction;
 use pocketmine\item\Consumable;
+use pocketmine\item\Durable;
 use pocketmine\item\Item;
 use pocketmine\item\WritableBook;
 use pocketmine\item\WrittenBook;
@@ -1714,7 +1715,22 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 						}
 						$this->inAirTicks = 0;
 					}else{
-						if(!$this->allowFlight and $this->inAirTicks > 10 and !$this->isSleeping() and !$this->isImmobile()){
+						if($this->isGliding()){
+							//TODO: do we even want to bother with any more core anti-cheat? I sure don't...
+							$item = $this->armorInventory->getChestplate();
+							if($item->enablesGliding()){
+								//TODO: check gliding angle (stops gliding past downwards angle)
+								//TODO: deal damage when hitting walls
+								$this->resetFallDistance();
+								if($currentTick % 20 === 0 and $item instanceof Durable){
+									$item->applyDamage(1);
+									$this->armorInventory->setChestplate($item);
+								}
+							}else{
+								$this->setGliding(false);
+								$this->propertyManager->setFloat(self::DATA_BOUNDING_BOX_HEIGHT, $this->height);
+							}
+						}elseif(!$this->allowFlight and $this->inAirTicks > 10 and !$this->isSleeping() and !$this->isImmobile() and !$this->isGliding()){
 							$expectedVelocity = (-$this->gravity) / $this->drag - ((-$this->gravity) / $this->drag) * exp(-$this->drag * ($this->inAirTicks - $this->startAirTicks));
 							$diff = ($this->speed->y - $expectedVelocity) ** 2;
 
@@ -2759,8 +2775,24 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				}
 				return true;
 			case PlayerActionPacket::ACTION_START_GLIDE:
+				//TODO: events
+				$item = $this->armorInventory->getChestplate();
+				if($this->isGliding() or $this->isInsideOfWater() or $this->onGround or !$item->enablesGliding()){
+					//TODO: player has to be falling to enable elytra gliding (Y velocity < 0)
+					$this->sendData($this);
+					break;
+				}
+				$this->setGliding();
+				$this->propertyManager->setFloat(self::DATA_BOUNDING_BOX_HEIGHT, $this->width);
+				break;
 			case PlayerActionPacket::ACTION_STOP_GLIDE:
-				break; //TODO
+				if(!$this->isGliding()){
+					$this->sendData($this);
+					break;
+				}
+				$this->setGliding(false);
+				$this->propertyManager->setFloat(self::DATA_BOUNDING_BOX_HEIGHT, $this->height);
+				break;
 			case PlayerActionPacket::ACTION_CONTINUE_BREAK:
 				$block = $this->level->getBlock($pos);
 				$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_PARTICLE_PUNCH_BLOCK, $block->getId() | ($block->getDamage() << 8) | ($packet->face << 16));

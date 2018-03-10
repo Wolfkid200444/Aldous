@@ -716,6 +716,14 @@ class Item implements ItemIds, \JsonSerializable{
 	}
 
 	/**
+	 * Returns whether this item allows an entity to glide when worn.
+	 * @return bool
+	 */
+	public function enablesGliding() : bool{
+		return false;
+	}
+
+	/**
 	 * @param Entity|Block $object
 	 *
 	 * @return bool
