@@ -21,38 +21,18 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\event;
+namespace pocketmine\item;
 
-class TextContainer{
-
-	/** @var string $text */
-	protected $text;
-
-	/**
-	 * @param string $text
-	 */
-	public function __construct(string $text){
-		$this->text = $text;
+class RawFish extends Food{
+	public function __construct(int $meta = 0){
+		parent::__construct(self::RAW_FISH, $meta, "Raw Fish");
 	}
 
-	/**
-	 * @param string $text
-	 */
-	public function setText(string $text){
-		$this->text = $text;
+	public function getFoodRestore() : int{
+		return 2;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getText() : string{
-		return $this->text;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function __toString() : string{
-		return $this->getText();
+	public function getSaturationRestore() : float{
+		return 0.4;
 	}
 }

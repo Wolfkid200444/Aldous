@@ -21,20 +21,18 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\inventory;
+namespace pocketmine\item;
 
-use pocketmine\level\Position;
-
-class FakeBlockMenu extends Position implements InventoryHolder{
-
-	private $inventory;
-
-	public function __construct(Inventory $inventory, Position $pos){
-		$this->inventory = $inventory;
-		parent::__construct($pos->x, $pos->y, $pos->z, $pos->level);
+class Clownfish extends Food{
+	public function __construct(int $meta = 0){
+		parent::__construct(self::CLOWNFISH, $meta, "Clownfish");
 	}
 
-	public function getInventory(){
-		return $this->inventory;
+	public function getFoodRestore() : int{
+		return 1;
+	}
+
+	public function getSaturationRestore() : float{
+		return 0.2;
 	}
 }

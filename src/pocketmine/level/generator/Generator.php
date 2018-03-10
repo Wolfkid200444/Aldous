@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace pocketmine\level\generator;
 
 use pocketmine\level\ChunkManager;
+use pocketmine\level\generator\hell\Nether;
 use pocketmine\level\generator\noise\Noise;
 use pocketmine\level\generator\normal\Normal;
 use pocketmine\math\Vector3;
@@ -34,6 +35,14 @@ use pocketmine\utils\Random;
 
 abstract class Generator{
 	private static $list = [];
+
+	public static function registerDefaultGenerators() : void{
+		self::addGenerator(Flat::class, "flat");
+		self::addGenerator(Normal::class, "normal");
+		self::addGenerator(Normal::class, "default");
+		self::addGenerator(Nether::class, "hell");
+		self::addGenerator(Nether::class, "nether");
+	}
 
 	public static function addGenerator($object, $name) : bool{
 		if(is_subclass_of($object, Generator::class) and !isset(Generator::$list[$name = strtolower($name)])){
@@ -90,7 +99,7 @@ abstract class Generator{
 			throw new \InvalidArgumentException("samplingRate cannot be 0");
 		}
 		if($xSize % $samplingRate !== 0){
-			throw new \InvalidArgumentCountException("xSize % samplingRate must return 0");
+			throw new \InvalidArgumentException("xSize % samplingRate must return 0");
 		}
 
 		$noiseArray = new \SplFixedArray($xSize + 1);
@@ -123,8 +132,8 @@ abstract class Generator{
 	public static function getFastNoise2D(Noise $noise, int $xSize, int $zSize, int $samplingRate, int $x, int $y, int $z) : \SplFixedArray{
 		assert($samplingRate !== 0, new \InvalidArgumentException("samplingRate cannot be 0"));
 
-		assert($xSize % $samplingRate === 0, new \InvalidArgumentCountException("xSize % samplingRate must return 0"));
-		assert($zSize % $samplingRate === 0, new \InvalidArgumentCountException("zSize % samplingRate must return 0"));
+		assert($xSize % $samplingRate === 0, new \InvalidArgumentException("xSize % samplingRate must return 0"));
+		assert($zSize % $samplingRate === 0, new \InvalidArgumentException("zSize % samplingRate must return 0"));
 
 		$noiseArray = new \SplFixedArray($xSize + 1);
 
@@ -176,9 +185,9 @@ abstract class Generator{
 		assert($zSamplingRate !== 0, new \InvalidArgumentException("zSamplingRate cannot be 0"));
 		assert($ySamplingRate !== 0, new \InvalidArgumentException("ySamplingRate cannot be 0"));
 
-		assert($xSize % $xSamplingRate === 0, new \InvalidArgumentCountException("xSize % xSamplingRate must return 0"));
-		assert($zSize % $zSamplingRate === 0, new \InvalidArgumentCountException("zSize % zSamplingRate must return 0"));
-		assert($ySize % $ySamplingRate === 0, new \InvalidArgumentCountException("ySize % ySamplingRate must return 0"));
+		assert($xSize % $xSamplingRate === 0, new \InvalidArgumentException("xSize % xSamplingRate must return 0"));
+		assert($zSize % $zSamplingRate === 0, new \InvalidArgumentException("zSize % zSamplingRate must return 0"));
+		assert($ySize % $ySamplingRate === 0, new \InvalidArgumentException("ySize % ySamplingRate must return 0"));
 
 		$noiseArray = array_fill(0, $xSize + 1, array_fill(0, $zSize + 1, []));
 

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\command;
 
-use pocketmine\event\TextContainer;
+use pocketmine\lang\TextContainer;
 use pocketmine\permission\PermissibleBase;
 use pocketmine\permission\Permission;
 use pocketmine\permission\PermissionAttachment;
@@ -90,13 +90,6 @@ class ConsoleCommandSender implements CommandSender{
 	 */
 	public function getEffectivePermissions() : array{
 		return $this->perm->getEffectivePermissions();
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isPlayer() : bool{
-		return false;
 	}
 
 	/**
