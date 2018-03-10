@@ -1574,26 +1574,40 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 			$list = $this->level->getCollisionCubes($this, $this->level->getTickRate() > 1 ? $this->boundingBox->getOffsetBoundingBox($dx, $dy, $dz) : $this->boundingBox->addCoord($dx, $dy, $dz), false);
 
-			foreach($list as $bb){
-				$dy = $bb->calculateYOffset($this->boundingBox, $dy);
-			}
+			$distSoFarX = $distSoFarY = $distSoFarZ = 0.0;
 
-			$this->boundingBox->offset(0, $dy, 0);
+			do{
+				$dx = $movX - $distSoFarX;
+				$dy = $movY - $distSoFarY;
+				$dz = $movZ - $distSoFarZ;
 
-			$fallingFlag = ($this->onGround or ($dy != $movY and $movY < 0));
+				foreach($list as $bb){
+					$dy = $bb->calculateYOffset($this->boundingBox, $dy);
+				}
 
-			foreach($list as $bb){
-				$dx = $bb->calculateXOffset($this->boundingBox, $dx);
-			}
+				$this->boundingBox->offset(0, $dy, 0);
+				$distSoFarY += $dy;
 
-			$this->boundingBox->offset($dx, 0, 0);
+				$fallingFlag = ($this->onGround or ($dy != $movY and $movY < 0));
 
-			foreach($list as $bb){
-				$dz = $bb->calculateZOffset($this->boundingBox, $dz);
-			}
+				foreach($list as $bb){
+					$dx = $bb->calculateXOffset($this->boundingBox, $dx);
+				}
 
-			$this->boundingBox->offset(0, 0, $dz);
+				$this->boundingBox->offset($dx, 0, 0);
+				$distSoFarX += $dx;
 
+				foreach($list as $bb){
+					$dz = $bb->calculateZOffset($this->boundingBox, $dz);
+				}
+
+				$this->boundingBox->offset(0, 0, $dz);
+				$distSoFarZ += $dz;
+			}while($dx != 0 and $dy != 0 and $dz != 0);
+
+			$dx = $distSoFarX;
+			$dy = $distSoFarY;
+			$dz = $distSoFarZ;
 
 			if($this->stepHeight > 0 and $fallingFlag and $this->ySize < 0.05 and ($movX != $dx or $movZ != $dz)){
 				$cx = $dx;
