@@ -188,7 +188,7 @@ class Fire extends Flowable{
 					//TODO: fire can't spread if it's raining in any horizontally adjacent block, or the current one
 
 					$encouragement = 0;
-					foreach($block->getHorizontalSides() as $blockSide){
+					foreach($block->getAllSides() as $blockSide){
 						$encouragement = max($encouragement, $blockSide->getFlameEncouragement());
 					}
 
