@@ -26,6 +26,7 @@ namespace pocketmine\block;
 use pocketmine\entity\Entity;
 use pocketmine\entity\projectile\Arrow;
 use pocketmine\event\block\BlockBurnEvent;
+use pocketmine\event\block\BlockSpreadEvent;
 use pocketmine\event\entity\EntityCombustByBlockEvent;
 use pocketmine\event\entity\EntityDamageByBlockEvent;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -161,7 +162,7 @@ class Fire extends Flowable{
 				$block->onIncinerate();
 
 				if(mt_rand(0, $this->meta + 9) < 5){ //TODO: check rain
-					$this->level->setBlock($block, BlockFactory::get(Block::FIRE, min(15, $this->meta + (mt_rand(0, 4) >> 2))));
+					$this->spreadBlock($block, BlockFactory::get(Block::FIRE, min(15, $this->meta + (mt_rand(0, 4) >> 2))));
 				}else{
 					$this->level->setBlock($block, BlockFactory::get(Block::AIR));
 				}
@@ -203,10 +204,17 @@ class Fire extends Flowable{
 					//TODO: max chance is lowered by half in humid biomes
 
 					if($maxChance > 0 and mt_rand(0, $randomBound - 1) <= $maxChance){
-						$this->level->setBlock($block, BlockFactory::get(Block::FIRE, min(15, $this->meta + (mt_rand(0, 4) >> 2))));
+						$this->spreadBlock($block, BlockFactory::get(Block::FIRE, min(15, $this->meta + (mt_rand(0, 4) >> 2))));
 					}
 				}
 			}
+		}
+	}
+
+	private function spreadBlock(Block $block, Block $newState) : void{
+		$this->level->getServer()->getPluginManager()->callEvent($ev = new BlockSpreadEvent($block, $this, $newState));
+		if(!$ev->isCancelled()){
+			$this->level->setBlock($block, $ev->getNewState());
 		}
 	}
 }
