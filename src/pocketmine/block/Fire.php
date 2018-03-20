@@ -174,9 +174,12 @@ class Fire extends Flowable{
 		$difficulty7 = $this->level->getDifficulty() * 7;
 		$age30 = $this->meta + 30;
 
-		for($x = -1; $x <= 1; ++$x){
+		for($y = -1; $y <= 4; ++$y){
+			//Higher blocks have a lower chance of catching fire
+			$randomBound = 100 + ($y > 1 ? ($y - 1) * 100 : 0);
+
 			for($z = -1; $z <= 1; ++$z){
-				for($y = -1; $y <= 4; ++$y){
+				for($x = -1; $x <= 1; ++$x){
 					if($x === 0 and $y === 0 and $z === 0){
 						continue;
 					}
@@ -196,9 +199,6 @@ class Fire extends Flowable{
 					if($encouragement <= 0){
 						continue;
 					}
-
-					//Higher blocks have a lower chance of catching fire
-					$randomBound = 100 + ($y > 1 ? ($y - 1) * 100 : 0);
 
 					$maxChance = intdiv($encouragement + 40 + $difficulty7, $age30);
 					//TODO: max chance is lowered by half in humid biomes
