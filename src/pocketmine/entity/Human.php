@@ -105,7 +105,7 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	 * @return bool
 	 */
 	public static function isValidSkin(string $skin) : bool{
-		return strlen($skin) === 64 * 64 * 4 or strlen($skin) === 64 * 32 * 4;
+		return strlen($skin) === 64 * 64 * 4 or strlen($skin) === 64 * 32 * 4 or strlen($skin) === 128 * 128 * 4;
 	}
 
 	/**
@@ -765,6 +765,9 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 		$pk->item = $this->getInventory()->getItemInHand();
 		$pk->metadata = $this->propertyManager->getAll();
 		$player->dataPacket($pk);
+
+		//TODO: Hack for MCPE 1.2.13: DATA_NAMETAG is useless in AddPlayerPacket, so it has to be sent separately
+		$this->sendData($player, [self::DATA_NAMETAG => [self::DATA_TYPE_STRING, $this->getNameTag()]]);
 
 		$this->armorInventory->sendContents($player);
 
