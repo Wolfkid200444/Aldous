@@ -28,10 +28,7 @@ declare(strict_types=1);
 namespace pocketmine\tile;
 
 use pocketmine\block\Block;
-use pocketmine\event\Timings;
-use pocketmine\event\TimingsHandler;
 use pocketmine\item\Item;
-use pocketmine\level\format\Chunk;
 use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
@@ -40,6 +37,8 @@ use pocketmine\nbt\tag\IntTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\Player;
 use pocketmine\Server;
+use pocketmine\timings\Timings;
+use pocketmine\timings\TimingsHandler;
 
 abstract class Tile extends Position{
 
@@ -69,8 +68,6 @@ abstract class Tile extends Position{
 	/** @var string[][] */
 	private static $saveNames = [];
 
-	/** @var Chunk */
-	public $chunk;
 	/** @var string */
 	public $name;
 	/** @var int */
@@ -161,10 +158,6 @@ abstract class Tile extends Position{
 		$this->namedtag = $nbt;
 		$this->server = $level->getServer();
 		$this->setLevel($level);
-		$this->chunk = $level->getChunk($this->namedtag->getInt(self::TAG_X) >> 4, $this->namedtag->getInt(self::TAG_Z) >> 4, false);
-		if($this->chunk === null){
-			throw new \InvalidStateException("Cannot create tiles in unloaded chunks");
-		}
 
 		$this->name = "";
 		$this->id = Tile::$tileCount++;
@@ -172,7 +165,6 @@ abstract class Tile extends Position{
 		$this->y = $this->namedtag->getInt(self::TAG_Y);
 		$this->z = $this->namedtag->getInt(self::TAG_Z);
 
-		$this->chunk->addTile($this);
 		$this->getLevel()->addTile($this);
 	}
 
@@ -276,13 +268,9 @@ abstract class Tile extends Position{
 	public function close() : void{
 		if(!$this->closed){
 			$this->closed = true;
-			unset($this->level->updateTiles[$this->id]);
-			if($this->chunk instanceof Chunk){
-				$this->chunk->removeTile($this);
-				$this->chunk = null;
-			}
-			if(($level = $this->getLevel()) instanceof Level){
-				$level->removeTile($this);
+
+			if($this->isValid()){
+				$this->level->removeTile($this);
 				$this->setLevel(null);
 			}
 

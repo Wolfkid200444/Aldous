@@ -21,11 +21,8 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\inventory;
+namespace pocketmine\inventory\transaction;
 
-class BigCraftingGrid extends CraftingGrid{
+class TransactionValidationException extends \RuntimeException{
 
-	public function getGridWidth() : int{
-		return 3;
-	}
 }

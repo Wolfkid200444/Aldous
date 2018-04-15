@@ -25,7 +25,6 @@ namespace pocketmine\network\mcpe;
 
 
 use pocketmine\event\server\DataPacketReceiveEvent;
-use pocketmine\event\Timings;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
@@ -65,6 +64,7 @@ use pocketmine\network\mcpe\protocol\SpawnExperienceOrbPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\Player;
 use pocketmine\Server;
+use pocketmine\timings\Timings;
 
 class PlayerNetworkSessionAdapter extends NetworkSession{
 
@@ -201,7 +201,9 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 	}
 
 	public function handleRequestChunkRadius(RequestChunkRadiusPacket $packet) : bool{
-		return $this->player->handleRequestChunkRadius($packet);
+		$this->player->setViewDistance($packet->radius);
+
+		return true;
 	}
 
 	public function handleItemFrameDropItem(ItemFrameDropItemPacket $packet) : bool{
