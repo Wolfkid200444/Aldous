@@ -28,7 +28,7 @@ class VanillaWeatherManager extends WeatherManager{
 	/** @var int */
 	private $tickRate = 1;
 
-	public function tick(int $tickDiff = 1) : bool{
+	public function tick(int $tickDiff = 1) : void{
 		if($this->rainCycleTime > 0){
 			$this->rainCycleTime -= $tickDiff * $this->tickRate;
 		}else{
@@ -54,8 +54,6 @@ class VanillaWeatherManager extends WeatherManager{
 		}
 
 		//TODO: events
-
-		return true;
 	}
 
 	/**

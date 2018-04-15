@@ -38,10 +38,8 @@ abstract class WeatherManager{
 	 * Called every tick by the Level to update the weather.
 	 *
 	 * @param int $tickDiff
-	 *
-	 * @return bool
 	 */
-	abstract public function tick(int $tickDiff = 1) : bool;
+	abstract public function tick(int $tickDiff = 1) : void;
 
 	/**
 	 * Returns the current rain level as a float between 0.0 and 1.0.
