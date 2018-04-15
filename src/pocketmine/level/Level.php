@@ -709,6 +709,22 @@ class Level implements ChunkManager, Metadatable{
 		$this->server->broadcastPacket(count($targets) > 0 ? $targets : $this->players, $pk);
 	}
 
+	protected function checkWeather() : void{
+		$oldRainLevel = $this->weatherManager->getRainLevel();
+		$oldLightningLevel = $this->weatherManager->getLightningLevel();
+		$this->weatherManager->tick($this->tickRate);
+
+		$newRainLevel = $this->weatherManager->getRainLevel();
+		if($oldRainLevel != $newRainLevel){
+			$this->broadcastLevelEvent(null, $newRainLevel > 0.0 ? LevelEventPacket::EVENT_START_RAIN : LevelEventPacket::EVENT_STOP_RAIN, (int) ($newRainLevel * 65535.0));
+		}
+
+		$newLightningLevel = $this->weatherManager->getRealLightningLevel();
+		if($oldLightningLevel != $newLightningLevel){
+			$this->broadcastLevelEvent(null, $newLightningLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($newLightningLevel * 65535.0));
+		}
+	}
+
 	/**
 	 * WARNING: Do not use this, it's only for internal use.
 	 * Changes to this function won't be recorded on the version.
@@ -723,9 +739,9 @@ class Level implements ChunkManager, Metadatable{
 
 		$this->timings->doTick->startTiming();
 
-		$this->checkTime();
+		$this->checkWeather();
 
-		$this->weatherManager->tick($this->tickRate);
+		$this->checkTime();
 
 		$this->sunAnglePercentage = $this->computeSunAnglePercentage(); //Sun angle depends on the current time
 		$this->skyLightReduction = $this->computeSkyLightReduction(); //Sky light reduction depends on the sun angle

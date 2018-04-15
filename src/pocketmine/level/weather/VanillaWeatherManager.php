@@ -23,25 +23,12 @@ declare(strict_types=1);
 
 namespace pocketmine\level\weather;
 
-use pocketmine\level\Level;
-use pocketmine\network\mcpe\protocol\LevelEventPacket;
-
 class VanillaWeatherManager extends WeatherManager{
-
-	/** @var Level */
-	private $level;
 
 	/** @var int */
 	private $tickRate = 1;
 
-	public function __construct(Level $level){
-		$this->level = $level;
-	}
-
 	public function tick(int $tickDiff = 1) : bool{
-		$oldRainLevel = $this->rainLevel;
-		$oldLightningLevel = $this->getRealLightningLevel();
-
 		if($this->rainCycleTime > 0){
 			$this->rainCycleTime -= $tickDiff * $this->tickRate;
 		}else{
@@ -67,16 +54,6 @@ class VanillaWeatherManager extends WeatherManager{
 		}
 
 		//TODO: events
-
-
-		if($oldRainLevel != $this->rainLevel){
-			$this->level->broadcastLevelEvent(null, $this->rainLevel > 0.0 ? LevelEventPacket::EVENT_START_RAIN : LevelEventPacket::EVENT_STOP_RAIN, (int) ($this->rainLevel * 65535.0));
-		}
-
-		$newLightningLevel = $this->getRealLightningLevel();
-		if($oldLightningLevel != $newLightningLevel){
-			$this->level->broadcastLevelEvent(null, $newLightningLevel > 0.0 ? LevelEventPacket::EVENT_START_THUNDER : LevelEventPacket::EVENT_STOP_THUNDER, (int) ($newLightningLevel * 65535.0));
-		}
 
 		return true;
 	}
