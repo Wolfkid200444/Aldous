@@ -21,25 +21,15 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\level;
+namespace pocketmine\level\weather;
 
+use pocketmine\level\Level;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 
-class WeatherManager{
+class VanillaWeatherManager extends WeatherManager{
 
-	/**
-	 * @var Level
-	 */
+	/** @var Level */
 	private $level;
-
-	/** @var float */
-	private $rainLevel = 0.0;
-	/** @var float */
-	private $lightningLevel = 0.0;
-	/** @var int */
-	private $rainCycleTime = 0;
-	/** @var int */
-	private $lightningCycleTime = 0;
 
 	/** @var int */
 	private $tickRate = 1;
@@ -115,54 +105,6 @@ class WeatherManager{
 	}
 
 	/**
-	 * @return float
-	 */
-	public function getRainLevel() : float{
-		return $this->rainLevel;
-	}
-
-	public function isRaining() : bool{
-		return $this->rainLevel > 0;
-	}
-
-	/**
-	 * @param float $level
-	 */
-	public function setRainLevel(float $level) : void{
-		if($level < 0.0 or $level > 1.0){
-			throw new \InvalidArgumentException("Rain level must be in range 0.0 - 1.0");
-		}
-
-		$this->rainLevel = $level;
-	}
-
-	/**
-	 * @return float
-	 */
-	public function getLightningLevel() : float{
-		return $this->lightningLevel;
-	}
-
-	public function getRealLightningLevel() : float{
-		return $this->rainLevel * $this->lightningLevel;
-	}
-
-	public function isLightning() : bool{
-		return $this->getRealLightningLevel() > 0;
-	}
-
-	/**
-	 * @param float $level
-	 */
-	public function setLightningLevel(float $level) : void{
-		if($level < 0.0 or $level > 1.0){
-			throw new \InvalidArgumentException("Lightning level must be in range 0.0 - 1.0");
-		}
-
-		$this->lightningLevel = $level;
-	}
-
-	/**
 	 * Returns a the chance of a lightning bolt spawning under the current weather conditions.
 	 * Larger return value = lower chance of lightning strike.
 	 *
@@ -171,30 +113,6 @@ class WeatherManager{
 	public function getLightningStrikeChance() : int{
 		$lightningLevel = $this->getRealLightningLevel();
 		return (int) (((1 - $lightningLevel) * 100000 + $lightningLevel * 3000) / $this->tickRate);
-	}
-
-	/**
-	 * Returns the time until the next weather change.
-	 * @return int
-	 */
-	public function getRainCycleTime() : int{
-		return $this->rainCycleTime;
-	}
-
-	/**
-	 * Sets the time until the next weather change.
-	 * @param int $ticks
-	 */
-	public function setRainCycleTime(int $ticks) : void{
-		$this->rainCycleTime = $ticks;
-	}
-
-	public function getLightningCycleTime() : int{
-		return $this->lightningCycleTime;
-	}
-
-	public function setLightningCycleTime(int $ticks) : void{
-		$this->lightningCycleTime = $ticks;
 	}
 
 	public function getTickRate() : int{

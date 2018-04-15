@@ -59,6 +59,8 @@ use pocketmine\level\light\SkyLightUpdate;
 use pocketmine\level\particle\DestroyBlockParticle;
 use pocketmine\level\particle\Particle;
 use pocketmine\level\sound\Sound;
+use pocketmine\level\weather\WeatherManager;
+use pocketmine\level\weather\VanillaWeatherManager;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Math;
 use pocketmine\math\Vector2;
@@ -356,7 +358,7 @@ class Level implements ChunkManager, Metadatable{
 
 		$this->time = $this->provider->getTime();
 
-		$this->weatherManager = new WeatherManager($this);
+		$this->weatherManager = new VanillaWeatherManager($this);
 		$this->weatherManager->setRainLevel($this->provider->getRainLevel());
 		$this->weatherManager->setLightningLevel($this->provider->getLightningLevel());
 		$this->weatherManager->setRainCycleTime($this->provider->getRainTime());
@@ -2980,8 +2982,18 @@ class Level implements ChunkManager, Metadatable{
 		$this->server->broadcastPacket($targets, $pk);
 	}
 
+	/**
+	 * @return WeatherManager
+	 */
 	public function getWeatherManager() : WeatherManager{
 		return $this->weatherManager;
+	}
+
+	/**
+	 * @param WeatherManager $manager
+	 */
+	public function setWeatherManager(WeatherManager $manager) : void{
+		$this->weatherManager = $manager;
 	}
 
 	public function populateChunk(int $x, int $z, bool $force = false) : bool{
