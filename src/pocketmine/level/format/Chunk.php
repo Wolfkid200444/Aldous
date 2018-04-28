@@ -925,19 +925,4 @@ class Chunk{
 		$chunk->terrainGenerated = (bool) ($flags & 1);
 		return $chunk;
 	}
-
-	/**
-	 * Creates a block hash from chunk block coordinates. Used for extra data keys in chunk packets.
-	 * @internal
-	 *
-	 * @param int $x 0-15
-	 * @param int $y 0-255
-	 * @param int $z 0-15
-	 *
-	 * @return int
-	 */
-	public static function chunkBlockHash(int $x, int $y, int $z) : int{
-		return ($x << 12) | ($z << 8) | $y;
-	}
-
 }
