@@ -31,6 +31,7 @@ use pocketmine\entity\Entity;
 use pocketmine\level\Level;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
+use pocketmine\network\mcpe\NetworkBinaryStream;
 use pocketmine\Player;
 use pocketmine\tile\Spawnable;
 use pocketmine\tile\Tile;
@@ -851,24 +852,48 @@ class Chunk{
 	 * @return string
 	 */
 	public function networkSerialize() : string{
-		$result = "";
+		$stream = new NetworkBinaryStream();
+
 		$subChunkCount = $this->getSubChunkSendCount();
-		$result .= chr($subChunkCount);
-		for($y = 0; $y < $subChunkCount; ++$y){
-			$result .= $this->subChunks[$y]->networkSerialize();
+		$stream->putByte($subChunkCount);
+
+
+		for($subY = 0; $subY < $subChunkCount; ++$subY){
+			$converted = new PalettedBlockArray();
+			$legacy = $this->subChunks[$subY];
+
+			for($x = 0; $x < 16; ++$x){
+				for($z = 0; $z < 16; ++$z){
+					for($y = 0; $y < 16; ++$y){
+						$converted->set($x, $y, $z, BlockFactory::toStaticRuntimeId($legacy->getBlockId($x, $y, $z), $legacy->getBlockData($x, $y, $z)));
+					}
+				}
+			}
+
+			$stream->putByte(8); //subchunk version
+			$stream->putByte(1); //block array count
+
+			$stream->putByte(($converted->getBitsPerBlock() << 1) | 1); //final 1-bit is network flag
+			$stream->put($converted->getWordArray());
+			$palette = $converted->getPalette();
+			$stream->putVarInt(count($palette));
+			foreach($palette as $p){
+				$stream->putVarInt($p);
+			}
 		}
-		$result .= pack("v*", ...$this->heightMap)
-		        .  $this->biomeIds
-		        .  chr(0); //border block array count
+
+		$stream->put(pack("v*", ...$this->heightMap));
+		$stream->put($this->biomeIds);
+		$stream->putByte(0); //border block array count
 		//Border block entry format: 1 byte (4 bits X, 4 bits Z). These are however useless since they crash the regular client.
 
 		foreach($this->tiles as $tile){
 			if($tile instanceof Spawnable){
-				$result .= $tile->getSerializedSpawnCompound();
+				$stream->put($tile->getSerializedSpawnCompound());
 			}
 		}
 
-		return $result;
+		return $stream->buffer;
 	}
 
 	/**
