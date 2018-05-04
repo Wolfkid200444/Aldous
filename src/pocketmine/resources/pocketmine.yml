@@ -90,8 +90,6 @@ network:
  batch-threshold: 256
  #Compression level used when sending batched packets. Higher = more CPU, less bandwidth usage
  compression-level: 7
- #Use AsyncTasks for compression. Adds half/one tick delay, less CPU load on main thread
- async-compression: false
  #Experimental, only for Windows. Tries to use UPnP to automatically port forward
  upnp-forwarding: false
  #Maximum size in bytes of packets sent over the network (default 1492 bytes). Packets larger than this will be
