@@ -38,6 +38,7 @@ use pocketmine\entity\Skin;
 use pocketmine\event\HandlerList;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
+use pocketmine\event\player\PlayerCreationEvent;
 use pocketmine\event\player\PlayerDataSaveEvent;
 use pocketmine\event\server\QueryRegenerateEvent;
 use pocketmine\event\server\ServerCommandEvent;
@@ -70,7 +71,9 @@ use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\AdvancedSourceInterface;
 use pocketmine\network\mcpe\CompressBatchedTask;
-use pocketmine\network\mcpe\protocol\BatchPacket;
+use pocketmine\network\mcpe\CompressedPacketBuffer;
+use pocketmine\network\mcpe\PacketBuffer;
+use pocketmine\network\mcpe\IPlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
@@ -1853,66 +1856,105 @@ class Server{
 	 * @param DataPacket $packet
 	 */
 	public function broadcastPacket(array $players, DataPacket $packet){
-		$packet->encode();
-		$this->batchPackets($players, [$packet], false);
+		$this->broadcastPackets($players, [$packet]);
 	}
 
 	/**
-	 * Broadcasts a list of packets in a batch to a list of players
-	 *
 	 * @param Player[]     $players
 	 * @param DataPacket[] $packets
 	 * @param bool         $forceSync
 	 * @param bool         $immediate
 	 */
-	public function batchPackets(array $players, array $packets, bool $forceSync = false, bool $immediate = false){
+	public function broadcastPackets(array $players, array $packets, bool $forceSync = false, bool $immediate = false) : void{
 		if(empty($packets)){
-			throw new \InvalidArgumentException("Cannot send empty batch");
+			throw new \InvalidArgumentException("Tried to broadcast empty list of packets");
 		}
+
+		/** @var IPlayerNetworkSession[] $sessions */
+		$sessions = [];
+		foreach($players as $player){
+			if($player->isConnected()){
+				$sessions[] = $player->getNetworkSession();
+			}
+		}
+		if(empty($sessions)){
+			return;
+		}
+
+		//TODO: packet broadcast events
+
+		$length = 0;
+		foreach($packets as $packet){
+			if(!$packet->isEncoded){
+				$packet->encode();
+			}
+
+			$length += \strlen($packet->buffer);
+		}
+
+		if(Network::$BATCH_THRESHOLD >= 0 and $length >= Network::$BATCH_THRESHOLD){
+			$stream = new PacketBuffer();
+			foreach($packets as $packet){
+				$stream->addPacket($packet);
+			}
+
+			$this->prepareBatch($sessions, $stream, $forceSync, $immediate);
+		}else{
+			foreach($sessions as $player){
+				foreach($packets as $packet){
+					//FIXME: this is going to spam DataPacketSendEvent, which won't be desirable after we have broadcast events
+					$player->sendDataPacket($packet, $immediate);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Broadcasts a list of packets in a batch to a list of players
+	 *
+	 * @param IPlayerNetworkSession[] $sessions
+	 * @param PacketBuffer            $payload
+	 * @param bool                    $forceSync
+	 * @param bool                    $immediate
+	 */
+	public function prepareBatch(array $sessions, PacketBuffer $payload, bool $forceSync = false, bool $immediate = false){
 		Timings::$playerNetworkTimer->startTiming();
 
-		$targets = array_filter($players, function(Player $player) : bool{ return $player->isConnected(); });
+		$compressionLevel = $this->networkCompressionLevel;
 
-		if(!empty($targets)){
-			$pk = new BatchPacket();
+		if(Network::$BATCH_THRESHOLD < 0 or strlen($payload->buffer) < Network::$BATCH_THRESHOLD){
+			$compressionLevel = 0; //Do not compress packets under the threshold
+			$forceSync = true;
+		}
 
-			foreach($packets as $p){
-				$pk->addPacket($p);
-			}
+		$batch = new CompressedPacketBuffer();
 
-			if(Network::$BATCH_THRESHOLD >= 0 and strlen($pk->payload) >= Network::$BATCH_THRESHOLD){
-				$pk->setCompressionLevel($this->networkCompressionLevel);
-			}else{
-				$pk->setCompressionLevel(0); //Do not compress packets under the threshold
-				$forceSync = true;
-			}
+		//this makes each session add this batch to a queue for sending - the object properties will be modified
+		//and then the sessions will be notified that the batch is ready to send
+		foreach($sessions as $target){
+			$target->notifyPendingBatch($batch);
+		}
 
-			if(!$forceSync and !$immediate and $this->networkCompressionAsync){
-				$task = new CompressBatchedTask($pk, $targets);
-				$this->asyncPool->submitTask($task);
-			}else{
-				$this->broadcastPacketsCallback($pk, $targets, $immediate);
-			}
+		if(!$forceSync and !$immediate){
+			$this->asyncPool->submitTask(new CompressBatchedTask($batch, $payload->buffer, $compressionLevel, $sessions));
+		}else{
+			$batch->setBuffer($payload->compress($this->networkCompressionLevel));
+
+			$this->broadcastPacketsCallback($sessions, $immediate);
 		}
 
 		Timings::$playerNetworkTimer->stopTiming();
 	}
 
 	/**
-	 * @param BatchPacket $pk
-	 * @param Player[]    $players
-	 * @param bool        $immediate
+	 * @param IPlayerNetworkSession[] $sessions
+	 * @param bool                    $immediate
 	 */
-	public function broadcastPacketsCallback(BatchPacket $pk, array $players, bool $immediate = false){
-		if(!$pk->isEncoded){
-			$pk->encode();
-		}
-
-		foreach($players as $i){
-			$i->sendDataPacket($pk, false, $immediate);
+	public function broadcastPacketsCallback(array $sessions, bool $immediate = false) : void{
+		foreach($sessions as $i){
+			$i->flushBatchQueue($immediate);
 		}
 	}
-
 
 	/**
 	 * @param int $type
@@ -2268,6 +2310,21 @@ class Server{
 		}
 	}
 
+	public function createPlayer(IPlayerNetworkSession $networkSession, string $baseClass = Player::class, string $playerClass = Player::class) : Player{
+		$ev = new PlayerCreationEvent($networkSession, $baseClass, $playerClass);
+		$this->pluginManager->callEvent($ev);
+		$class = $ev->getPlayerClass();
+
+		/**
+		 * @var Player $player
+		 * @see Player::__construct()
+		 */
+		$player = new $class($this, $networkSession);
+		$this->addPlayer($player);
+
+		return $player;
+	}
+
 	public function onPlayerLogin(Player $player){
 		if($this->sendUsageTicker > 0){
 			$this->uniquePlayers[$player->getRawUniqueId()] = $player->getRawUniqueId();
@@ -2520,7 +2577,7 @@ class Server{
 		$this->checkTickUpdates($this->tickCounter, $tickTime);
 
 		foreach($this->players as $player){
-			$player->checkNetwork();
+			$player->processChunkSends();
 		}
 
 		if(($this->tickCounter % 20) === 0){

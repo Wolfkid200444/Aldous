@@ -26,11 +26,9 @@ declare(strict_types=1);
  */
 namespace pocketmine\network;
 
-use pocketmine\network\mcpe\protocol\DataPacket;
-use pocketmine\Player;
-
 /**
- * Classes that implement this interface will be able to be attached to players
+ * Source interfaces are network implementations which players can connect through. Network implementations must
+ * implement this interface in order to be registered in the server Network and process connections.
  */
 interface SourceInterface{
 
@@ -38,26 +36,6 @@ interface SourceInterface{
 	 * Performs actions needed to start the interface after it is registered.
 	 */
 	public function start() : void;
-
-	/**
-	 * Sends a DataPacket to the interface, returns an unique identifier for the packet if $needACK is true
-	 *
-	 * @param Player     $player
-	 * @param DataPacket $packet
-	 * @param bool       $needACK
-	 * @param bool       $immediate
-	 *
-	 * @return int|null
-	 */
-	public function putPacket(Player $player, DataPacket $packet, bool $needACK = false, bool $immediate = true) : ?int;
-
-	/**
-	 * Terminates the connection
-	 *
-	 * @param Player $player
-	 * @param string $reason
-	 */
-	public function close(Player $player, string $reason = "unknown reason") : void;
 
 	/**
 	 * @param string $name

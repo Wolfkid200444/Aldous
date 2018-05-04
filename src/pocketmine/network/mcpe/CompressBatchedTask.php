@@ -23,44 +23,44 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe;
 
-use pocketmine\network\mcpe\protocol\BatchPacket;
-use pocketmine\Player;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\Server;
 
 class CompressBatchedTask extends AsyncTask{
-
-	public $level = 7;
-	public $data;
+	/** @var string */
+	private $uncompressedPayload;
+	/** @var int */
+	private $compressionLevel;
 
 	/**
-	 * @param BatchPacket $batch
-	 * @param string[]    $targets
+	 * @param CompressedPacketBuffer  $buffer
+	 * @param string                  $uncompressedPayload
+	 * @param int                     $compressionLevel
+	 * @param IPlayerNetworkSession[] $targets
 	 */
-	public function __construct(BatchPacket $batch, array $targets){
-		$this->data = $batch->payload;
-		$this->level = $batch->getCompressionLevel();
-		$this->storeLocal($targets);
+	public function __construct(CompressedPacketBuffer $buffer, string $uncompressedPayload, int $compressionLevel, array $targets){
+		$this->storeLocal(["targets" => $targets, "batch" => $buffer]);
+
+		$this->uncompressedPayload = $uncompressedPayload;
+		$this->compressionLevel = $compressionLevel;
 	}
 
 	public function onRun() : void{
-		$batch = new BatchPacket();
-		$batch->payload = $this->data;
-		$this->data = null;
+		$batch = new PacketBuffer($this->uncompressedPayload);
+		$this->uncompressedPayload = null;
 
-		$batch->setCompressionLevel($this->level);
-		$batch->encode();
-
-		$this->setResult($batch->buffer, false);
+		$this->setResult($batch->compress($this->compressionLevel), false);
 	}
 
 	public function onCompletion(Server $server) : void{
-		$pk = new BatchPacket($this->getResult());
-		$pk->isEncoded = true;
+		$data = $this->fetchLocal();
 
-		/** @var Player[] $targets */
-		$targets = $this->fetchLocal();
+		/** @var IPlayerNetworkSession[] $targets */
+		$targets = $data["targets"];
+		/** @var CompressedPacketBuffer $buffer */
+		$buffer = $data["batch"];
+		$buffer->setBuffer($this->getResult());
 
-		$server->broadcastPacketsCallback($pk, $targets);
+		$server->broadcastPacketsCallback($targets);
 	}
 }

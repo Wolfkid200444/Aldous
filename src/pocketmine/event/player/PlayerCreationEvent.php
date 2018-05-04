@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\event\player;
 
 use pocketmine\event\Event;
+use pocketmine\network\mcpe\IPlayerNetworkSession;
 use pocketmine\network\SourceInterface;
 use pocketmine\Player;
 
@@ -31,29 +32,20 @@ use pocketmine\Player;
  * Allows the creation of players overriding the base Player class
  */
 class PlayerCreationEvent extends Event{
-	/** @var SourceInterface */
-	private $interface;
-	/** @var string */
-	private $address;
-	/** @var int */
-	private $port;
-
+	/** @var IPlayerNetworkSession */
+	private $networkSession;
 	/** @var Player::class */
 	private $baseClass;
 	/** @var Player::class */
 	private $playerClass;
 
 	/**
-	 * @param SourceInterface $interface
-	 * @param Player::class   $baseClass
-	 * @param Player::class   $playerClass
-	 * @param string          $address
-	 * @param int             $port
+	 * @param IPlayerNetworkSession $networkSession
+	 * @param string                $baseClass Class that is an instanceof \pocketmine\Player
+	 * @param string                $playerClass Class that is an instanceof $baseClass
 	 */
-	public function __construct(SourceInterface $interface, $baseClass, $playerClass, string $address, int $port){
-		$this->interface = $interface;
-		$this->address = $address;
-		$this->port = $port;
+	public function __construct(IPlayerNetworkSession $networkSession, $baseClass, $playerClass){
+		$this->networkSession = $networkSession;
 
 		if(!is_a($baseClass, Player::class, true)){
 			throw new \RuntimeException("Base class $baseClass must extend " . Player::class);
@@ -61,32 +53,42 @@ class PlayerCreationEvent extends Event{
 
 		$this->baseClass = $baseClass;
 
-		if(!is_a($playerClass, Player::class, true)){
-			throw new \RuntimeException("Class $playerClass must extend " . Player::class);
+		if(!is_a($playerClass, $baseClass, true)){
+			throw new \RuntimeException("Class $playerClass must extend " . $baseClass);
 		}
 
 		$this->playerClass = $playerClass;
 	}
 
 	/**
+	 * @return IPlayerNetworkSession
+	 */
+	public function getNetworkSession() : IPlayerNetworkSession{
+		return $this->networkSession;
+	}
+
+	/**
+	 * @deprecated
 	 * @return SourceInterface
 	 */
 	public function getInterface() : SourceInterface{
-		return $this->interface;
+		return $this->networkSession->getInterface();
 	}
 
 	/**
+	 * @deprecated
 	 * @return string
 	 */
 	public function getAddress() : string{
-		return $this->address;
+		return $this->networkSession->getIp();
 	}
 
 	/**
+	 * @deprecated
 	 * @return int
 	 */
 	public function getPort() : int{
-		return $this->port;
+		return $this->networkSession->getPort();
 	}
 
 	/**

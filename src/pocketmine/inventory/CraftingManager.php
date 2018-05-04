@@ -25,7 +25,8 @@ namespace pocketmine\inventory;
 
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
-use pocketmine\network\mcpe\protocol\BatchPacket;
+use pocketmine\network\mcpe\CompressedPacketBuffer;
+use pocketmine\network\mcpe\PacketBuffer;
 use pocketmine\network\mcpe\protocol\CraftingDataPacket;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
@@ -38,7 +39,7 @@ class CraftingManager{
 	/** @var FurnaceRecipe[] */
 	protected $furnaceRecipes = [];
 
-	/** @var BatchPacket */
+	/** @var CompressedPacketBuffer|null */
 	private $craftingDataCache;
 
 	public function __construct(){
@@ -100,23 +101,19 @@ class CraftingManager{
 			$pk->addFurnaceRecipe($recipe);
 		}
 
-		$pk->encode();
-
-		$batch = new BatchPacket();
+		$batch = new PacketBuffer();
 		$batch->addPacket($pk);
-		$batch->setCompressionLevel(Server::getInstance()->networkCompressionLevel);
-		$batch->encode();
 
-		$this->craftingDataCache = $batch;
+		$this->craftingDataCache = new CompressedPacketBuffer($batch->compress(Server::getInstance()->networkCompressionLevel));
 		Timings::$craftingDataCacheRebuildTimer->stopTiming();
 	}
 
 	/**
 	 * Returns a pre-compressed CraftingDataPacket for sending to players. Rebuilds the cache if it is not found.
 	 *
-	 * @return BatchPacket
+	 * @return CompressedPacketBuffer
 	 */
-	public function getCraftingDataPacket() : BatchPacket{
+	public function getCraftingDataPacket() : CompressedPacketBuffer{
 		if($this->craftingDataCache === null){
 			$this->buildCraftingDataCache();
 		}

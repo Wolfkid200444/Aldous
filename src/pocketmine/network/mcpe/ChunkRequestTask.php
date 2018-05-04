@@ -25,7 +25,6 @@ namespace pocketmine\network\mcpe;
 
 use pocketmine\level\format\Chunk;
 use pocketmine\level\Level;
-use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\network\mcpe\protocol\FullChunkDataPacket;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\Server;
@@ -72,22 +71,17 @@ class ChunkRequestTask extends AsyncTask{
 		$pk->chunkZ = $this->chunkZ;
 		$pk->data = $chunk->networkSerialize() . $this->tiles;
 
-		$batch = new BatchPacket();
+		$batch = new PacketBuffer();
 		$batch->addPacket($pk);
-		$batch->setCompressionLevel($this->compressionLevel);
-		$batch->encode();
 
-		$this->setResult($batch->buffer, false);
+		$this->setResult($batch->compress($this->compressionLevel), false);
 	}
 
 	public function onCompletion(Server $server) : void{
 		$level = $server->getLevel($this->levelId);
 		if($level instanceof Level){
 			if($this->hasResult()){
-				$batch = new BatchPacket($this->getResult());
-				assert(strlen($batch->buffer) > 0);
-				$batch->isEncoded = true;
-				$level->chunkRequestCallback($this->chunkX, $this->chunkZ, $batch);
+				$level->chunkRequestCallback($this->chunkX, $this->chunkZ, new CompressedPacketBuffer($this->getResult()));
 			}else{
 				$server->getLogger()->error("Chunk request for level #" . $this->levelId . ", x=" . $this->chunkX . ", z=" . $this->chunkZ . " doesn't have any result data");
 			}

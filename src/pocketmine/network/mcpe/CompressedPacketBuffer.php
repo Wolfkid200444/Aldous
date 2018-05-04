@@ -23,13 +23,23 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe;
 
-use raklib\protocol\EncapsulatedPacket;
-
-class CachedEncapsulatedPacket extends EncapsulatedPacket{
+class CompressedPacketBuffer{
 	/** @var string|null */
-	private $internalData = null;
+	private $buffer;
 
-	public function toInternalBinary() : string{
-		return $this->internalData ?? ($this->internalData = parent::toInternalBinary());
+	public function __construct(?string $buffer = null){
+		$this->buffer = $buffer;
+	}
+
+	public function isReady() : bool{
+		return $this->buffer !== null;
+	}
+
+	public function getBuffer() : string{
+		return $this->buffer;
+	}
+
+	public function setBuffer(string $buffer) : void{
+		$this->buffer = $buffer;
 	}
 }

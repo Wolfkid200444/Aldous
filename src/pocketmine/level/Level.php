@@ -69,7 +69,7 @@ use pocketmine\metadata\MetadataValue;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\ChunkRequestTask;
-use pocketmine\network\mcpe\protocol\BatchPacket;
+use pocketmine\network\mcpe\CompressedPacketBuffer;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
@@ -123,7 +123,7 @@ class Level implements ChunkManager, Metadatable{
 	/** @var Block[][] */
 	private $blockCache = [];
 
-	/** @var BatchPacket[] */
+	/** @var CompressedPacketBuffer[] */
 	private $chunkCache = [];
 
 	/** @var int */
@@ -449,7 +449,7 @@ class Level implements ChunkManager, Metadatable{
 				$this->addChunkPacket($sound->getFloorX() >> 4, $sound->getFloorZ() >> 4, $e);
 			}
 		}else{
-			$this->server->batchPackets($players, $pk, false);
+			$this->server->broadcastPackets($players, $pk);
 		}
 	}
 
@@ -464,7 +464,7 @@ class Level implements ChunkManager, Metadatable{
 				$this->addChunkPacket($particle->getFloorX() >> 4, $particle->getFloorZ() >> 4, $e);
 			}
 		}else{
-			$this->server->batchPackets($players, $pk, false);
+			$this->server->broadcastPackets($players, $pk);
 		}
 	}
 
@@ -798,7 +798,7 @@ class Level implements ChunkManager, Metadatable{
 		}
 
 		if(!empty($this->players) and !empty($this->globalPackets)){
-			$this->server->batchPackets($this->players, $this->globalPackets);
+			$this->server->broadcastPackets($this->players, $this->globalPackets);
 			$this->globalPackets = [];
 		}
 
@@ -806,7 +806,7 @@ class Level implements ChunkManager, Metadatable{
 			Level::getXZ($index, $chunkX, $chunkZ);
 			$chunkPlayers = $this->getChunkPlayers($chunkX, $chunkZ);
 			if(count($chunkPlayers) > 0){
-				$this->server->batchPackets($chunkPlayers, $entries, false, false);
+				$this->server->broadcastPackets($chunkPlayers, $entries);
 			}
 		}
 
@@ -914,7 +914,7 @@ class Level implements ChunkManager, Metadatable{
 			}
 		}
 
-		$this->server->batchPackets($target, $packets, false, false);
+		$this->server->broadcastPackets($target, $packets);
 	}
 
 	public function clearCache(bool $force = false){
@@ -2499,7 +2499,10 @@ class Level implements ChunkManager, Metadatable{
 		}
 	}
 
-	public function chunkRequestCallback(int $x, int $z, BatchPacket $payload){
+	public function chunkRequestCallback(int $x, int $z, CompressedPacketBuffer $payload){
+		if(!$payload->isReady()){
+			throw new \InvalidStateException("Failed to asynchronously prepare chunk $x $z");
+		}
 		$this->timings->syncChunkSendTimer->startTiming();
 
 		$index = Level::chunkHash($x, $z);

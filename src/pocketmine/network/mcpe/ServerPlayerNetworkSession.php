@@ -23,8 +23,9 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe;
 
-
 use pocketmine\event\server\DataPacketReceiveEvent;
+use pocketmine\event\server\DataPacketSendEvent;
+use pocketmine\network\SourceInterface;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
@@ -37,6 +38,7 @@ use pocketmine\network\mcpe\protocol\CommandRequestPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\CraftingEventPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
+use pocketmine\network\mcpe\protocol\DisconnectPacket;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 use pocketmine\network\mcpe\protocol\EntityFallPacket;
 use pocketmine\network\mcpe\protocol\EntityPickRequestPacket;
@@ -66,19 +68,80 @@ use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
 
-class PlayerNetworkSessionAdapter extends NetworkSession{
+abstract class ServerPlayerNetworkSession extends NetworkSession implements IPlayerNetworkSession{
+
+	/** @var string */
+	protected $ip;
+	/** @var int */
+	protected $port;
+	/** @var int */
+	protected $lastPingMeasure = 1;
 
 	/** @var Server */
-	private $server;
+	protected $server;
 	/** @var Player */
-	private $player;
+	protected $player;
+	/** @var RakLibInterface */
+	protected $interface;
 
-	public function __construct(Server $server, Player $player){
+	/** @var bool */
+	protected $connected = true;
+
+	/** @var bool */
+	protected $loggedIn = false;
+
+	/** @var PacketBuffer */
+	protected $batchBuffer;
+
+	/** @var \SplQueue|CompressedPacketBuffer[] */
+	protected $batchQueue;
+
+	public function __construct(Server $server, SourceInterface $interface, string $ip, int $port){
 		$this->server = $server;
-		$this->player = $player;
+		$this->interface = $interface;
+		$this->ip = $ip;
+		$this->port = $port;
+
+		$this->batchQueue = new \SplQueue();
+
+		//TODO: this shouldn't happen here, it should happen during the login sequence
+		$this->player = $this->server->createPlayer($this);
 	}
 
-	public function handleDataPacket(DataPacket $packet) : void{
+	public function getIp() : string{
+		return $this->ip;
+	}
+
+	public function getPort() : int{
+		return $this->port;
+	}
+
+	public function getPing() : int{
+		return $this->lastPingMeasure;
+	}
+
+	/**
+	 * @internal Called by the network interface to update session ping measurements.
+	 *
+	 * @param int $pingMS
+	 */
+	public function updatePing(int $pingMS) : void{
+		$this->lastPingMeasure = $pingMS;
+	}
+
+	public function getInterface() : SourceInterface{
+		return $this->interface;
+	}
+
+	public function setLoggedIn() : void{
+		$this->loggedIn = true;
+	}
+
+	public function isConnected() : bool{
+		return $this->connected;
+	}
+
+	protected function handleDataPacket(DataPacket $packet) : void{
 		$timings = Timings::getReceiveDataPacketTimings($packet);
 		$timings->startTiming();
 
@@ -94,6 +157,142 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 		}
 
 		$timings->stopTiming();
+	}
+
+	/**
+	 * @param DataPacket $packet
+	 * @param bool       $immediateFlush
+	 *
+	 * @return bool
+	 */
+	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false) : bool{
+		//Basic safety restriction. TODO: improve this
+		if(!$this->loggedIn and !$packet->canBeSentBeforeLogin()){
+			throw new \InvalidArgumentException("Attempted to send " . get_class($packet) . " to " . $this->player->getName() . " too early");
+		}
+
+		$timings = Timings::getSendDataPacketTimings($packet);
+		$timings->startTiming();
+		try{
+			$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this->player, $packet));
+			if($ev->isCancelled()){
+				return false;
+			}
+
+			$this->addToBatchBuffer($packet);
+			if($immediateFlush){
+				$this->flushBatchBuffer($immediateFlush);
+			}
+
+			return true;
+		}finally{
+			$timings->stopTiming();
+		}
+	}
+
+	/**
+	 * Adds a packet to the session list to be sent in a batch at the next available opportunity.
+	 *
+	 * @param DataPacket $packet
+	 */
+	private function addToBatchBuffer(DataPacket $packet) : void{
+		if($this->batchBuffer === null){
+			$this->batchBuffer = new PacketBuffer();
+		}
+
+		$this->batchBuffer->addPacket($packet);
+	}
+
+	/**
+	 * Flushes pending buffered packets in a single batch to the network.
+	 *
+	 * @param bool $immediateFlush
+	 */
+	private function flushBatchBuffer(bool $immediateFlush = false) : void{
+		if($this->batchBuffer !== null){
+			//this might sync-send and call back to this again, so make sure we don't double-flush
+			$buf = $this->batchBuffer;
+			$this->batchBuffer = null;
+
+			$this->server->prepareBatch([$this], $buf, $immediateFlush, $immediateFlush);
+		}
+	}
+
+	public function serverDisconnect(string $reason = "", bool $mcpeDisconnect = true) : void{
+		if($this->connected){
+			$this->connected = false;
+
+			if($mcpeDisconnect){
+				$pk = new DisconnectPacket();
+				$pk->message = $reason;
+				$pk->hideDisconnectionScreen = $reason === "";
+				$this->sendDataPacket($pk, true);
+			}
+
+			$this->disconnectFromInterface($reason);
+
+			$this->player = null;
+			$this->interface = null;
+		}
+	}
+
+	abstract protected function disconnectFromInterface(string $reason) : void;
+
+	/**
+	 * @internal Called by the network interface when a player disconnects of their own accord.
+	 *
+	 * @param string $reason
+	 */
+	public function onClientDisconnect(string $reason) : void{
+		if($this->connected){
+			$this->connected = false;
+
+			$this->player->close($this->player->getLeaveMessage(), $reason);
+
+			$this->player = null;
+			$this->interface = null;
+		}
+	}
+
+
+	public function notifyPendingBatch(CompressedPacketBuffer $buffer) : void{
+		$this->flushBatchBuffer();
+		$this->batchQueue->enqueue($buffer);
+	}
+
+	public function sendPreparedBatch(CompressedPacketBuffer $buffer, bool $immediateFlush = false) : void{
+		$this->flushBatchBuffer($immediateFlush);
+		$this->batchQueue->enqueue($buffer);
+		$this->flushBatchQueue($immediateFlush);
+	}
+
+	public function flushBatchQueue(bool $immediateFlush = false) : void{
+		while(!$this->batchQueue->isEmpty()){
+			/** @var CompressedPacketBuffer $nextBatch */
+			$nextBatch = $this->batchQueue->bottom();
+			if($nextBatch->isReady()){
+				//this gets modified by the async task preparing it
+				$this->batchQueue->dequeue();
+
+				//TODO: encryption
+
+				$this->sendBatch($nextBatch, $immediateFlush);
+			}else{
+				//we're still waiting for this one being async-prepared
+				break;
+			}
+		}
+	}
+
+	abstract protected function sendBatch(CompressedPacketBuffer $buffer, bool $immediateFlush) : void;
+
+	/**
+	 * @internal Called by RakLibInterface every tick to flush buffered packets.
+	 */
+	public function tick() : void{
+		if($this->batchBuffer !== null){
+			$this->flushBatchBuffer();
+		}
 	}
 
 	public function handleLogin(LoginPacket $packet) : bool{

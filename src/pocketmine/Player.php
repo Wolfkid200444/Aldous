@@ -67,7 +67,6 @@ use pocketmine\event\player\PlayerToggleFlightEvent;
 use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\event\player\PlayerToggleSprintEvent;
 use pocketmine\event\player\PlayerTransferEvent;
-use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\inventory\CraftingGrid;
 use pocketmine\inventory\Inventory;
 use pocketmine\inventory\PlayerCursorInventory;
@@ -97,18 +96,17 @@ use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\ListTag;
-use pocketmine\network\mcpe\PlayerNetworkSessionAdapter;
+use pocketmine\network\mcpe\CompressedPacketBuffer;
+use pocketmine\network\mcpe\IPlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
-use pocketmine\network\mcpe\protocol\BatchPacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
 use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
 use pocketmine\network\mcpe\protocol\ChunkRadiusUpdatedPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
-use pocketmine\network\mcpe\protocol\DisconnectPacket;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
@@ -144,7 +142,6 @@ use pocketmine\network\mcpe\protocol\types\PlayerPermissions;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
 use pocketmine\network\mcpe\VerifyLoginTask;
-use pocketmine\network\SourceInterface;
 use pocketmine\permission\PermissibleBase;
 use pocketmine\permission\PermissionAttachment;
 use pocketmine\permission\PermissionAttachmentInfo;
@@ -185,36 +182,13 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return $lname !== "rcon" and $lname !== "console" and $len >= 1 and $len <= 16 and preg_match("/[^A-Za-z0-9_ ]/", $name) === 0;
 	}
 
-
-	/** @var SourceInterface */
-	protected $interface;
-
 	/**
-	 * @var PlayerNetworkSessionAdapter
-	 * TODO: remove this once player and network are divorced properly
+	 * @var IPlayerNetworkSession
 	 */
-	protected $sessionAdapter;
+	protected $networkSession;
 
 	/** @var int */
 	protected $protocol = -1;
-
-	/** @var string */
-	protected $ip;
-	/** @var int */
-	protected $port;
-
-	/** @var bool[] */
-	private $needACK = [];
-
-	/** @var DataPacket[] */
-	private $batchedPackets = [];
-
-	/**
-	 * @var int
-	 * Last measurement of player's latency in milliseconds.
-	 */
-	protected $lastPingMeasure = 1;
-
 
 	/** @var float */
 	public $creationTime = 0;
@@ -705,17 +679,16 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
-	 * @param SourceInterface $interface
-	 * @param string          $ip
-	 * @param int             $port
+	 * @param Server                $server
+	 * @param IPlayerNetworkSession $networkSession
 	 */
-	public function __construct(SourceInterface $interface, string $ip, int $port){
-		$this->interface = $interface;
+	public function __construct(Server $server, IPlayerNetworkSession $networkSession){
+		$this->server = $server;
+		$this->networkSession = $networkSession;
+
 		$this->perm = new PermissibleBase($this);
 		$this->namedtag = new CompoundTag();
-		$this->server = Server::getInstance();
-		$this->ip = $ip;
-		$this->port = $port;
+
 		$this->loaderId = Level::generateChunkLoaderId($this);
 		$this->chunksPerTick = (int) $this->server->getProperty("chunk-sending.per-tick", 4);
 		$this->spawnThreshold = (int) (($this->server->getProperty("chunk-sending.spawn-radius", 4) ** 2) * M_PI);
@@ -726,15 +699,13 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->creationTime = microtime(true);
 
 		$this->allowMovementCheats = (bool) $this->server->getProperty("player.anti-cheat.allow-movement-cheats", false);
-
-		$this->sessionAdapter = new PlayerNetworkSessionAdapter($this->server, $this);
 	}
 
 	/**
 	 * @return bool
 	 */
 	public function isConnected() : bool{
-		return $this->sessionAdapter !== null;
+		return $this->networkSession !== null;
 	}
 
 	/**
@@ -817,19 +788,26 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
+	 * @return IPlayerNetworkSession
+	 */
+	public function getNetworkSession() : IPlayerNetworkSession{
+		return $this->networkSession;
+	}
+
+	/**
 	 * Gets the player IP address
 	 *
 	 * @return string
 	 */
 	public function getAddress() : string{
-		return $this->ip;
+		return $this->networkSession->getIp();
 	}
 
 	/**
 	 * @return int
 	 */
 	public function getPort() : int{
-		return $this->port;
+		return $this->networkSession->getPort();
 	}
 
 	/**
@@ -839,18 +817,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return int
 	 */
 	public function getPing() : int{
-		return $this->lastPingMeasure;
-	}
-
-	/**
-	 * Updates the player's last ping measurement.
-	 *
-	 * @internal Plugins should not use this method.
-	 *
-	 * @param int $pingMS
-	 */
-	public function updatePing(int $pingMS){
-		$this->lastPingMeasure = $pingMS;
+		return $this->networkSession->getPing();
 	}
 
 	/**
@@ -957,7 +924,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		unset($this->loadQueue[$index]);
 	}
 
-	public function sendChunk(int $x, int $z, BatchPacket $payload){
+	public function sendChunk(int $x, int $z, CompressedPacketBuffer $payload){
 		if(!$this->isConnected()){
 			return;
 		}
@@ -965,7 +932,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->usedChunks[Level::chunkHash($x, $z)] = true;
 		$this->chunkLoadCount++;
 
-		$this->dataPacket($payload);
+		$this->networkSession->sendPreparedBatch($payload);
 
 		if($this->spawned){
 			foreach($this->level->getChunkEntities($x, $z) as $entity){
@@ -1790,7 +1757,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->dataPacket($pk);
 	}
 
-	public function checkNetwork(){
+	public function processChunkSends(){
 		if(!$this->isOnline()){
 			return;
 		}
@@ -1801,11 +1768,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		if(count($this->loadQueue) > 0){
 			$this->sendNextChunk();
-		}
-
-		if(count($this->batchedPackets) > 0){
-			$this->server->batchPackets([$this], $this->batchedPackets, false);
-			$this->batchedPackets = [];
 		}
 	}
 
@@ -1929,7 +1891,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$pk = new PlayStatusPacket();
 		$pk->status = $status;
 		$pk->protocol = $this->protocol;
-		$this->sendDataPacket($pk, false, $immediate);
+		$this->sendDataPacket($pk, $immediate);
 	}
 
 	public function onVerifyCompleted(LoginPacket $packet, ?string $error, bool $signedByMojang) : void{
@@ -2018,6 +1980,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->sendPlayStatus(PlayStatusPacket::LOGIN_SUCCESS);
 
 		$this->loggedIn = true;
+		$this->networkSession->setLoggedIn();
 		$this->server->onPlayerLogin($this);
 
 		$pk = new ResourcePacksInfoPacket();
@@ -2130,8 +2093,8 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logIn", [
 			TextFormat::AQUA . $this->username . TextFormat::WHITE,
-			$this->ip,
-			$this->port,
+			$this->networkSession->getIp(),
+			$this->networkSession->getPort(),
 			$this->id,
 			$this->level->getName(),
 			round($this->x, 4),
@@ -2151,7 +2114,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->sendAllInventories();
 		$this->inventory->sendCreativeContents();
 		$this->inventory->sendHeldItem($this);
-		$this->dataPacket($this->server->getCraftingManager()->getCraftingDataPacket());
+		$this->networkSession->sendPreparedBatch($this->server->getCraftingManager()->getCraftingDataPacket());
 
 		$this->server->addOnlinePlayer($this);
 		$this->server->sendFullPlayerListData($this);
@@ -3048,97 +3011,26 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
-	 * Called when a packet is received from the client. This method will call DataPacketReceiveEvent.
-	 *
 	 * @param DataPacket $packet
-	 */
-	public function handleDataPacket(DataPacket $packet){
-		if($this->sessionAdapter !== null){
-			$this->sessionAdapter->handleDataPacket($packet);
-		}
-	}
-
-	/**
-	 * Batch a Data packet into the channel list to send at the end of the tick
-	 *
-	 * @param DataPacket $packet
-	 *
-	 * @return bool
-	 */
-	public function batchDataPacket(DataPacket $packet) : bool{
-		if(!$this->isConnected()){
-			return false;
-		}
-
-		$timings = Timings::getSendDataPacketTimings($packet);
-		$timings->startTiming();
-		$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this, $packet));
-		if($ev->isCancelled()){
-			$timings->stopTiming();
-			return false;
-		}
-
-		$this->batchedPackets[] = clone $packet;
-		$timings->stopTiming();
-		return true;
-	}
-
-	/**
-	 * @param DataPacket $packet
-	 * @param bool       $needACK
 	 * @param bool       $immediate
 	 *
 	 * @return bool|int
 	 */
-	public function sendDataPacket(DataPacket $packet, bool $needACK = false, bool $immediate = false){
-		if(!$this->isConnected()){
-			return false;
+	public function sendDataPacket(DataPacket $packet, bool $immediate = false){
+		if($this->networkSession !== null){
+			return $this->networkSession->sendDataPacket($packet, $immediate);
 		}
 
-		//Basic safety restriction. TODO: improve this
-		if(!$this->loggedIn and !$packet->canBeSentBeforeLogin()){
-			throw new \InvalidArgumentException("Attempted to send " . get_class($packet) . " to " . $this->getName() . " too early");
-		}
-
-		$timings = Timings::getSendDataPacketTimings($packet);
-		$timings->startTiming();
-		try{
-			$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this, $packet));
-			if($ev->isCancelled()){
-				return false;
-			}
-
-			$identifier = $this->interface->putPacket($this, $packet, $needACK, $immediate);
-
-			if($needACK and $identifier !== null){
-				$this->needACK[$identifier] = false;
-				return $identifier;
-			}
-
-			return true;
-		}finally{
-			$timings->stopTiming();
-		}
+		return false;
 	}
 
 	/**
 	 * @param DataPacket $packet
-	 * @param bool       $needACK
 	 *
 	 * @return bool|int
 	 */
-	public function dataPacket(DataPacket $packet, bool $needACK = false){
-		return $this->sendDataPacket($packet, $needACK, false);
-	}
-
-	/**
-	 * @param DataPacket $packet
-	 * @param bool       $needACK
-	 *
-	 * @return bool|int
-	 */
-	public function directDataPacket(DataPacket $packet, bool $needACK = false){
-		return $this->sendDataPacket($packet, $needACK, true);
+	public function dataPacket(DataPacket $packet){
+		return $this->sendDataPacket($packet, false);
 	}
 
 	/**
@@ -3157,7 +3049,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$pk = new TransferPacket();
 			$pk->address = $ev->getAddress();
 			$pk->port = $ev->getPort();
-			$this->directDataPacket($pk);
+			$this->sendDataPacket($pk, true);
 			$this->close("", $ev->getMessage(), false);
 
 			return true;
@@ -3366,13 +3258,11 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		if($this->isConnected() and !$this->closed){
 
 			try{
-				if($notify and strlen($reason) > 0){
-					$pk = new DisconnectPacket();
-					$pk->message = $reason;
-					$this->directDataPacket($pk);
-				}
-				$this->interface->close($this, $notify ? $reason : "");
-				$this->sessionAdapter = null;
+				$ip = $this->getAddress();
+				$port = $this->getPort();
+
+				$this->networkSession->serverDisconnect($notify ? $reason : "", $notify);
+				$this->networkSession = null;
 
 				$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_USERS, $this);
 				$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE, $this);
@@ -3392,6 +3282,13 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 						$this->server->getLogger()->logException($e);
 					}
 				}
+
+				$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logOut", [
+					TextFormat::AQUA . $this->getName() . TextFormat::WHITE,
+					$ip,
+					$port,
+					$this->getServer()->getLanguage()->translateString($reason)
+				]));
 
 				if($this->isValid()){
 					foreach($this->usedChunks as $index => $d){
@@ -3431,13 +3328,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 					$this->loggedIn = false;
 					$this->server->removeOnlinePlayer($this);
 				}
-
-				$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logOut", [
-					TextFormat::AQUA . $this->getName() . TextFormat::WHITE,
-					$this->ip,
-					$this->port,
-					$this->getServer()->getLanguage()->translateString($reason)
-				]));
 
 				$this->spawnPosition = null;
 
