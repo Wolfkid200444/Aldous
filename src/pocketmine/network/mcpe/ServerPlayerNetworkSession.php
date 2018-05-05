@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe;
 
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\network\SourceInterface;
+use pocketmine\network\NetworkInterface;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
@@ -96,7 +96,7 @@ abstract class ServerPlayerNetworkSession extends NetworkSession implements IPla
 	/** @var \SplQueue|CompressedPacketBuffer[] */
 	protected $batchQueue;
 
-	public function __construct(Server $server, SourceInterface $interface, string $ip, int $port){
+	public function __construct(Server $server, NetworkInterface $interface, string $ip, int $port){
 		$this->server = $server;
 		$this->interface = $interface;
 		$this->ip = $ip;
@@ -129,7 +129,7 @@ abstract class ServerPlayerNetworkSession extends NetworkSession implements IPla
 		$this->lastPingMeasure = $pingMS;
 	}
 
-	public function getInterface() : SourceInterface{
+	public function getInterface() : NetworkInterface{
 		return $this->interface;
 	}
 

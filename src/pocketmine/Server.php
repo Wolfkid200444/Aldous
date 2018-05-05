@@ -69,7 +69,7 @@ use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\LongTag;
 use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\network\AdvancedSourceInterface;
+use pocketmine\network\AdvancedNetworkInterface;
 use pocketmine\network\mcpe\CompressBatchedTask;
 use pocketmine\network\mcpe\CompressedPacketBuffer;
 use pocketmine\network\mcpe\PacketBuffer;
@@ -2523,14 +2523,14 @@ class Server{
 	}
 
 	/**
-	 * @param AdvancedSourceInterface $interface
-	 * @param string                  $address
-	 * @param int                     $port
-	 * @param string                  $payload
+	 * @param AdvancedNetworkInterface $interface
+	 * @param string                   $address
+	 * @param int                      $port
+	 * @param string                   $payload
 	 *
 	 * TODO: move this to Network
 	 */
-	public function handlePacket(AdvancedSourceInterface $interface, string $address, int $port, string $payload){
+	public function handlePacket(AdvancedNetworkInterface $interface, string $address, int $port, string $payload){
 		try{
 			if(strlen($payload) > 2 and substr($payload, 0, 2) === "\xfe\xfd" and $this->queryHandler instanceof QueryHandler){
 				$this->queryHandler->handle($interface, $address, $port, $payload);

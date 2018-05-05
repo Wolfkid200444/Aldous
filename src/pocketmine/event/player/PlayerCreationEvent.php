@@ -25,7 +25,7 @@ namespace pocketmine\event\player;
 
 use pocketmine\event\Event;
 use pocketmine\network\mcpe\IPlayerNetworkSession;
-use pocketmine\network\SourceInterface;
+use pocketmine\network\NetworkInterface;
 use pocketmine\Player;
 
 /**
@@ -69,9 +69,9 @@ class PlayerCreationEvent extends Event{
 
 	/**
 	 * @deprecated
-	 * @return SourceInterface
+	 * @return NetworkInterface
 	 */
-	public function getInterface() : SourceInterface{
+	public function getInterface() : NetworkInterface{
 		return $this->networkSession->getInterface();
 	}
 

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe;
 
-use pocketmine\network\AdvancedSourceInterface;
+use pocketmine\network\AdvancedNetworkInterface;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\Network;
 use pocketmine\Server;
@@ -35,7 +35,7 @@ use raklib\server\ServerHandler;
 use raklib\server\ServerInstance;
 use raklib\utils\InternetAddress;
 
-class RakLibInterface implements ServerInstance, AdvancedSourceInterface{
+class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 	/**
 	 * Sometimes this gets changed when the MCPE-layer protocol gets broken to the point where old and new can't
 	 * communicate. It's important that we check this to avoid catastrophes.

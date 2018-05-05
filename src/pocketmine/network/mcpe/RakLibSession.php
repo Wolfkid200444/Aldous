@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe;
 
 use pocketmine\network\mcpe\protocol\PacketPool;
-use pocketmine\network\SourceInterface;
+use pocketmine\network\NetworkInterface;
 use pocketmine\Server;
 use raklib\protocol\EncapsulatedPacket;
 use raklib\protocol\PacketReliability;
@@ -51,7 +51,7 @@ class RakLibSession extends ServerPlayerNetworkSession{
 	 *
 	 * @return RakLibInterface
 	 */
-	public function getInterface() : SourceInterface{
+	public function getInterface() : NetworkInterface{
 		return parent::getInterface();
 	}
 

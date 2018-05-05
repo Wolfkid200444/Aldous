@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe;
 
 use pocketmine\network\mcpe\protocol\DataPacket;
-use pocketmine\network\SourceInterface;
+use pocketmine\network\NetworkInterface;
 
 /**
  * Session implementations wanting to be attached to a Player must implement this interface
@@ -49,9 +49,9 @@ interface IPlayerNetworkSession{
 	public function getPing() : int;
 
 	/**
-	 * @return SourceInterface
+	 * @return NetworkInterface
 	 */
-	public function getInterface() : SourceInterface;
+	public function getInterface() : NetworkInterface;
 
 	/**
 	 * Called by Player to set the logged-in flag on the network session - TODO REMOVE
