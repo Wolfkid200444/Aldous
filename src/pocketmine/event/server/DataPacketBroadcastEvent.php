@@ -56,4 +56,18 @@ class DataPacketBroadcastEvent extends ServerEvent implements Cancellable{
 	public function getPackets() : array{
 		return $this->packets;
 	}
+
+	/**
+	 * @param Player[] $players
+	 */
+	public function setPlayers(array $players) : void{
+		$this->players = $players;
+	}
+
+	/**
+	 * @param DataPacket[] $packets
+	 */
+	public function setPackets(array $packets) : void{
+		$this->packets = $packets;
+	}
 }

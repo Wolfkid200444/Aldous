@@ -1873,6 +1873,9 @@ class Server{
 			return;
 		}
 
+		$players = $ev->getPlayers();
+		$packets = $ev->getPackets();
+
 		/** @var IPlayerNetworkSession[] $sessions */
 		$sessions = [];
 		foreach($players as $player){
