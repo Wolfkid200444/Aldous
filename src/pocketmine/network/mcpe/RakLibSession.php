@@ -76,14 +76,8 @@ class RakLibSession extends ServerPlayerNetworkSession{
 			return false;
 		}
 
-		//TODO: decryption if encryption is enabled
-
-		//Skip 0xfe byte
-		$batch = PacketBuffer::decompress(substr($packet->buffer, 1));
-		foreach($batch->getPackets() as $str){
-			$pk = PacketPool::getPacket($str);
-			$this->handleDataPacket($pk);
-		}
+		//drop 0xfe byte
+		$this->handleBatch(substr($packet->buffer, 1));
 
 		return true;
 	}
@@ -92,7 +86,7 @@ class RakLibSession extends ServerPlayerNetworkSession{
 		$this->interface->close($this, $reason);
 	}
 
-	protected function sendBatch(CompressedPacketBuffer $buffer, bool $immediateFlush) : void{
-		$this->interface->sendEncapsulated($this->sessionIdentifier, self::MCPE_MAGIC_BYTE . $buffer->getBuffer(), PacketReliability::RELIABLE_ORDERED, 0, $immediateFlush);
+	protected function sendBatch(string $buffer, bool $immediateFlush) : void{
+		$this->interface->sendEncapsulated($this->sessionIdentifier, self::MCPE_MAGIC_BYTE . $buffer, PacketReliability::RELIABLE_ORDERED, 0, $immediateFlush);
 	}
 }

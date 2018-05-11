@@ -29,6 +29,7 @@ use pocketmine\network\mcpe\handler\NetworkHandler;
 use pocketmine\network\mcpe\handler\SimpleNetworkHandler;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\DisconnectPacket;
+use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\NetworkInterface;
 use pocketmine\Player;
 use pocketmine\Server;
@@ -111,7 +112,18 @@ abstract class ServerPlayerNetworkSession implements IPlayerNetworkSession{
 		return $this->connected;
 	}
 
+	protected function handleBatch(string $buffer) : void{
+		//TODO: this needs to be decrypted before decompression if encryption is enabled
+
+		$batch = PacketBuffer::decompress($buffer);
+		foreach($batch->getPackets() as $str){
+			$pk = PacketPool::getPacket($str);
+			$this->handleDataPacket($pk);
+		}
+	}
+
 	protected function handleDataPacket(DataPacket $packet) : void{
+
 		$timings = Timings::getReceiveDataPacketTimings($packet);
 		$timings->startTiming();
 
@@ -251,7 +263,7 @@ abstract class ServerPlayerNetworkSession implements IPlayerNetworkSession{
 
 				//TODO: encryption
 
-				$this->sendBatch($nextBatch, $immediateFlush);
+				$this->sendBatch($nextBatch->getBuffer(), $immediateFlush);
 			}else{
 				//we're still waiting for this one being async-prepared
 				break;
@@ -259,7 +271,7 @@ abstract class ServerPlayerNetworkSession implements IPlayerNetworkSession{
 		}
 	}
 
-	abstract protected function sendBatch(CompressedPacketBuffer $buffer, bool $immediateFlush) : void;
+	abstract protected function sendBatch(string $buffer, bool $immediateFlush) : void;
 
 	/**
 	 * @internal Called by RakLibInterface every tick to flush buffered packets.
