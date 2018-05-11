@@ -74,13 +74,11 @@ interface IPlayerNetworkSession{
 	 */
 	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false, bool $fireEvent = true) : bool;
 
-
 	/**
 	 * @param string $reason
 	 * @param bool   $mcpeDisconnect
 	 */
 	public function serverDisconnect(string $reason = "", bool $mcpeDisconnect = true) : void;
-
 
 	/**
 	 * Called by the server to notify the session of a pending batch packet which is not yet ready to be sent.

@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\protocol;
 
 
-use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\handler\NetworkHandler;
 
 class UnknownPacket extends DataPacket{
 	public const NETWORK_ID = -1; //Invalid, do not try to write this
@@ -53,7 +53,7 @@ class UnknownPacket extends DataPacket{
 		$this->put($this->payload);
 	}
 
-	public function handle(NetworkSession $session) : bool{
+	public function handle(NetworkHandler $handler) : bool{
 		return false;
 	}
 }

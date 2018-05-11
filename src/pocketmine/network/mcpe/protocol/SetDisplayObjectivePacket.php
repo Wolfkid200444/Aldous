@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\handler\NetworkHandler;
 
 class SetDisplayObjectivePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::SET_DISPLAY_OBJECTIVE_PACKET;
@@ -57,7 +57,7 @@ class SetDisplayObjectivePacket extends DataPacket{
 		$this->putVarInt($this->sortOrder);
 	}
 
-	public function handle(NetworkSession $session) : bool{
+	public function handle(NetworkHandler $session) : bool{
 		return $session->handleSetDisplayObjective($this);
 	}
 }

@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\handler\NetworkHandler;
 
 class ContainerSetDataPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::CONTAINER_SET_DATA_PACKET;
@@ -60,7 +60,7 @@ class ContainerSetDataPacket extends DataPacket{
 		$this->putVarInt($this->value);
 	}
 
-	public function handle(NetworkSession $session) : bool{
-		return $session->handleContainerSetData($this);
+	public function handle(NetworkHandler $handler) : bool{
+		return $handler->handleContainerSetData($this);
 	}
 }

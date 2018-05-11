@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\handler\NetworkHandler;
 
 class WSConnectPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::W_S_CONNECT_PACKET;
@@ -41,7 +41,7 @@ class WSConnectPacket extends DataPacket{
 		$this->putString($this->serverUri);
 	}
 
-	public function handle(NetworkSession $session) : bool{
-		return $session->handleWSConnect($this);
+	public function handle(NetworkHandler $handler) : bool{
+		return $handler->handleWSConnect($this);
 	}
 }

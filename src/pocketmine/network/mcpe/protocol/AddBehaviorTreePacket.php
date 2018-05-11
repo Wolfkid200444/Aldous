@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\handler\NetworkHandler;
 
 class AddBehaviorTreePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::ADD_BEHAVIOR_TREE_PACKET;
@@ -41,7 +41,7 @@ class AddBehaviorTreePacket extends DataPacket{
 		$this->putString($this->behaviorTreeJson);
 	}
 
-	public function handle(NetworkSession $session) : bool{
-		return $session->handleAddBehaviorTree($this);
+	public function handle(NetworkHandler $handler) : bool{
+		return $handler->handleAddBehaviorTree($this);
 	}
 }
