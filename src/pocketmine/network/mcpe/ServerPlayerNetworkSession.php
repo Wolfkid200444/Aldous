@@ -162,10 +162,11 @@ abstract class ServerPlayerNetworkSession extends NetworkSession implements IPla
 	/**
 	 * @param DataPacket $packet
 	 * @param bool       $immediateFlush
+	 * @param bool       $fireEvent
 	 *
 	 * @return bool
 	 */
-	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false) : bool{
+	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false, bool $fireEvent = true) : bool{
 		//Basic safety restriction. TODO: improve this
 		if(!$this->loggedIn and !$packet->canBeSentBeforeLogin()){
 			throw new \InvalidArgumentException("Attempted to send " . get_class($packet) . " to " . $this->player->getName() . " too early");
@@ -174,9 +175,11 @@ abstract class ServerPlayerNetworkSession extends NetworkSession implements IPla
 		$timings = Timings::getSendDataPacketTimings($packet);
 		$timings->startTiming();
 		try{
-			$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this->player, $packet));
-			if($ev->isCancelled()){
-				return false;
+			if($fireEvent){
+				$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this->player, $packet));
+				if($ev->isCancelled()){
+					return false;
+				}
 			}
 
 			$this->addToBatchBuffer($packet);

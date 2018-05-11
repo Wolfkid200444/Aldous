@@ -68,10 +68,11 @@ interface IPlayerNetworkSession{
 	/**
 	 * @param DataPacket $packet
 	 * @param bool       $immediateFlush
+	 * @param bool       $fireEvent
 	 *
 	 * @return bool
 	 */
-	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false) : bool;
+	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false, bool $fireEvent = true) : bool;
 
 
 	/**
