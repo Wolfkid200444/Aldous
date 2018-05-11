@@ -87,15 +87,17 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 		$this->network = $network;
 	}
 
-	public function process() : void{
-		while($this->interface->handlePacket()){}
+	public function processEvents() : void{
+		while($this->interface->handlePacket());
+	}
+
+	public function tick() : void{
+		if(!$this->rakLib->isRunning() and !$this->rakLib->isShutdown()){
+			throw new \Exception("RakLib Thread crashed");
+		}
 
 		foreach($this->sessions as $session){
 			$session->tick();
-		}
-
-		if(!$this->rakLib->isRunning() and !$this->rakLib->isShutdown()){
-			throw new \Exception("RakLib Thread crashed");
 		}
 	}
 

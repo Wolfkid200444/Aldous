@@ -83,15 +83,24 @@ class Network{
 		return $this->interfaces;
 	}
 
-	public function processInterfaces() : void{
+	/**
+	 * Called every tick to update network interfaces, for example to tick sessions.
+	 */
+	public function tickInterfaces() : void{
 		foreach($this->interfaces as $interface){
-			$this->processInterface($interface);
+			$interface->tick();
 		}
 	}
 
+	/**
+	 * Processes events on a network interface. This can be used from an event notifier to process event-driven
+	 * interfaces.
+	 *
+	 * @param NetworkInterface $interface
+	 */
 	public function processInterface(NetworkInterface $interface) : void{
 		try{
-			$interface->process();
+			$interface->processEvents();
 		}catch(\Throwable $e){
 			$logger = $this->server->getLogger();
 			if(\pocketmine\DEBUG > 1){

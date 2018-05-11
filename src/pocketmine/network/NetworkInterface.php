@@ -42,9 +42,16 @@ interface NetworkInterface{
 	public function setName(string $name) : void;
 
 	/**
-	 * Called every tick to process events on the interface.
+	 * Called to process events on the interface. This can be fired by instructing the network to process the interface.
+	 * Do not tick sessions in this function, because it might be called at any time or not at all.
 	 */
-	public function process() : void;
+	public function processEvents() : void;
+
+	/**
+	 * Called every server tick by the server. This should tick sessions and any other actions that need to happen on a
+	 * regular interval.
+	 */
+	public function tick() : void;
 
 	/**
 	 * Gracefully shuts down the network interface.
