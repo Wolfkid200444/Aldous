@@ -33,10 +33,10 @@ class CompressBatchedTask extends AsyncTask{
 	private $compressionLevel;
 
 	/**
-	 * @param CompressedPacketBuffer  $buffer
-	 * @param string                  $uncompressedPayload
-	 * @param int                     $compressionLevel
-	 * @param IPlayerNetworkSession[] $targets
+	 * @param CompressedPacketBuffer $buffer
+	 * @param string                 $uncompressedPayload
+	 * @param int                    $compressionLevel
+	 * @param PlayerNetworkSession[] $targets
 	 */
 	public function __construct(CompressedPacketBuffer $buffer, string $uncompressedPayload, int $compressionLevel, array $targets){
 		$this->storeLocal(["targets" => $targets, "batch" => $buffer]);
@@ -55,7 +55,7 @@ class CompressBatchedTask extends AsyncTask{
 	public function onCompletion(Server $server) : void{
 		$data = $this->fetchLocal();
 
-		/** @var IPlayerNetworkSession[] $targets */
+		/** @var PlayerNetworkSession[] $targets */
 		$targets = $data["targets"];
 		/** @var CompressedPacketBuffer $buffer */
 		$buffer = $data["batch"];

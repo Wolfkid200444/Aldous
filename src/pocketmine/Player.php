@@ -97,7 +97,7 @@ use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\network\mcpe\CompressedPacketBuffer;
-use pocketmine\network\mcpe\IPlayerNetworkSession;
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
@@ -183,7 +183,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
-	 * @var IPlayerNetworkSession
+	 * @var PlayerNetworkSession
 	 */
 	protected $networkSession;
 
@@ -679,10 +679,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
-	 * @param Server                $server
-	 * @param IPlayerNetworkSession $networkSession
+	 * @param Server               $server
+	 * @param PlayerNetworkSession $networkSession
 	 */
-	public function __construct(Server $server, IPlayerNetworkSession $networkSession){
+	public function __construct(Server $server, PlayerNetworkSession $networkSession){
 		$this->server = $server;
 		$this->networkSession = $networkSession;
 
@@ -788,9 +788,9 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	/**
-	 * @return IPlayerNetworkSession
+	 * @return PlayerNetworkSession
 	 */
-	public function getNetworkSession() : IPlayerNetworkSession{
+	public function getNetworkSession() : PlayerNetworkSession{
 		return $this->networkSession;
 	}
 

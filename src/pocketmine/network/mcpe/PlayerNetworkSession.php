@@ -29,7 +29,7 @@ use pocketmine\network\NetworkInterface;
 /**
  * Session implementations wanting to be attached to a Player must implement this interface
  */
-interface IPlayerNetworkSession{
+interface PlayerNetworkSession{
 	/**
 	 * @return string
 	 */

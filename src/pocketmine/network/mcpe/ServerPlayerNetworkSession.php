@@ -35,7 +35,7 @@ use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
 
-abstract class ServerPlayerNetworkSession implements IPlayerNetworkSession{
+abstract class ServerPlayerNetworkSession implements PlayerNetworkSession{
 
 	/** @var string */
 	protected $ip;

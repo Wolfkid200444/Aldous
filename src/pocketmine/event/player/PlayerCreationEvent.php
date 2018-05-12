@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace pocketmine\event\player;
 
 use pocketmine\event\Event;
-use pocketmine\network\mcpe\IPlayerNetworkSession;
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\NetworkInterface;
 use pocketmine\Player;
 
@@ -32,7 +32,7 @@ use pocketmine\Player;
  * Allows the creation of players overriding the base Player class
  */
 class PlayerCreationEvent extends Event{
-	/** @var IPlayerNetworkSession */
+	/** @var PlayerNetworkSession */
 	private $networkSession;
 	/** @var Player::class */
 	private $baseClass;
@@ -40,11 +40,11 @@ class PlayerCreationEvent extends Event{
 	private $playerClass;
 
 	/**
-	 * @param IPlayerNetworkSession $networkSession
-	 * @param string                $baseClass Class that is an instanceof \pocketmine\Player
-	 * @param string                $playerClass Class that is an instanceof $baseClass
+	 * @param PlayerNetworkSession $networkSession
+	 * @param string               $baseClass Class that is an instanceof \pocketmine\Player
+	 * @param string               $playerClass Class that is an instanceof $baseClass
 	 */
-	public function __construct(IPlayerNetworkSession $networkSession, $baseClass, $playerClass){
+	public function __construct(PlayerNetworkSession $networkSession, $baseClass, $playerClass){
 		$this->networkSession = $networkSession;
 
 		if(!is_a($baseClass, Player::class, true)){
@@ -61,9 +61,9 @@ class PlayerCreationEvent extends Event{
 	}
 
 	/**
-	 * @return IPlayerNetworkSession
+	 * @return PlayerNetworkSession
 	 */
-	public function getNetworkSession() : IPlayerNetworkSession{
+	public function getNetworkSession() : PlayerNetworkSession{
 		return $this->networkSession;
 	}
 

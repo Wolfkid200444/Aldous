@@ -74,7 +74,7 @@ use pocketmine\network\AdvancedNetworkInterface;
 use pocketmine\network\mcpe\CompressBatchedTask;
 use pocketmine\network\mcpe\CompressedPacketBuffer;
 use pocketmine\network\mcpe\PacketBuffer;
-use pocketmine\network\mcpe\IPlayerNetworkSession;
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
@@ -1876,7 +1876,7 @@ class Server{
 		$players = $ev->getPlayers();
 		$packets = $ev->getPackets();
 
-		/** @var IPlayerNetworkSession[] $sessions */
+		/** @var PlayerNetworkSession[] $sessions */
 		$sessions = [];
 		foreach($players as $player){
 			if($player->isConnected()){
@@ -1916,10 +1916,10 @@ class Server{
 	/**
 	 * Broadcasts a list of packets in a batch to a list of players
 	 *
-	 * @param IPlayerNetworkSession[] $sessions
-	 * @param PacketBuffer            $payload
-	 * @param bool                    $forceSync
-	 * @param bool                    $immediate
+	 * @param PlayerNetworkSession[] $sessions
+	 * @param PacketBuffer           $payload
+	 * @param bool                   $forceSync
+	 * @param bool                   $immediate
 	 */
 	public function prepareBatch(array $sessions, PacketBuffer $payload, bool $forceSync = false, bool $immediate = false){
 		Timings::$playerNetworkTimer->startTiming();
@@ -1951,8 +1951,8 @@ class Server{
 	}
 
 	/**
-	 * @param IPlayerNetworkSession[] $sessions
-	 * @param bool                    $immediate
+	 * @param PlayerNetworkSession[] $sessions
+	 * @param bool                   $immediate
 	 */
 	public function broadcastPacketsCallback(array $sessions, bool $immediate = false) : void{
 		foreach($sessions as $i){
@@ -2314,7 +2314,7 @@ class Server{
 		}
 	}
 
-	public function createPlayer(IPlayerNetworkSession $networkSession, string $baseClass = Player::class, string $playerClass = Player::class) : Player{
+	public function createPlayer(PlayerNetworkSession $networkSession, string $baseClass = Player::class, string $playerClass = Player::class) : Player{
 		$ev = new PlayerCreationEvent($networkSession, $baseClass, $playerClass);
 		$this->pluginManager->callEvent($ev);
 		$class = $ev->getPlayerClass();
