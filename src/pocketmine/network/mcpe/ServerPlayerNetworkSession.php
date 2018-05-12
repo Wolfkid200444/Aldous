@@ -48,7 +48,7 @@ abstract class ServerPlayerNetworkSession implements IPlayerNetworkSession{
 	protected $server;
 	/** @var Player */
 	protected $player;
-	/** @var RakLibInterface */
+	/** @var NetworkInterface */
 	protected $interface;
 
 	/** @var bool */
