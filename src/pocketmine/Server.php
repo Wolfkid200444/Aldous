@@ -1956,7 +1956,9 @@ class Server{
 	 */
 	public function broadcastPacketsCallback(array $sessions, bool $immediate = false) : void{
 		foreach($sessions as $i){
-			$i->flushBatchQueue($immediate);
+			if($i->isConnected()){
+				$i->flushBatchQueue($immediate);
+			}
 		}
 	}
 
