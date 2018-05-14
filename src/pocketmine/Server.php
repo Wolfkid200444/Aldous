@@ -1868,24 +1868,26 @@ class Server{
 			throw new \InvalidArgumentException("Tried to broadcast empty list of packets");
 		}
 
-		$this->pluginManager->callEvent($ev = new DataPacketBroadcastEvent($players, $packets));
-		if($ev->isCancelled()){
-			return;
-		}
-
-		$players = $ev->getPlayers();
-		$packets = $ev->getPackets();
-
 		/** @var PlayerNetworkSession[] $sessions */
 		$sessions = [];
-		foreach($players as $player){
-			if($player->isConnected()){
-				$sessions[] = $player->getNetworkSession();
+		foreach($players as $session){
+			if($session->isConnected()){
+				$sessions[] = $session->getNetworkSession();
 			}
 		}
 		if(empty($sessions)){
 			return;
 		}
+
+		$this->pluginManager->callEvent($ev = new DataPacketBroadcastEvent($sessions, $packets));
+		if($ev->isCancelled()){
+			return;
+		}
+
+		$sessions = $ev->getTargets();
+		$packets = $ev->getPackets();
+
+
 
 		$length = 0;
 		foreach($packets as $packet){
@@ -1904,10 +1906,10 @@ class Server{
 
 			$this->prepareBatch($sessions, $stream, $forceSync, $immediate);
 		}else{
-			foreach($sessions as $player){
+			foreach($sessions as $session){
 				foreach($packets as $packet){
 					//don't fire DataPacketSendEvent for this
-					$player->sendDataPacket($packet, $immediate, false);
+					$session->sendDataPacket($packet, $immediate, false);
 				}
 			}
 		}
@@ -2316,8 +2318,8 @@ class Server{
 		}
 	}
 
-	public function createPlayer(PlayerNetworkSession $networkSession, string $baseClass = Player::class, string $playerClass = Player::class) : Player{
-		$ev = new PlayerCreationEvent($networkSession, $baseClass, $playerClass);
+	public function createPlayer(PlayerNetworkSession $networkSession, PlayerParameters $parameters, string $baseClass = Player::class, string $playerClass = Player::class) : Player{
+		$ev = new PlayerCreationEvent($networkSession, $parameters, $baseClass, $playerClass);
 		$this->pluginManager->callEvent($ev);
 		$class = $ev->getPlayerClass();
 
@@ -2325,7 +2327,7 @@ class Server{
 		 * @var Player $player
 		 * @see Player::__construct()
 		 */
-		$player = new $class($this, $networkSession);
+		$player = new $class($this, $networkSession, $parameters);
 		$this->addPlayer($player);
 
 		return $player;
@@ -2411,9 +2413,7 @@ class Server{
 
 	private function checkTickUpdates(int $currentTick, float $tickTime) : void{
 		foreach($this->players as $p){
-			if(!$p->loggedIn and ($tickTime - $p->creationTime) >= 10){
-				$p->close("", "Login timeout");
-			}elseif($this->alwaysTickPlayers and $p->spawned){
+			if($this->alwaysTickPlayers and $p->spawned){
 				$p->onUpdate($currentTick);
 			}
 		}

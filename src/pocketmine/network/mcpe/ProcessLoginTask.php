@@ -24,11 +24,10 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe;
 
 use pocketmine\network\mcpe\protocol\LoginPacket;
-use pocketmine\Player;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\Server;
 
-class VerifyLoginTask extends AsyncTask{
+class ProcessLoginTask extends AsyncTask{
 
 	public const MOJANG_ROOT_PUBLIC_KEY = "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V";
 
@@ -50,8 +49,8 @@ class VerifyLoginTask extends AsyncTask{
 	private $authenticated = false;
 
 
-	public function __construct(Player $player, LoginPacket $packet){
-		$this->storeLocal($player);
+	public function __construct(PlayerNetworkSession $session, LoginPacket $packet){
+		$this->storeLocal($session);
 		$this->packet = $packet;
 	}
 
@@ -73,6 +72,8 @@ class VerifyLoginTask extends AsyncTask{
 		}catch(VerifyLoginException $e){
 			$this->error = $e->getMessage();
 		}
+
+		//TODO: generate ECC keys and shared secret for encryption
 	}
 
 	/**
@@ -143,12 +144,9 @@ class VerifyLoginTask extends AsyncTask{
 	}
 
 	public function onCompletion(Server $server) : void{
-		/** @var Player $player */
-		$player = $this->fetchLocal();
-		if($player->isClosed()){
-			$server->getLogger()->error("Player " . $player->getName() . " was disconnected before their login could be verified");
-		}else{
-			$player->onVerifyCompleted($this->packet, $this->error, $this->authenticated);
-		}
+		/** @var PlayerNetworkSession $session */
+		$session = $this->fetchLocal();
+
+		$session->onClientAuthenticated($this->packet, $this->error, $this->authenticated);
 	}
 }

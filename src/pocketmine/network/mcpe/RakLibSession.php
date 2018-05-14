@@ -29,7 +29,7 @@ use pocketmine\Server;
 use raklib\protocol\EncapsulatedPacket;
 use raklib\protocol\PacketReliability;
 
-class RakLibSession extends ServerPlayerNetworkSession{
+class RakLibSession extends PlayerNetworkSession{
 	/**
 	 * Header byte at the start of every MCPE RakNet packet
 	 */

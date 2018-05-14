@@ -23,36 +23,95 @@ declare(strict_types=1);
 
 namespace pocketmine\event\player;
 
-use pocketmine\event\Cancellable;
-use pocketmine\Player;
+use pocketmine\event\Event;
+use pocketmine\network\mcpe\PlayerNetworkSession;
+use pocketmine\PlayerParameters;
 
 /**
  * Called when the player logs in, before things have been set up
  */
-class PlayerPreLoginEvent extends PlayerEvent implements Cancellable{
-	/** @var string */
+class PlayerPreLoginEvent extends Event{
+	public const ALLOWED = 0;
+	public const REASON_SERVER_FULL = 1;
+	public const REASON_BANNED = 2;
+	public const REASON_WHITELIST = 3;
+	public const REASON_PLUGIN = 4;
+
+	/** @var PlayerNetworkSession */
+	protected $networkSession;
+	/** @var PlayerParameters */
+	protected $loginData;
+
+	/** @var string|null */
 	protected $kickMessage;
+	/** @var int */
+	protected $reason = self::ALLOWED;
 
 	/**
-	 * @param Player $player
-	 * @param string $kickMessage
+	 * @param PlayerNetworkSession $networkSession
+	 * @param PlayerParameters     $loginData
 	 */
-	public function __construct(Player $player, string $kickMessage){
-		$this->player = $player;
+	public function __construct(PlayerNetworkSession $networkSession, PlayerParameters $loginData){
+		$this->networkSession = $networkSession;
+	}
+
+	public function getNetworkSession() : PlayerNetworkSession{
+		return $this->networkSession;
+	}
+
+	/**
+	 * Returns data associated with this login attempt, such as UUID, username, XUID, etc.
+	 * @return PlayerParameters
+	 */
+	public function getLoginData() : PlayerParameters{
+		return $this->loginData;
+	}
+
+	/**
+	 * Null will display a generic kick message based on the reason flags set.
+	 *
+	 * @param string|null $kickMessage
+	 */
+	public function setKickMessage(?string $kickMessage) : void{
 		$this->kickMessage = $kickMessage;
 	}
 
 	/**
-	 * @param string $kickMessage
+	 * @return string|null
 	 */
-	public function setKickMessage(string $kickMessage) : void{
-		$this->kickMessage = $kickMessage;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getKickMessage() : string{
+	public function getKickMessage() : ?string{
 		return $this->kickMessage;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getKickFlags() : int{
+		return $this->reason;
+	}
+
+	/**
+	 * @param int $flag
+	 *
+	 * @return bool
+	 */
+	public function hasKickFlag(int $flag) : bool{
+		return ($this->reason & $flag) !== 0;
+	}
+
+	/**
+	 * @param int  $flag
+	 * @param bool $on
+	 */
+	public function setKickFlag(int $flag, bool $on = true) : void{
+		if($on){
+			$this->reason |= $flag;
+		}else{
+			$this->reason &= ~$flag;
+		}
+	}
+
+	public function canJoin() : bool{
+		return $this->reason === self::ALLOWED; //No kick flags set
 	}
 }

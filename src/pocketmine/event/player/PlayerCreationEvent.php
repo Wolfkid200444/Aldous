@@ -27,6 +27,7 @@ use pocketmine\event\Event;
 use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\NetworkInterface;
 use pocketmine\Player;
+use pocketmine\PlayerParameters;
 
 /**
  * Allows the creation of players overriding the base Player class
@@ -34,18 +35,23 @@ use pocketmine\Player;
 class PlayerCreationEvent extends Event{
 	/** @var PlayerNetworkSession */
 	private $networkSession;
+	/** @var PlayerParameters */
+	private $parameters;
 	/** @var Player::class */
 	private $baseClass;
 	/** @var Player::class */
 	private $playerClass;
 
+
 	/**
 	 * @param PlayerNetworkSession $networkSession
+	 * @param PlayerParameters     $parameters
 	 * @param string               $baseClass Class that is an instanceof \pocketmine\Player
 	 * @param string               $playerClass Class that is an instanceof $baseClass
 	 */
-	public function __construct(PlayerNetworkSession $networkSession, $baseClass, $playerClass){
+	public function __construct(PlayerNetworkSession $networkSession, PlayerParameters $parameters, $baseClass, $playerClass){
 		$this->networkSession = $networkSession;
+		$this->parameters = $parameters;
 
 		if(!is_a($baseClass, Player::class, true)){
 			throw new \RuntimeException("Base class $baseClass must extend " . Player::class);
@@ -58,6 +64,7 @@ class PlayerCreationEvent extends Event{
 		}
 
 		$this->playerClass = $playerClass;
+
 	}
 
 	/**
@@ -65,6 +72,14 @@ class PlayerCreationEvent extends Event{
 	 */
 	public function getNetworkSession() : PlayerNetworkSession{
 		return $this->networkSession;
+	}
+
+	/**
+	 * Returns a PlayerParameters object containing information used to construct the Player.
+	 * @return PlayerParameters
+	 */
+	public function getParameters() : PlayerParameters{
+		return $this->parameters;
 	}
 
 	/**

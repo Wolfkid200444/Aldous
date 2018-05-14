@@ -44,7 +44,7 @@ class PlayStatusPacket extends DataPacket{
 	public $status;
 
 	/**
-	 * @var int
+	 * @var int|null
 	 * Used to determine how to write the packet when we disconnect incompatible clients.
 	 */
 	public $protocol;
@@ -58,7 +58,7 @@ class PlayStatusPacket extends DataPacket{
 	}
 
 	protected function encodeHeader() : void{
-		if($this->protocol < 130){ //MCPE <= 1.1
+		if($this->protocol !== null and $this->protocol < 130){ //MCPE <= 1.1
 			$this->putByte(static::NETWORK_ID);
 		}else{
 			parent::encodeHeader();
