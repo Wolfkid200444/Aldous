@@ -174,9 +174,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 */
 	protected $networkSession;
 
-	/** @var float */
-	public $creationTime = 0;
-
 	/** @var bool */
 	public $spawned = false;
 
@@ -670,14 +667,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		$this->perm = new PermissibleBase($this);
 
-		$this->loaderId = Level::generateChunkLoaderId($this);
-		$this->chunksPerTick = (int) $this->server->getProperty("chunk-sending.per-tick", 4);
-		$this->spawnThreshold = (int) (($this->server->getProperty("chunk-sending.spawn-radius", 4) ** 2) * M_PI);
-
-		$this->creationTime = microtime(true);
-
-		$this->allowMovementCheats = (bool) $this->server->getProperty("player.anti-cheat.allow-movement-cheats", false);
-
 		$this->username = TextFormat::clean($parameters->getUsername());
 		$this->displayName = $this->username;
 		$this->iusername = strtolower($this->username);
@@ -703,9 +692,9 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		$this->allowFlight = $this->isCreative();
 		$this->keepMovement = $this->isSpectator() || $this->allowMovementCheats();
+		$this->allowMovementCheats = (bool) $this->server->getProperty("player.anti-cheat.allow-movement-cheats", false);
 
 		$level = $this->server->getLevelByName($this->namedtag->getString("Level", "", true));
-
 		if($level === null){
 			$level = $this->server->getDefaultLevel();
 
@@ -733,6 +722,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				$this->spawnPosition = $this->level->getSafeSpawn();
 			}
 		}
+
+		$this->loaderId = Level::generateChunkLoaderId($this);
+		$this->chunksPerTick = (int) $this->server->getProperty("chunk-sending.per-tick", 4);
+		$this->spawnThreshold = (int) (($this->server->getProperty("chunk-sending.spawn-radius", 4) ** 2) * M_PI);
 
 		/** @var float[] $pos */
 		$pos = $this->namedtag->getListTag("Pos")->getAllValues();
