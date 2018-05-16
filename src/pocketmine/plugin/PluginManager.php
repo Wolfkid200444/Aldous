@@ -35,6 +35,8 @@ use pocketmine\permission\Permission;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
 use pocketmine\timings\TimingsHandler;
+use pocketmine\utils\MainLogger;
+use pocketmine\utils\Utils;
 
 /**
  * Manages all the plugins, Permissions and Permissibles
@@ -716,17 +718,6 @@ class PluginManager{
 	}
 
 	/**
-	 * Extracts one-line tags from the doc-comment
-	 *
-	 * @param string $docComment
-	 * @return string[] an array of tagName => tag value. If the tag has no value, an empty string is used as the value.
-	 */
-	public static function parseDocComment(string $docComment) : array{
-		preg_match_all('/^[\t ]*\* @([a-zA-Z]+)(?:[\t ]+(.+))?[\t ]*$/m', $docComment, $matches);
-		return array_combine($matches[1], array_map("trim", $matches[2]));
-	}
-
-	/**
 	 * Registers all the events in the given Listener class
 	 *
 	 * @param Listener $listener
@@ -742,7 +733,10 @@ class PluginManager{
 		$reflection = new \ReflectionClass(get_class($listener));
 		foreach($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method){
 			if(!$method->isStatic()){
-				$tags = self::parseDocComment((string) $method->getDocComment());
+				$tags = Utils::parseDocComment((string) $method->getDocComment());
+				if(isset($tags["notHandler"])){
+					continue;
+				}
 
 				try{
 					$priority = isset($tags["priority"]) ? EventPriority::fromString($tags["priority"]) : EventPriority::NORMAL;
@@ -752,7 +746,17 @@ class PluginManager{
 				$ignoreCancelled = isset($tags["ignoreCancelled"]) && strtolower($tags["ignoreCancelled"]) === "true";
 
 				$parameters = $method->getParameters();
-				if(count($parameters) === 1 and $parameters[0]->getClass() instanceof \ReflectionClass and is_subclass_of($parameters[0]->getClass()->getName(), Event::class)){
+				try{
+					$isHandler = count($parameters) === 1 && $parameters[0]->getClass() instanceof \ReflectionClass && is_subclass_of($parameters[0]->getClass()->getName(), Event::class);
+				}catch(\ReflectionException $e){
+					if(isset($tags["softDepend"]) && !isset($this->plugins[$tags["softDepend"]])){
+						MainLogger::getLogger()->debug("Not registering @softDepend listener " . get_class($listener) . "::" . $method->getName() . "(" . $parameters[0]->getType()->getName() . ") because plugin \"" . $tags["softDepend"] . "\" not found");
+						continue;
+					}
+
+					throw $e;
+				}
+				if($isHandler){
 					$class = $parameters[0]->getClass()->getName();
 					$this->registerEvent($class, $listener, $priority, new MethodEventExecutor($method->getName()), $plugin, $ignoreCancelled);
 				}
@@ -775,7 +779,7 @@ class PluginManager{
 			throw new PluginException($event . " is not an Event");
 		}
 
-		$tags = self::parseDocComment((string) (new \ReflectionClass($event))->getDocComment());
+		$tags = Utils::parseDocComment((string) (new \ReflectionClass($event))->getDocComment());
 		if(isset($tags["deprecated"]) and $this->server->getProperty("settings.deprecated-verbose", true)){
 			$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.plugin.deprecatedEvent", [
 				$plugin->getName(),

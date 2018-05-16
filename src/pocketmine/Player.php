@@ -76,6 +76,7 @@ use pocketmine\inventory\transaction\CraftingTransaction;
 use pocketmine\inventory\transaction\InventoryTransaction;
 use pocketmine\inventory\transaction\TransactionValidationException;
 use pocketmine\item\Consumable;
+use pocketmine\item\Durable;
 use pocketmine\item\Item;
 use pocketmine\item\WritableBook;
 use pocketmine\item\WrittenBook;
@@ -86,7 +87,6 @@ use pocketmine\level\format\Chunk;
 use pocketmine\level\Level;
 use pocketmine\level\Location;
 use pocketmine\level\Position;
-use pocketmine\level\WeakPosition;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Vector3;
 use pocketmine\metadata\MetadataValue;
@@ -298,7 +298,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 	/** @var Vector3|null */
 	protected $sleeping = null;
-	/** @var WeakPosition|null */
+	/** @var Position|null */
 	private $spawnPosition = null;
 
 	//TODO: Abilities
@@ -1167,7 +1167,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return bool
 	 */
 	public function hasValidSpawnPosition() : bool{
-		return $this->spawnPosition instanceof WeakPosition and $this->spawnPosition->isValid();
+		return $this->spawnPosition !== null and $this->spawnPosition->isValid();
 	}
 
 	/**
@@ -1182,7 +1182,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		}else{
 			$level = $pos->getLevel();
 		}
-		$this->spawnPosition = new WeakPosition($pos->x, $pos->y, $pos->z, $level);
+		$this->spawnPosition = new Position($pos->x, $pos->y, $pos->z, $level);
 		$pk = new SetSpawnPositionPacket();
 		$pk->x = $this->spawnPosition->getFloorX();
 		$pk->y = $this->spawnPosition->getFloorY();
@@ -1944,7 +1944,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$xuid = "";
 		}
 
-		if($xuid === ""){
+		if($xuid === "" or !is_string($xuid)){
 			if($signedByMojang){
 				$this->server->getLogger()->error($this->getName() . " should have an XUID, but none found");
 			}
@@ -2082,9 +2082,9 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		if(!$this->hasValidSpawnPosition()){
 			if(($level = $this->server->getLevelByName($this->namedtag->getString("SpawnLevel", ""))) instanceof Level){
-				$this->spawnPosition = new WeakPosition($this->namedtag->getInt("SpawnX"), $this->namedtag->getInt("SpawnY"), $this->namedtag->getInt("SpawnZ"), $level);
+				$this->spawnPosition = new Position($this->namedtag->getInt("SpawnX"), $this->namedtag->getInt("SpawnY"), $this->namedtag->getInt("SpawnZ"), $level);
 			}else{
-				$this->spawnPosition = WeakPosition::fromObject($this->level->getSafeSpawn());
+				$this->spawnPosition = $this->level->getSafeSpawn();
 			}
 		}
 
@@ -2143,8 +2143,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->sendPotionEffects($this);
 		$this->sendData($this);
 
-		$this->inventory->sendContents($this);
-		$this->armorInventory->sendContents($this);
+		$this->sendAllInventories();
 		$this->inventory->sendCreativeContents();
 		$this->inventory->sendHeldItem($this);
 		$this->dataPacket($this->server->getCraftingManager()->getCraftingDataPacket());
@@ -2511,7 +2510,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 						$target->attack($ev);
 
 						if($ev->isCancelled()){
-							if($heldItem->isTool() and $this->isSurvival()){
+							if($heldItem instanceof Durable and $this->isSurvival()){
 								$this->inventory->sendContents($this);
 							}
 							return true;
@@ -2527,13 +2526,11 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 							}
 						}
 
-						if($this->isSurvival()){
-							if($heldItem->useOn($target)){
-								$this->inventory->setItemInHand($heldItem);
-							}
-
-							$this->exhaust(0.3, PlayerExhaustEvent::CAUSE_ATTACK);
+						if($heldItem->onAttackEntity($target) and $this->isSurvival()){ //always fire the hook, even if we are survival
+							$this->inventory->setItemInHand($heldItem);
 						}
+
+						$this->exhaust(0.3, PlayerExhaustEvent::CAUSE_ATTACK);
 
 						return true;
 					default:
@@ -3672,8 +3669,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->sendData($this->getViewers());
 
 		$this->sendSettings();
-		$this->inventory->sendContents($this);
-		$this->armorInventory->sendContents($this);
+		$this->sendAllInventories();
 
 		$this->spawnToAll();
 		$this->scheduleUpdate();

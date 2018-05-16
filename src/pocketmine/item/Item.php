@@ -164,7 +164,7 @@ class Item implements ItemIds, \JsonSerializable{
 
 	public static function getCreativeItemIndex(Item $item) : int{
 		foreach(Item::$creative as $i => $d){
-			if($item->equals($d, !$item->isTool())){
+			if($item->equals($d, !($item instanceof Durable))){
 				return $i;
 			}
 		}
@@ -716,22 +716,6 @@ class Item implements ItemIds, \JsonSerializable{
 	}
 
 	/**
-	 * @param Entity|Block $object
-	 *
-	 * @return bool
-	 */
-	public function useOn($object){
-		return false;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isTool(){
-		return false;
-	}
-
-	/**
 	 * Returns what type of block-breaking tool this is. Blocks requiring the same tool type as the item will break
 	 * faster (except for blocks requiring no tool, which break at the same speed regardless of the tool used)
 	 *
@@ -752,30 +736,6 @@ class Item implements ItemIds, \JsonSerializable{
 	 */
 	public function getBlockToolHarvestLevel() : int{
 		return 0;
-	}
-
-	public function isPickaxe(){
-		return false;
-	}
-
-	public function isAxe(){
-		return false;
-	}
-
-	public function isSword(){
-		return false;
-	}
-
-	public function isShovel(){
-		return false;
-	}
-
-	public function isHoe(){
-		return false;
-	}
-
-	public function isShears(){
-		return false;
 	}
 
 	public function getMiningEfficiency(Block $block) : float{
@@ -818,6 +778,28 @@ class Item implements ItemIds, \JsonSerializable{
 	 * @return bool
 	 */
 	public function onReleaseUsing(Player $player) : bool{
+		return false;
+	}
+
+	/**
+	 * Called when this item is used to destroy a block. Usually used to update durability.
+	 *
+	 * @param Block $block
+	 *
+	 * @return bool
+	 */
+	public function onDestroyBlock(Block $block) : bool{
+		return false;
+	}
+
+	/**
+	 * Called when this item is used to attack an entity. Usually used to update durability.
+	 *
+	 * @param Entity $victim
+	 *
+	 * @return bool
+	 */
+	public function onAttackEntity(Entity $victim) : bool{
 		return false;
 	}
 
