@@ -48,8 +48,7 @@ interface NetworkInterface{
 	public function processEvents() : void;
 
 	/**
-	 * Called every server tick by the server. This should tick sessions and any other actions that need to happen on a
-	 * regular interval.
+	 * Called every server tick by the server. This should perform actions that need to happen on a regular interval.
 	 */
 	public function tick() : void;
 

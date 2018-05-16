@@ -95,10 +95,6 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 		if(!$this->rakLib->isRunning() and !$this->rakLib->isShutdown()){
 			throw new \Exception("RakLib Thread crashed");
 		}
-
-		foreach($this->sessions as $session){
-			$session->tick();
-		}
 	}
 
 	public function closeSession(string $identifier, string $reason) : void{

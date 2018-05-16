@@ -29,6 +29,7 @@ namespace pocketmine\network;
 use pocketmine\event\server\NetworkInterfaceCrashEvent;
 use pocketmine\event\server\NetworkInterfaceRegisterEvent;
 use pocketmine\event\server\NetworkInterfaceUnregisterEvent;
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\Server;
 
@@ -44,6 +45,9 @@ class Network{
 
 	/** @var AdvancedNetworkInterface[] */
 	private $advancedInterfaces = [];
+
+	/** @var PlayerNetworkSession[] */
+	private $sessions = [];
 
 	private $upload = 0;
 	private $download = 0;
@@ -86,9 +90,14 @@ class Network{
 	/**
 	 * Called every tick to update network interfaces, for example to tick sessions.
 	 */
-	public function tickInterfaces() : void{
+	public function tick() : void{
 		foreach($this->interfaces as $interface){
 			$interface->tick();
+		}
+
+		$currentTime = microtime(true);
+		foreach($this->sessions as $session){
+			$session->tick($currentTime);
 		}
 	}
 
@@ -198,5 +207,19 @@ class Network{
 		foreach($this->advancedInterfaces as $interface){
 			$interface->unblockAddress($address);
 		}
+	}
+
+	/**
+	 * @param PlayerNetworkSession $session
+	 */
+	public function addTrackedSession(PlayerNetworkSession $session) : void{
+		$this->sessions[spl_object_hash($session)] = $session;
+	}
+
+	/**
+	 * @param PlayerNetworkSession $session
+	 */
+	public function removeTrackedSession(PlayerNetworkSession $session) : void{
+		unset($this->sessions[spl_object_hash($session)]);
 	}
 }

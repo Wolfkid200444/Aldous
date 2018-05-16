@@ -2569,7 +2569,7 @@ class Server{
 		++$this->tickCounter;
 
 		Timings::$connectionTimer->startTiming();
-		$this->network->tickInterfaces();
+		$this->network->tick();
 		Timings::$connectionTimer->stopTiming();
 
 		Timings::$schedulerTimer->startTiming();

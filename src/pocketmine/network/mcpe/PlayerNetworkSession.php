@@ -49,6 +49,9 @@ abstract class PlayerNetworkSession{
 	/** @var int */
 	protected $lastPingMeasure = 1;
 
+	/** @var float */
+	protected $creationTime;
+
 	/** @var Server */
 	protected $server;
 	/** @var Player */
@@ -78,10 +81,13 @@ abstract class PlayerNetworkSession{
 		$this->interface = $interface;
 		$this->ip = $ip;
 		$this->port = $port;
+		$this->creationTime = microtime(true);
 
 		$this->batchQueue = new \SplQueue();
 
 		$this->handler = new LoginNetworkHandler($this->server, $this);
+
+		$this->server->getNetwork()->addTrackedSession($this);
 	}
 
 	public function getIp() : string{
@@ -295,6 +301,7 @@ abstract class PlayerNetworkSession{
 	public function serverDisconnect(string $reason = "", bool $mcpeDisconnect = true) : void{
 		if($this->connected){
 			$this->connected = false;
+			$this->server->getNetwork()->removeTrackedSession($this);
 
 			if($this->player !== null){
 				$this->player->close("", $reason, $mcpeDisconnect);
@@ -369,9 +376,13 @@ abstract class PlayerNetworkSession{
 	abstract protected function sendBatch(string $buffer, bool $immediateFlush) : void;
 
 	/**
-	 * @internal Called by RakLibInterface every tick to flush buffered packets.
+	 * @param float $microtime
 	 */
-	public function tick() : void{
+	public function tick(float $microtime) : void{
+		if(!$this->loggedIn and $this->creationTime + 10 < $microtime){
+			$this->serverDisconnect("Login timeout");
+			return;
+		}
 		if($this->batchBuffer !== null){
 			$this->flushBatchBuffer();
 		}
