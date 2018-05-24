@@ -82,7 +82,7 @@ class ChunkRequestTask extends AsyncTask{
 		if($level instanceof Level){
 			if($this->hasResult()){
 				$task = new CompressBatchedTask("", $server->networkCompressionLevel);
-				$task->setResult($this->getResult());
+				$task->setResult($this->getResult(), false);
 				$level->chunkRequestCallback($this->chunkX, $this->chunkZ, $task);
 			}else{
 				$server->getLogger()->error("Chunk request for level #" . $this->levelId . ", x=" . $this->chunkX . ", z=" . $this->chunkZ . " doesn't have any result data");
