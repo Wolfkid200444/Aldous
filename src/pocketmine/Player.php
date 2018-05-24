@@ -94,7 +94,7 @@ use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\ListTag;
-use pocketmine\network\mcpe\CompressedPacketBuffer;
+use pocketmine\network\mcpe\CompressBatchedTask;
 use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
@@ -965,7 +965,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		unset($this->loadQueue[$index]);
 	}
 
-	public function sendChunk(int $x, int $z, CompressedPacketBuffer $payload){
+	public function sendChunk(int $x, int $z, CompressBatchedTask $payload){
 		if(!$this->isConnected()){
 			return;
 		}

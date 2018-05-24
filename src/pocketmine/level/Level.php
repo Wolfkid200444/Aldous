@@ -69,7 +69,7 @@ use pocketmine\metadata\MetadataValue;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\ChunkRequestTask;
-use pocketmine\network\mcpe\CompressedPacketBuffer;
+use pocketmine\network\mcpe\CompressBatchedTask;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
@@ -123,7 +123,7 @@ class Level implements ChunkManager, Metadatable{
 	/** @var Block[][] */
 	private $blockCache = [];
 
-	/** @var CompressedPacketBuffer[] */
+	/** @var CompressBatchedTask[] */
 	private $chunkCache = [];
 
 	/** @var int */
@@ -2499,8 +2499,8 @@ class Level implements ChunkManager, Metadatable{
 		}
 	}
 
-	public function chunkRequestCallback(int $x, int $z, CompressedPacketBuffer $payload){
-		if(!$payload->isReady()){
+	public function chunkRequestCallback(int $x, int $z, CompressBatchedTask $payload){
+		if(!$payload->hasResult()){
 			throw new \InvalidStateException("Failed to asynchronously prepare chunk $x $z");
 		}
 		$this->timings->syncChunkSendTimer->startTiming();

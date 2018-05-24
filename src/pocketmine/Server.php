@@ -72,7 +72,6 @@ use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\AdvancedNetworkInterface;
 use pocketmine\network\mcpe\CompressBatchedTask;
-use pocketmine\network\mcpe\CompressedPacketBuffer;
 use pocketmine\network\mcpe\PacketBuffer;
 use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\DataPacket;
@@ -1904,7 +1903,13 @@ class Server{
 				$stream->addPacket($packet);
 			}
 
-			$this->prepareBatch($sessions, $stream, $forceSync, $immediate);
+			$task = $this->prepareBatch($stream, $forceSync or $immediate);
+
+			//this makes each session add this batch to a queue for sending - the object properties will be modified
+			//and then the sessions will be notified that the batch is ready to send
+			foreach($sessions as $session){
+				$session->sendPreparedBatch($task, $immediate);
+			}
 		}else{
 			foreach($sessions as $session){
 				foreach($packets as $packet){
@@ -1916,14 +1921,14 @@ class Server{
 	}
 
 	/**
-	 * Broadcasts a list of packets in a batch to a list of players
+	 * Prepares a buffer of packets for sending by compressing them, optionally asynchronously.
 	 *
-	 * @param PlayerNetworkSession[] $sessions
-	 * @param PacketBuffer           $payload
-	 * @param bool                   $forceSync
-	 * @param bool                   $immediate
+	 * @param PacketBuffer $payload
+	 * @param bool         $forceSync
+	 *
+	 * @return CompressBatchedTask
 	 */
-	public function prepareBatch(array $sessions, PacketBuffer $payload, bool $forceSync = false, bool $immediate = false){
+	public function prepareBatch(PacketBuffer $payload, bool $forceSync = false) : CompressBatchedTask{
 		Timings::$playerNetworkTimer->startTiming();
 
 		$compressionLevel = $this->networkCompressionLevel;
@@ -1933,35 +1938,17 @@ class Server{
 			$forceSync = true;
 		}
 
-		$batch = new CompressedPacketBuffer();
+		$task = new CompressBatchedTask($payload->buffer, $compressionLevel);
 
-		//this makes each session add this batch to a queue for sending - the object properties will be modified
-		//and then the sessions will be notified that the batch is ready to send
-		foreach($sessions as $target){
-			$target->notifyPendingBatch($batch);
-		}
-
-		if(!$forceSync and !$immediate){
-			$this->asyncPool->submitTask(new CompressBatchedTask($batch, $payload->buffer, $compressionLevel, $sessions));
+		if(!$forceSync){
+			$this->asyncPool->submitTask($task);
 		}else{
-			$batch->setBuffer($payload->compress($this->networkCompressionLevel));
-
-			$this->broadcastPacketsCallback($sessions, $immediate);
+			$task->onRun();
 		}
 
 		Timings::$playerNetworkTimer->stopTiming();
-	}
 
-	/**
-	 * @param PlayerNetworkSession[] $sessions
-	 * @param bool                   $immediate
-	 */
-	public function broadcastPacketsCallback(array $sessions, bool $immediate = false) : void{
-		foreach($sessions as $i){
-			if($i->isConnected()){
-				$i->flushBatchQueue($immediate);
-			}
-		}
+		return $task;
 	}
 
 	/**

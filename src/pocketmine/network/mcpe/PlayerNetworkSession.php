@@ -70,7 +70,7 @@ abstract class PlayerNetworkSession{
 	/** @var PacketBuffer */
 	protected $batchBuffer;
 
-	/** @var \SplQueue|CompressedPacketBuffer[] */
+	/** @var \SplQueue|CompressBatchedTask[] */
 	protected $batchQueue;
 
 	/** @var NetworkHandler */
@@ -290,11 +290,9 @@ abstract class PlayerNetworkSession{
 	 */
 	private function flushBatchBuffer(bool $immediateFlush = false) : void{
 		if($this->batchBuffer !== null){
-			//this might sync-send and call back to this again, so make sure we don't double-flush
-			$buf = $this->batchBuffer;
+			$this->batchQueue->enqueue($this->server->prepareBatch($this->batchBuffer, $immediateFlush));
+			$this->flushBatchQueue($immediateFlush);
 			$this->batchBuffer = null;
-
-			$this->server->prepareBatch([$this], $buf, $immediateFlush, $immediateFlush);
 		}
 	}
 
@@ -343,31 +341,24 @@ abstract class PlayerNetworkSession{
 		}
 	}
 
-
-	public function notifyPendingBatch(CompressedPacketBuffer $buffer) : void{
-		$this->flushBatchBuffer();
-		$this->batchQueue->enqueue($buffer);
-	}
-
-	public function sendPreparedBatch(CompressedPacketBuffer $buffer, bool $immediateFlush = false) : void{
+	public function sendPreparedBatch(CompressBatchedTask $task, bool $immediateFlush = false) : void{
 		$this->flushBatchBuffer($immediateFlush);
-		$this->batchQueue->enqueue($buffer);
+		$this->batchQueue->enqueue($task);
 		$this->flushBatchQueue($immediateFlush);
 	}
 
-	public function flushBatchQueue(bool $immediateFlush = false) : void{
+	private function flushBatchQueue(bool $immediateFlush = false) : void{
 		while(!$this->batchQueue->isEmpty()){
-			/** @var CompressedPacketBuffer $nextBatch */
+			/** @var CompressBatchedTask $nextBatch */
 			$nextBatch = $this->batchQueue->bottom();
-			if($nextBatch->isReady()){
-				//this gets modified by the async task preparing it
+			if($nextBatch->hasResult()){
 				$this->batchQueue->dequeue();
 
 				//TODO: encryption
 
-				$this->sendBatch($nextBatch->getBuffer(), $immediateFlush);
+				$this->sendBatch($nextBatch->getResult(), $immediateFlush);
 			}else{
-				//we're still waiting for this one being async-prepared
+				//we're still waiting for this task to finish
 				break;
 			}
 		}
@@ -385,6 +376,9 @@ abstract class PlayerNetworkSession{
 		}
 		if($this->batchBuffer !== null){
 			$this->flushBatchBuffer();
+		}else{
+			//if we had buffered batches, flushBatchBuffer() will do this anyway
+			$this->flushBatchQueue();
 		}
 	}
 
