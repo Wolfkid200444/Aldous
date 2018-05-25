@@ -288,7 +288,7 @@ abstract class PlayerNetworkSession{
 	 *
 	 * @param bool $immediateFlush
 	 */
-	private function flushBatchBuffer(bool $immediateFlush = false) : void{
+	public function flushBatchBuffer(bool $immediateFlush = false) : void{
 		if($this->batchBuffer !== null){
 			$this->batchQueue->enqueue($this->server->prepareBatch($this->batchBuffer, $immediateFlush));
 			$this->flushBatchQueue($immediateFlush);

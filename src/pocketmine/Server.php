@@ -1914,7 +1914,10 @@ class Server{
 			foreach($sessions as $session){
 				foreach($packets as $packet){
 					//don't fire DataPacketSendEvent for this
-					$session->sendDataPacket($packet, $immediate, false);
+					$session->sendDataPacket($packet, false, false);
+				}
+				if($immediate){
+					$session->flushBatchBuffer($immediate);
 				}
 			}
 		}
