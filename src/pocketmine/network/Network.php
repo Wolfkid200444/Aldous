@@ -222,4 +222,11 @@ class Network{
 	public function removeTrackedSession(PlayerNetworkSession $session) : void{
 		unset($this->sessions[spl_object_hash($session)]);
 	}
+
+	/**
+	 * @return PlayerNetworkSession[]
+	 */
+	public function getSessions() : array{
+		return $this->sessions;
+	}
 }

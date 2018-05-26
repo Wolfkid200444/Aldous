@@ -175,20 +175,19 @@ abstract class PlayerNetworkSession{
 
 		//TODO: encryption
 
-		//TODO: fix this - how do we track logins prior to creating the player?
-		/*foreach($this->server->getLoggedInPlayers() as $p){
-			if($p !== $this and ($p->iusername === $this->iusername or $this->getUniqueId()->equals($p->getUniqueId()))){
-				if(!$p->kick("logged in from another location")){
-					$this->close($this->getLeaveMessage(), "Logged in from another location");
-
-					return;
-				}
+		foreach($this->server->getNetwork()->getSessions() as $other){
+			if($other === $this or !$other->loggedIn){
+				continue;
 			}
-		}*/
+
+			if(strtolower($other->loginData->getUsername()) === strtolower($this->loginData->getUsername()) or
+				$other->loginData->getUuid()->equals($this->loginData->getUuid())){
+				//TODO: allow plugins to have a say in this
+				$other->serverDisconnect("Logged in from another location");
+			}
+		}
 
 		$this->loggedIn = true;
-		//$this->server->onPlayerLogin($this);
-
 		$this->sendPlayStatus(PlayStatusPacket::LOGIN_SUCCESS);
 
 		$this->handler = new ResourcePacksNetworkHandler($this->server, $this);
