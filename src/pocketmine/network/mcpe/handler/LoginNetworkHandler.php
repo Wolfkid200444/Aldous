@@ -75,7 +75,7 @@ class LoginNetworkHandler extends NetworkHandler{
 		$params = new PlayerParameters();
 		$params->setUsername($packet->username);
 		$params->setUuid(UUID::fromString($packet->clientUUID));
-		$params->setXuid($packet->xuid);
+		$params->setXuid($packet->xuid ?? "");
 		$params->setLocale($packet->locale);
 		$params->setClientId($packet->clientId);
 		$params->setSkin($skin);
