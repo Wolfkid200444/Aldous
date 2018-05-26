@@ -155,6 +155,7 @@ abstract class PlayerNetworkSession{
 		if(!$signedByMojang and $xuid !== ""){
 			$this->server->getLogger()->warning($this->loginData->getUsername() . " has an XUID, but their login keychain is not signed by Mojang");
 			$this->loginData->setXuid("");
+			$xuid = "";
 		}
 
 		if($xuid === ""){
