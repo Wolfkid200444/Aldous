@@ -329,6 +329,7 @@ abstract class PlayerNetworkSession{
 	public function onClientDisconnect(string $reason) : void{
 		if($this->connected){
 			$this->connected = false;
+			$this->server->getNetwork()->removeTrackedSession($this);
 
 			if($this->player !== null){
 				$this->player->close($this->player->getLeaveMessage(), $reason);
