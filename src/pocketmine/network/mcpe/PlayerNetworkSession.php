@@ -196,7 +196,6 @@ abstract class PlayerNetworkSession{
 	}
 
 	public function startSpawnSequence() : void{
-		//TODO: this is where we should be actually creating the player
 		$this->player = $this->server->createPlayer($this, $this->loginData);
 		$this->handler = new SimpleNetworkHandler($this->player);
 	}
