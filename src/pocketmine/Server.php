@@ -2540,10 +2540,6 @@ class Server{
 
 		++$this->tickCounter;
 
-		Timings::$connectionTimer->startTiming();
-		$this->network->tick();
-		Timings::$connectionTimer->stopTiming();
-
 		Timings::$schedulerTimer->startTiming();
 		$this->pluginManager->tickSchedulers($this->tickCounter);
 		Timings::$schedulerTimer->stopTiming();
@@ -2557,6 +2553,19 @@ class Server{
 		foreach($this->players as $player){
 			$player->processChunkSends();
 		}
+
+		/*
+		 * Levels buffer packets per chunk area until the end of their tick, but network sessions do as well. This
+		 * should be ticked AFTER anything that might want to send packets on this tick has sent them, to make sure that
+		 * session buffers get flushed in real time.
+		 * Since this doesn't process events on network interfaces, it does not need to be called at the start of tick,
+		 * since any events that would result in packet sending should already have been processed before tick start.
+		 * At the worst, those events might get delayed until the end of this tick, which would result in a buffer flush
+		 * delay of UP TO 50ms, which is perfectly acceptable.
+		 */
+		Timings::$connectionTimer->startTiming();
+		$this->network->tick();
+		Timings::$connectionTimer->stopTiming();
 
 		if(($this->tickCounter % 20) === 0){
 			if($this->doTitleTick){
