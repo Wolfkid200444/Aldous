@@ -21,39 +21,18 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\item\enchantment;
+namespace pocketmine\item;
 
-
-class EnchantmentEntry{
-
-	/** @var Enchantment[] */
-	private $enchantments;
-	/** @var int */
-	private $cost;
-	/** @var string */
-	private $randomName;
-
-	/**
-	 * @param Enchantment[] $enchantments
-	 * @param int           $cost
-	 * @param string        $randomName
-	 */
-	public function __construct(array $enchantments, int $cost, string $randomName){
-		$this->enchantments = $enchantments;
-		$this->cost = $cost;
-		$this->randomName = $randomName;
+class DriedKelp extends Food{
+	public function __construct(int $meta = 0){
+		parent::__construct(self::DRIED_KELP, $meta, "Dried Kelp");
 	}
 
-	public function getEnchantments() : array{
-		return $this->enchantments;
+	public function getFoodRestore() : int{
+		return 1;
 	}
 
-	public function getCost() : int{
-		return $this->cost;
+	public function getSaturationRestore() : float{
+		return 0.6;
 	}
-
-	public function getRandomName() : string{
-		return $this->randomName;
-	}
-
 }

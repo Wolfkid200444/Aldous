@@ -429,6 +429,8 @@ class LevelDB extends BaseLevelProvider{
 			}
 		}
 
+		//TODO: extra data should be converted into blockstorage layers (first they need to be implemented!)
+		/*
 		$extraData = [];
 		if(($extraRawData = $this->db->get($index . self::TAG_BLOCK_EXTRA_DATA)) !== false and strlen($extraRawData) > 0){
 			$binaryStream->setBuffer($extraRawData, 0);
@@ -438,7 +440,7 @@ class LevelDB extends BaseLevelProvider{
 				$value = $binaryStream->getLShort();
 				$extraData[$key] = $value;
 			}
-		}
+		}*/
 
 		$chunk = new Chunk(
 			$chunkX,
@@ -447,8 +449,7 @@ class LevelDB extends BaseLevelProvider{
 			$entities,
 			$tiles,
 			$biomeIds,
-			$heightMap,
-			$extraData
+			$heightMap
 		);
 
 		//TODO: tile ticks, biome states (?)
@@ -479,20 +480,6 @@ class LevelDB extends BaseLevelProvider{
 		}
 
 		$this->db->put($index . self::TAG_DATA_2D, pack("v*", ...$chunk->getHeightMapArray()) . $chunk->getBiomeIdArray());
-
-		$extraData = $chunk->getBlockExtraDataArray();
-		if(count($extraData) > 0){
-			$stream = new BinaryStream();
-			$stream->putLInt(count($extraData));
-			foreach($extraData as $key => $value){
-				$stream->putLInt($key);
-				$stream->putLShort($value);
-			}
-
-			$this->db->put($index . self::TAG_BLOCK_EXTRA_DATA, $stream->getBuffer());
-		}else{
-			$this->db->delete($index . self::TAG_BLOCK_EXTRA_DATA);
-		}
 
 		//TODO: use this properly
 		$this->db->put($index . self::TAG_STATE_FINALISATION, chr(self::FINALISATION_DONE));

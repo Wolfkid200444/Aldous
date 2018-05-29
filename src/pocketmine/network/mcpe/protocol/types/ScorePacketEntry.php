@@ -21,39 +21,15 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\item\enchantment;
+namespace pocketmine\network\mcpe\protocol\types;
 
+use pocketmine\utils\UUID;
 
-class EnchantmentEntry{
-
-	/** @var Enchantment[] */
-	private $enchantments;
-	/** @var int */
-	private $cost;
+class ScorePacketEntry{
+	/** @var UUID */
+	public $uuid;
 	/** @var string */
-	private $randomName;
-
-	/**
-	 * @param Enchantment[] $enchantments
-	 * @param int           $cost
-	 * @param string        $randomName
-	 */
-	public function __construct(array $enchantments, int $cost, string $randomName){
-		$this->enchantments = $enchantments;
-		$this->cost = $cost;
-		$this->randomName = $randomName;
-	}
-
-	public function getEnchantments() : array{
-		return $this->enchantments;
-	}
-
-	public function getCost() : int{
-		return $this->cost;
-	}
-
-	public function getRandomName() : string{
-		return $this->randomName;
-	}
-
+	public $objectiveName;
+	/** @var int */
+	public $score;
 }

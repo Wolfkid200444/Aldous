@@ -21,39 +21,14 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\item\enchantment;
+namespace pocketmine\item;
 
-
-class EnchantmentEntry{
-
-	/** @var Enchantment[] */
-	private $enchantments;
-	/** @var int */
-	private $cost;
-	/** @var string */
-	private $randomName;
-
-	/**
-	 * @param Enchantment[] $enchantments
-	 * @param int           $cost
-	 * @param string        $randomName
-	 */
-	public function __construct(array $enchantments, int $cost, string $randomName){
-		$this->enchantments = $enchantments;
-		$this->cost = $cost;
-		$this->randomName = $randomName;
+class Totem extends Item{
+	public function __construct(int $meta = 0){
+		parent::__construct(self::TOTEM, $meta, "Totem of Undying");
 	}
 
-	public function getEnchantments() : array{
-		return $this->enchantments;
+	public function getMaxStackSize() : int{
+		return 1;
 	}
-
-	public function getCost() : int{
-		return $this->cost;
-	}
-
-	public function getRandomName() : string{
-		return $this->randomName;
-	}
-
 }

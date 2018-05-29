@@ -21,18 +21,27 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\item;
+namespace pocketmine\network\mcpe\protocol;
 
-use pocketmine\block\Block;
-use pocketmine\block\BlockFactory;
+#include <rules/DataPacket.h>
 
-class Anvil extends ItemBlock{
+use pocketmine\network\mcpe\NetworkSession;
 
-	public function __construct(int $meta = 0){
-		parent::__construct(Item::ANVIL, $meta);
+class RemoveObjectivePacket extends DataPacket{
+	public const NETWORK_ID = ProtocolInfo::REMOVE_OBJECTIVE_PACKET;
+
+	/** @var string */
+	public $objectiveName;
+
+	protected function decodePayload(){
+		$this->objectiveName = $this->getString();
 	}
 
-	public function getBlock() : Block{
-		return BlockFactory::get(Block::ANVIL, $this->meta << 2);
+	protected function encodePayload(){
+		$this->putString($this->objectiveName);
+	}
+
+	public function handle(NetworkSession $session) : bool{
+		return $session->handleRemoveObjective($this);
 	}
 }
