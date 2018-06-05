@@ -2549,10 +2549,6 @@ class Server{
 
 		$this->checkTickUpdates($this->tickCounter, $tickTime);
 
-		foreach($this->players as $player){
-			$player->processChunkSends();
-		}
-
 		/*
 		 * Levels buffer packets per chunk area until the end of their tick, but network sessions do as well. This
 		 * should be ticked AFTER anything that might want to send packets on this tick has sent them, to make sure that

@@ -791,7 +791,10 @@ class Level implements ChunkManager, Metadatable{
 
 		}
 
-		$this->processChunkRequest();
+		foreach($this->players as $p){
+			$p->doChunkRequests();
+		}
+		$this->processChunkRequests();
 
 		if($this->sleepTicks > 0 and --$this->sleepTicks <= 0){
 			$this->checkSleep();
@@ -2468,7 +2471,7 @@ class Level implements ChunkManager, Metadatable{
 		}
 	}
 
-	private function processChunkRequest(){
+	private function processChunkRequests(){
 		if(count($this->chunkSendQueue) > 0){
 			$this->timings->syncChunkSendTimer->startTiming();
 
