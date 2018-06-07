@@ -59,7 +59,7 @@ abstract class PlayerNetworkSession{
 	/** @var NetworkInterface */
 	protected $interface;
 	/** @var PlayerParameters */
-	protected $loginData;
+	protected $playerParams;
 
 	/** @var bool */
 	protected $connected = true;
@@ -123,12 +123,12 @@ abstract class PlayerNetworkSession{
 		return $this->connected;
 	}
 
-	public function getLoginData() : ?PlayerParameters{
-		return $this->loginData;
+	public function getPlayerParams() : ?PlayerParameters{
+		return $this->playerParams;
 	}
 
-	public function setLoginData(PlayerParameters $parameters) : void{
-		$this->loginData = $parameters;
+	public function setPlayerParams(PlayerParameters $parameters) : void{
+		$this->playerParams = $parameters;
 	}
 
 	/**
@@ -150,17 +150,17 @@ abstract class PlayerNetworkSession{
 			return;
 		}
 
-		$xuid = $this->loginData->getXuid();
+		$xuid = $this->playerParams->getXuid();
 
 		if(!$signedByMojang and $xuid !== ""){
-			$this->server->getLogger()->warning($this->loginData->getUsername() . " has an XUID, but their login keychain is not signed by Mojang");
-			$this->loginData->setXuid("");
+			$this->server->getLogger()->warning($this->playerParams->getUsername() . " has an XUID, but their login keychain is not signed by Mojang");
+			$this->playerParams->setXuid("");
 			$xuid = "";
 		}
 
 		if($xuid === ""){
 			if($signedByMojang){
-				$this->server->getLogger()->error($this->loginData->getUsername() . " should have an XUID, but none found");
+				$this->server->getLogger()->error($this->playerParams->getUsername() . " should have an XUID, but none found");
 			}
 
 			if($this->server->requiresAuthentication()){
@@ -169,9 +169,9 @@ abstract class PlayerNetworkSession{
 				return;
 			}
 
-			$this->server->getLogger()->debug($this->loginData->getUsername() . " is NOT logged into Xbox Live");
+			$this->server->getLogger()->debug($this->playerParams->getUsername() . " is NOT logged into Xbox Live");
 		}else{
-			$this->server->getLogger()->debug($this->loginData->getUsername() . " is logged into Xbox Live");
+			$this->server->getLogger()->debug($this->playerParams->getUsername() . " is logged into Xbox Live");
 		}
 
 		//TODO: encryption
@@ -181,8 +181,8 @@ abstract class PlayerNetworkSession{
 				continue;
 			}
 
-			if(strtolower($other->loginData->getUsername()) === strtolower($this->loginData->getUsername()) or
-				$other->loginData->getUuid()->equals($this->loginData->getUuid())){
+			if(strtolower($other->playerParams->getUsername()) === strtolower($this->playerParams->getUsername()) or
+				$other->playerParams->getUuid()->equals($this->playerParams->getUuid())){
 				//TODO: allow plugins to have a say in this
 				$other->serverDisconnect("Logged in from another location");
 			}
@@ -196,9 +196,9 @@ abstract class PlayerNetworkSession{
 	}
 
 	public function startSpawnSequence() : void{
-		$this->player = $this->server->createPlayer($this, $this->loginData);
+		$this->player = $this->server->createPlayer($this, $this->playerParams);
 		$this->handler = new SimpleNetworkHandler($this->player);
-		$this->loginData = null;
+		$this->playerParams = null;
 	}
 
 	public function onSpawn() : void{

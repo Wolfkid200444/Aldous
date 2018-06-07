@@ -116,7 +116,7 @@ class LoginNetworkHandler extends NetworkHandler{
 			return true;
 		}
 
-		$this->session->setLoginData($params);
+		$this->session->setPlayerParams($params);
 
 
 		if(!$packet->skipVerification){
