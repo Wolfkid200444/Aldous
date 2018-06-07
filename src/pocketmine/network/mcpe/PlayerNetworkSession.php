@@ -198,6 +198,7 @@ abstract class PlayerNetworkSession{
 	public function startSpawnSequence() : void{
 		$this->player = $this->server->createPlayer($this, $this->loginData);
 		$this->handler = new SimpleNetworkHandler($this->player);
+		$this->loginData = null;
 	}
 
 	public function onSpawn() : void{
