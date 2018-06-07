@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\event;
 
-
 /**
  * List of event priorities
  *
@@ -87,5 +86,9 @@ abstract class EventPriority{
 		}
 
 		throw new \InvalidArgumentException("Unable to resolve priority \"$name\"");
+	}
+
+	public static function toString(int $priority) : string{
+		return array_search($priority, (new ReflectionClass(EventPriority::class))->getConstants());
 	}
 }

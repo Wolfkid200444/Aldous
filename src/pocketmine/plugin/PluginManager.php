@@ -25,6 +25,7 @@ namespace pocketmine\plugin;
 
 use pocketmine\command\PluginCommand;
 use pocketmine\command\SimpleCommandMap;
+use pocketmine\event\async\EventCallSequence;
 use pocketmine\event\Event;
 use pocketmine\event\EventPriority;
 use pocketmine\event\HandlerList;
@@ -90,11 +91,11 @@ class PluginManager{
 	 */
 	protected $fileAssociations = [];
 
+	/** @var \SplObjectStorage|EventCallSequence[] */
+	private $pendingSequences;
+
 	/** @var int */
 	private $eventCallDepth = 0;
-
-	/** @var Event[] */
-	protected $pausedEvents = [];
 
 	/** @var TimingsHandler */
 	public static $pluginParentTimer;
@@ -106,6 +107,8 @@ class PluginManager{
 	public function __construct(Server $server, SimpleCommandMap $commandMap){
 		$this->server = $server;
 		$this->commandMap = $commandMap;
+
+		$this->pendingSequences = new \SplObjectStorage();
 	}
 
 	/**
@@ -677,6 +680,18 @@ class PluginManager{
 		}
 	}
 
+	public function collectEvents() : void{
+		$detaches = [];
+		foreach($this->pendingSequences as $sequence){
+			if(!$sequence->tick()){
+				$detaches[] = $sequence;
+			}
+		}
+		foreach($detaches as $detach){
+			$this->pendingSequences->detach($detach);
+		}
+	}
+
 	public function clearPlugins(){
 		$this->disablePlugins();
 		$this->plugins = [];
@@ -684,14 +699,6 @@ class PluginManager{
 		$this->permissions = [];
 		$this->defaultPerms = [];
 		$this->defaultPermsOp = [];
-	}
-
-	public function checkEvents(int $currentTick) : void{
-		foreach($this->pausedEvents as $hash => $event){
-			if($event->asyncCheck($currentTick)){
-				unset($this->pausedEvents[$hash]);
-			}
-		}
 	}
 
 	/**
@@ -737,25 +744,24 @@ class PluginManager{
 		--$this->eventCallDepth;
 	}
 
-	public function callAsyncEvent(Event $event, callable $onCompletion) : void{
-		$queue = [];
-		foreach(EventPriority::ALL as $priority){
-			for($handlerList = HandlerList::getHandlerListFor(get_class($event)); $handlerList !== null; $handlerList = $handlerList->getParent()){
-				foreach($handlerList->getListenersByPriority($priority) as $registration){
-					if($registration->getPlugin()->isEnabled()){
-						$queue[] = $registration;
-					}
-				}
-			}
-		}
-		if($event->isAsync() && $event->isAsyncComplete()){
-			throw new \InvalidStateException("Attempt to call an async event that is still executing");
-		}
-		$event->setAsyncQueue($queue, $onCompletion);
-		$event->startAsyncQueue($this->server->getTick());
-		if($event->isAsync()){ // returns false if the event execution has completed
-			assert(!isset($this->pausedEvents[spl_object_hash($event)]));
-			$this->pausedEvents[spl_object_hash($event)] = $event; // we do not allow duplicate events
+	/**
+	 * Calls an event asynchronously, i.e. the event handlers may or may not have finished execution immediately after
+	 * this function call completes. The actual event execution should be done in the $onComplete callable.
+	 *
+	 * @param Event    $event
+	 * @param callable $onComplete
+	 */
+	public function callAsyncEvent(Event $event, callable $onComplete) : void{
+		// TODO detect recursive event call
+
+		$handlerList = HandlerList::getHandlerListFor(get_class($event));
+		assert($handlerList !== null, "Called event should have a valid HandlerList");
+
+		$sequence = new EventCallSequence($event, $handlerList, $onComplete);
+		$generator = $sequence->getGenerator();
+		$generator->rewind();
+		if($generator->valid()){
+			$this->pendingSequences[] = $sequence;
 		}
 	}
 

@@ -2518,8 +2518,6 @@ class Server{
 		$this->network->processInterfaces();
 		Timings::$connectionTimer->stopTiming();
 
-		$this->pluginManager->checkEvents($this->tickCounter);
-
 		Timings::$schedulerTimer->startTiming();
 		$this->pluginManager->tickSchedulers($this->tickCounter);
 		Timings::$schedulerTimer->stopTiming();
@@ -2527,6 +2525,8 @@ class Server{
 		Timings::$schedulerAsyncTimer->startTiming();
 		$this->asyncPool->collectTasks();
 		Timings::$schedulerAsyncTimer->stopTiming();
+
+		$this->pluginManager->collectEvents(); // collect after AsyncTask onComplete has been called if possible
 
 		$this->checkTickUpdates($this->tickCounter, $tickTime);
 

@@ -88,6 +88,13 @@ class RegisteredListener{
 	}
 
 	/**
+	 * @return EventExecutor
+	 */
+	public function getExecutor() : EventExecutor{
+		return $this->executor;
+	}
+
+	/**
 	 * @param Event $event
 	 */
 	public function callEvent(Event $event){
