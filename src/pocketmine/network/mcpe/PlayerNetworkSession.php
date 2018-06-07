@@ -218,6 +218,10 @@ abstract class PlayerNetworkSession{
 	}
 
 	protected function handleDataPacket(DataPacket $packet){
+		if(!$this->connected){
+			return;
+		}
+
 		$timings = Timings::getReceiveDataPacketTimings($packet);
 		$timings->startTiming();
 
