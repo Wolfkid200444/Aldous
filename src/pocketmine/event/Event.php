@@ -81,9 +81,9 @@ abstract class Event{
 	}
 
 	/**
-	 * @param EventCallSequence $callSequence
+	 * @param EventCallSequence|null $callSequence
 	 */
-	public function setCallSequence(EventCallSequence $callSequence) : void{
+	public function setCallSequence(?EventCallSequence $callSequence) : void{
 		$this->callSequence = $callSequence;
 	}
 }

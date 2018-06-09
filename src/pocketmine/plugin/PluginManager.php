@@ -684,6 +684,7 @@ class PluginManager{
 		$detaches = [];
 		foreach($this->pendingSequences as $sequence){
 			if(!$sequence->tick()){
+				$sequence->getEvent()->setCallSequence(null);
 				$detaches[] = $sequence;
 			}
 		}
@@ -754,8 +755,13 @@ class PluginManager{
 	public function callAsyncEvent(Event $event, callable $onComplete) : void{
 		// TODO detect recursive event call
 
+		if($event->getCallSequence() !== null){
+			throw new \InvalidStateException("Cannot call async event concurrently");
+		}
+
 		$handlerList = HandlerList::getHandlerListFor(get_class($event));
 		assert($handlerList !== null, "Called event should have a valid HandlerList");
+
 
 		$sequence = new EventCallSequence($event, $handlerList, $onComplete);
 		$generator = $sequence->getGenerator();
