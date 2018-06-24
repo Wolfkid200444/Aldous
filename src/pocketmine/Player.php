@@ -1912,8 +1912,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return bool
 	 */
 	public function chat(string $message) : bool{
-		$this->resetCraftingGridType();
-
 		$message = TextFormat::clean($message, $this->removeFormat);
 		foreach(explode("\n", $message) as $messagePart){
 			if(trim($messagePart) !== "" and strlen($messagePart) <= 255 and $this->messageCounter-- > 0){
@@ -1981,8 +1979,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleEntityEvent(EntityEventPacket $packet) : bool{
-		$this->resetCraftingGridType();
-
 		switch($packet->event){
 			case EntityEventPacket::EATING_ITEM:
 				if($packet->data === 0){
@@ -2128,8 +2124,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 						return true;
 					case InventoryTransactionPacket::USE_ITEM_ACTION_BREAK_BLOCK:
-						$this->resetCraftingGridType();
-
 						$item = $this->inventory->getItemInHand();
 						$oldItem = clone $item;
 
@@ -2380,8 +2374,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleInteract(InteractPacket $packet) : bool{
-		$this->resetCraftingGridType();
-
 		$target = $this->level->getEntity($packet->target);
 		if($target === null){
 			return false;
@@ -2575,14 +2567,15 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			return true;
 		}
 
-		$this->resetCraftingGridType();
-
 		if(isset($this->windowIndex[$packet->windowId])){
 			$this->server->getPluginManager()->callEvent(new InventoryCloseEvent($this->windowIndex[$packet->windowId], $this));
 			$this->removeWindow($this->windowIndex[$packet->windowId]);
 			return true;
 		}elseif($packet->windowId === 255){
 			//Closed a fake window
+			//TODO: this could be something else other than crafting grid
+			$this->resetCraftingGridType();
+
 			return true;
 		}
 
@@ -2622,8 +2615,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleBlockEntityData(BlockEntityDataPacket $packet) : bool{
-		$this->resetCraftingGridType();
-
 		$pos = new Vector3($packet->x, $packet->y, $packet->z);
 		if($pos->distanceSquared($this) > 10000 or $this->level->checkSpawnProtection($this, $pos)){
 			return true;
