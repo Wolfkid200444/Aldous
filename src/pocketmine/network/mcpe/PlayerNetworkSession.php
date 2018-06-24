@@ -27,6 +27,7 @@ use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\mcpe\handler\LoginNetworkHandler;
 use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\PreSpawnNetworkHandler;
 use pocketmine\network\mcpe\handler\ResourcePacksNetworkHandler;
 use pocketmine\network\mcpe\handler\SimpleNetworkHandler;
 use pocketmine\network\mcpe\protocol\DataPacket;
@@ -197,15 +198,14 @@ abstract class PlayerNetworkSession{
 
 	public function startSpawnSequence() : void{
 		$this->player = $this->server->createPlayer($this, $this->playerParams);
-		$this->handler = new SimpleNetworkHandler($this->player);
+		$this->handler = new PreSpawnNetworkHandler($this->player);
 		$this->playerParams = null;
 	}
 
 	public function onSpawn() : void{
-		//TODO: use a void network handler pre-spawn (it should be replaced with a regular game handler here)
 		$this->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+		$this->handler = new SimpleNetworkHandler($this->player);
 	}
-
 
 	protected function handleBatch(string $buffer) : void{
 		//TODO: this needs to be decrypted before decompression if encryption is enabled
