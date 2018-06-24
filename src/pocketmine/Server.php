@@ -2068,7 +2068,7 @@ class Server{
 			}
 
 			foreach($this->players as $player){
-				$player->close($player->getLeaveMessage(), $this->getProperty("settings.shutdown-message", "Server closed"));
+				$player->disconnect($player->getLeaveMessage(), $this->getProperty("settings.shutdown-message", "Server closed"));
 			}
 
 			$this->getLogger()->debug("Unloading all levels");

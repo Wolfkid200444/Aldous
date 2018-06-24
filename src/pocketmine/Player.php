@@ -734,7 +734,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		parent::__construct($level, $this->namedtag);
 		$this->server->getPluginManager()->callEvent($ev = new PlayerLoginEvent($this, "Plugin reason"));
 		if($ev->isCancelled()){
-			$this->close($this->getLeaveMessage(), $ev->getKickMessage());
+			$this->disconnect($this->getLeaveMessage(), $ev->getKickMessage());
 
 			return;
 		}
@@ -2814,7 +2814,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$pk->address = $ev->getAddress();
 			$pk->port = $ev->getPort();
 			$this->sendDataPacket($pk, true);
-			$this->close("", $ev->getMessage(), false);
+			$this->disconnect("", $ev->getMessage(), false);
 
 			return true;
 		}
@@ -2843,7 +2843,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 					$message = "disconnectionScreen.noReason";
 				}
 			}
-			$this->close($ev->getQuitMessage(), $message);
+			$this->disconnect($ev->getQuitMessage(), $message);
 
 			return true;
 		}
@@ -3018,49 +3018,68 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @param string               $reason Reason showed in console
 	 * @param bool                 $notify
 	 */
-	final public function close($message = "", string $reason = "generic reason", bool $notify = true) : void{
-		if($this->isConnected() and !$this->closed){
+	public function disconnect($message = "", string $reason = "generic reason", bool $notify = true) : void{
+		if(!$this->isConnected()){
+			return;
+		}
 
+		$ip = $this->getAddress();
+		$port = $this->getPort();
+
+		$session = $this->networkSession;
+		$this->networkSession = null;
+		$session->serverDisconnect($notify ? $reason : "", $notify);
+
+		$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_USERS, $this);
+		$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE, $this);
+
+
+		if($this->spawned){
+			$this->server->getPluginManager()->callEvent($ev = new PlayerQuitEvent($this, $message, $reason));
+			if($ev->getQuitMessage() != ""){
+				$this->server->broadcastMessage($ev->getQuitMessage());
+			}
+		}
+
+		$this->despawnFromAll();
+		$this->spawned = false;
+		$this->flagForDespawn();
+
+		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logOut", [
+			TextFormat::AQUA . $this->getName() . TextFormat::WHITE,
+			$ip,
+			$port,
+			$this->getServer()->getLanguage()->translateString($reason)
+		]));
+
+		$this->server->removeOnlinePlayer($this);
+		$this->server->removePlayer($this);
+	}
+
+	/**
+	 * @internal For disconnecting players, see kick() and disconnect().
+	 */
+	public function close() : void{
+		if(!$this->closed){
 			try{
-				$ip = $this->getAddress();
-				$port = $this->getPort();
-
-				$session = $this->networkSession;
-				$this->networkSession = null;
-				$session->serverDisconnect($notify ? $reason : "", $notify);
-
-				$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_USERS, $this);
-				$this->server->getPluginManager()->unsubscribeFromPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE, $this);
-
-				$this->stopSleep();
-
-				if($this->spawned){
-					$this->server->getPluginManager()->callEvent($ev = new PlayerQuitEvent($this, $message, $reason));
-					if($ev->getQuitMessage() != ""){
-						$this->server->broadcastMessage($ev->getQuitMessage());
-					}
-
-					try{
-						$this->save();
-					}catch(\Throwable $e){
-						$this->server->getLogger()->critical("Failed to save player data for " . $this->getName());
-						$this->server->getLogger()->logException($e);
-					}
+				if($this->isConnected()){
+					$this->disconnect($this->getLeaveMessage(), "entity destroyed");
+				}
+				try{
+					$this->save();
+				}catch(\Throwable $e){
+					$this->server->getLogger()->critical("Failed to save player data for " . $this->getName());
+					$this->server->getLogger()->logException($e);
 				}
 
-				$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logOut", [
-					TextFormat::AQUA . $this->getName() . TextFormat::WHITE,
-					$ip,
-					$port,
-					$this->getServer()->getLanguage()->translateString($reason)
-				]));
+				$this->stopSleep();
 
 				if($this->isValid()){
 					foreach($this->usedChunks as $index => $d){
 						Level::getXZ($index, $chunkX, $chunkZ);
 						$this->level->unregisterChunkLoader($this, $chunkX, $chunkZ);
 						foreach($this->level->getChunkEntities($chunkX, $chunkZ) as $entity){
-							$entity->despawnFrom($this);
+							$entity->despawnFrom($this, false);
 						}
 						unset($this->usedChunks[$index]);
 					}
@@ -3080,12 +3099,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				$this->windowIndex = [];
 				$this->cursorInventory = null;
 				$this->craftingGrid = null;
-				parent::close();
-
-				$this->spawned = false;
-
-				$this->server->removeOnlinePlayer($this);
-
 				$this->spawnPosition = null;
 
 				if($this->perm !== null){
@@ -3095,7 +3108,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			}catch(\Throwable $e){
 				$this->server->getLogger()->logException($e);
 			}finally{
-				$this->server->removePlayer($this);
+				parent::close();
 			}
 		}
 	}

@@ -310,7 +310,7 @@ abstract class PlayerNetworkSession{
 			$this->server->getNetwork()->removeTrackedSession($this);
 
 			if($this->player !== null){
-				$this->player->close("", $reason, $mcpeDisconnect);
+				$this->player->disconnect("", $reason, $mcpeDisconnect);
 			}
 
 			if($mcpeDisconnect){
@@ -341,7 +341,7 @@ abstract class PlayerNetworkSession{
 			$this->server->getNetwork()->removeTrackedSession($this);
 
 			if($this->player !== null){
-				$this->player->close($this->player->getLeaveMessage(), $reason);
+				$this->player->disconnect($this->player->getLeaveMessage(), $reason);
 				$this->player = null;
 			}
 
