@@ -1886,7 +1886,7 @@ class Server{
 			$length += \strlen($packet->buffer);
 		}
 
-		if(Network::$BATCH_THRESHOLD >= 0 and $length >= Network::$BATCH_THRESHOLD){
+		if($immediate or (Network::$BATCH_THRESHOLD >= 0 and $length >= Network::$BATCH_THRESHOLD)){ //immediate sends won't get buffered, so we batch them here in case we broadcasted a range of packets
 			$stream = new PacketBuffer();
 			foreach($packets as $packet){
 				$stream->addPacket($packet);
@@ -1904,9 +1904,6 @@ class Server{
 				foreach($packets as $packet){
 					//don't fire DataPacketSendEvent for this
 					$session->sendDataPacket($packet, false, false);
-				}
-				if($immediate){
-					$session->flushBatchBuffer($immediate);
 				}
 			}
 		}

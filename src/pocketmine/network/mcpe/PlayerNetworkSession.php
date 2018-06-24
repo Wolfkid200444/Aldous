@@ -295,12 +295,11 @@ abstract class PlayerNetworkSession{
 	/**
 	 * Flushes pending buffered packets in a single batch to the network.
 	 *
-	 * @param bool $immediateFlush
 	 */
-	public function flushBatchBuffer(bool $immediateFlush = false) : void{
+	public function flushBatchBuffer() : void{
 		if($this->batchBuffer !== null){
-			$this->batchQueue->enqueue($this->server->prepareBatch($this->batchBuffer, $immediateFlush));
-			$this->flushBatchQueue($immediateFlush);
+			$this->batchQueue->enqueue($this->server->prepareBatch($this->batchBuffer));
+			$this->flushBatchQueue();
 			$this->batchBuffer = null;
 		}
 	}
@@ -352,12 +351,19 @@ abstract class PlayerNetworkSession{
 	}
 
 	public function sendPreparedBatch(CompressBatchedTask $task, bool $immediateFlush = false) : void{
-		$this->flushBatchBuffer($immediateFlush);
-		$this->batchQueue->enqueue($task);
-		$this->flushBatchQueue($immediateFlush);
+		if($immediateFlush){
+			if(!$task->hasResult()){
+				throw new \InvalidArgumentException("Prepared batch cannot be sent immediately because it is not ready");
+			}
+			$this->sendBatch($task->getResult(), true);
+		}else{
+			$this->flushBatchBuffer();
+			$this->batchQueue->enqueue($task);
+			$this->flushBatchQueue();
+		}
 	}
 
-	private function flushBatchQueue(bool $immediateFlush = false) : void{
+	private function flushBatchQueue() : void{
 		while(!$this->batchQueue->isEmpty()){
 			/** @var CompressBatchedTask $nextBatch */
 			$nextBatch = $this->batchQueue->bottom();
@@ -366,7 +372,7 @@ abstract class PlayerNetworkSession{
 
 				//TODO: encryption
 
-				$this->sendBatch($nextBatch->getResult(), $immediateFlush);
+				$this->sendBatch($nextBatch->getResult(), false);
 			}else{
 				//we're still waiting for this task to finish
 				break;
