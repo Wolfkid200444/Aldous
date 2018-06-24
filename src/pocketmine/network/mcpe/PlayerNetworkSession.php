@@ -242,7 +242,7 @@ abstract class PlayerNetworkSession{
 
 	/**
 	 * @param DataPacket $packet
-	 * @param bool       $immediateFlush
+	 * @param bool       $immediateFlush Skips queues and sends with immediate priority if true
 	 * @param bool       $fireEvent
 	 *
 	 * @return bool
@@ -263,9 +263,14 @@ abstract class PlayerNetworkSession{
 				}
 			}
 
-			$this->addToBatchBuffer($packet);
 			if($immediateFlush){
-				$this->flushBatchBuffer($immediateFlush);
+				$buf = new PacketBuffer();
+				$buf->addPacket($packet);
+
+				$batch = $this->server->prepareBatch($buf, true);
+				$this->sendBatch($batch->getResult(), true);
+			}else{
+				$this->addToBatchBuffer($packet);
 			}
 
 			return true;
