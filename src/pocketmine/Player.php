@@ -1912,7 +1912,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return bool
 	 */
 	public function chat(string $message) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return false;
 		}
 
@@ -1956,7 +1956,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 			$this->sendPosition($this, null, null, MovePlayerPacket::MODE_RESET);
 			$this->server->getLogger()->debug("Got outdated pre-teleport movement from " . $this->getName() . ", received " . $newPos . ", expected " . $this->asVector3());
 			//Still getting movements from before teleport, ignore them
-		}elseif((!$this->isAlive() or !$this->spawned) and $newPos->distanceSquared($this) > 0.01){
+		}elseif(!$this->isAlive() and $newPos->distanceSquared($this) > 0.01){
 			$this->sendPosition($this, null, null, MovePlayerPacket::MODE_RESET);
 			$this->server->getLogger()->debug("Reverted movement of " . $this->getName() . " due to not alive or not spawned, received " . $newPos . ", locked at " . $this->asVector3());
 		}else{
@@ -1988,7 +1988,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleEntityEvent(EntityEventPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 		$this->resetCraftingGridType();
@@ -2016,7 +2016,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return bool
 	 */
 	public function handleInventoryTransaction(InventoryTransactionPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return false;
 		}
 
@@ -2378,7 +2378,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleMobEquipment(MobEquipmentPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 
@@ -2398,7 +2398,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleInteract(InteractPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 
@@ -2453,7 +2453,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handlePlayerAction(PlayerActionPacket $packet) : bool{
-		if(!$this->spawned or (!$this->isAlive() and $packet->action !== PlayerActionPacket::ACTION_RESPAWN and $packet->action !== PlayerActionPacket::ACTION_DIMENSION_CHANGE_REQUEST)){
+		if(!$this->isAlive() and $packet->action !== PlayerActionPacket::ACTION_RESPAWN and $packet->action !== PlayerActionPacket::ACTION_DIMENSION_CHANGE_REQUEST){
 			return true;
 		}
 
@@ -2506,7 +2506,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				$this->stopSleep();
 				break;
 			case PlayerActionPacket::ACTION_RESPAWN:
-				if(!$this->spawned or $this->isAlive() or !$this->isOnline()){
+				if($this->isAlive() or !$this->isOnline()){
 					break;
 				}
 
@@ -2571,7 +2571,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleAnimate(AnimatePacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 
@@ -2595,7 +2595,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @return bool if the item was dropped or if the item was null
 	 */
 	public function dropItem(Item $item) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return false;
 		}
 
@@ -2612,7 +2612,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleContainerClose(ContainerClosePacket $packet) : bool{
-		if(!$this->spawned or $packet->windowId === 0){
+		if($packet->windowId === 0){
 			return true;
 		}
 
@@ -2663,7 +2663,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleBlockEntityData(BlockEntityDataPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 		$this->resetCraftingGridType();
@@ -2699,7 +2699,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	}
 
 	public function handleItemFrameDropItem(ItemFrameDropItemPacket $packet) : bool{
-		if(!$this->spawned or !$this->isAlive()){
+		if(!$this->isAlive()){
 			return true;
 		}
 
