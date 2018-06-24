@@ -25,6 +25,7 @@ namespace pocketmine\network\mcpe;
 
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
+use pocketmine\network\mcpe\handler\DeathNetworkHandler;
 use pocketmine\network\mcpe\handler\LoginNetworkHandler;
 use pocketmine\network\mcpe\handler\NetworkHandler;
 use pocketmine\network\mcpe\handler\PreSpawnNetworkHandler;
@@ -204,6 +205,14 @@ abstract class PlayerNetworkSession{
 
 	public function onSpawn() : void{
 		$this->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+		$this->handler = new SimpleNetworkHandler($this->player);
+	}
+
+	public function onDeath() : void{
+		$this->handler = new DeathNetworkHandler($this->player);
+	}
+
+	public function onRespawn() : void{
 		$this->handler = new SimpleNetworkHandler($this->player);
 	}
 
