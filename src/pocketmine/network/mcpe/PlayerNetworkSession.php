@@ -41,6 +41,7 @@ use pocketmine\Player;
 use pocketmine\PlayerParameters;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
+use pocketmine\utils\UUID;
 
 abstract class PlayerNetworkSession{
 
@@ -133,6 +134,26 @@ abstract class PlayerNetworkSession{
 		$this->playerParams = $parameters;
 	}
 
+	public function getUsername() : string{
+		if($this->player !== null){
+			return $this->player->getName();
+		}
+		if($this->playerParams !== null){
+			return $this->playerParams->getUsername();
+		}
+		return $this->getIp() . " " . $this->getPort();
+	}
+
+	public function getUuid() : UUID{
+		if($this->player !== null){
+			return $this->player->getUniqueId();
+		}
+		if($this->playerParams !== null){
+			return $this->playerParams->getUuid();
+		}
+		return new UUID(); //null UUID default
+	}
+
 	/**
 	 * @param int $status
 	 */
@@ -155,14 +176,14 @@ abstract class PlayerNetworkSession{
 		$xuid = $this->playerParams->getXuid();
 
 		if(!$signedByMojang and $xuid !== ""){
-			$this->server->getLogger()->warning($this->playerParams->getUsername() . " has an XUID, but their login keychain is not signed by Mojang");
+			$this->server->getLogger()->warning($this->getUsername() . " has an XUID, but their login keychain is not signed by Mojang");
 			$this->playerParams->setXuid("");
 			$xuid = "";
 		}
 
 		if($xuid === ""){
 			if($signedByMojang){
-				$this->server->getLogger()->error($this->playerParams->getUsername() . " should have an XUID, but none found");
+				$this->server->getLogger()->error($this->getUsername() . " should have an XUID, but none found");
 			}
 
 			if($this->server->requiresAuthentication()){
@@ -171,9 +192,9 @@ abstract class PlayerNetworkSession{
 				return;
 			}
 
-			$this->server->getLogger()->debug($this->playerParams->getUsername() . " is NOT logged into Xbox Live");
+			$this->server->getLogger()->debug($this->getUsername() . " is NOT logged into Xbox Live");
 		}else{
-			$this->server->getLogger()->debug($this->playerParams->getUsername() . " is logged into Xbox Live");
+			$this->server->getLogger()->debug($this->getUsername() . " is logged into Xbox Live");
 		}
 
 		//TODO: encryption
@@ -183,8 +204,8 @@ abstract class PlayerNetworkSession{
 				continue;
 			}
 
-			if(strtolower($other->playerParams->getUsername()) === strtolower($this->playerParams->getUsername()) or
-				$other->playerParams->getUuid()->equals($this->playerParams->getUuid())){
+			if(strtolower($other->getUsername()) === strtolower($this->getUsername()) or
+				$other->getUuid()->equals($this->getUuid())){
 				//TODO: allow plugins to have a say in this
 				$other->serverDisconnect("Logged in from another location");
 			}
@@ -243,7 +264,7 @@ abstract class PlayerNetworkSession{
 		$this->server->getPluginManager()->callEvent($ev = new DataPacketReceiveEvent($this, $packet));
 
 		if(!$ev->isCancelled() and !$packet->handle($this->handler)){
-			$this->server->getLogger()->debug("Unhandled " . $packet->getName() . " received from " . $this->getIp() . " " . $this->getPort() . ": 0x" . bin2hex($packet->buffer));
+			$this->server->getLogger()->debug("Unhandled " . $packet->getName() . " received from " . $this->getUsername() . ": 0x" . bin2hex($packet->buffer));
 		}
 
 		$timings->stopTiming();
@@ -259,7 +280,7 @@ abstract class PlayerNetworkSession{
 	public function sendDataPacket(DataPacket $packet, bool $immediateFlush = false, bool $fireEvent = true) : bool{
 		//Basic safety restriction. TODO: improve this
 		if(!$this->loggedIn and !$packet->canBeSentBeforeLogin()){
-			throw new \InvalidArgumentException("Attempted to send " . get_class($packet) . " to " . $this->getIp() . " " . $this->getPort() . " too early");
+			throw new \InvalidArgumentException("Attempted to send " . get_class($packet) . " to " . $this->getUsername() . " too early");
 		}
 
 		$timings = Timings::getSendDataPacketTimings($packet);
