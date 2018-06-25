@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
+use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
@@ -99,7 +100,10 @@ class SimpleNetworkHandler extends NetworkHandler{
 	}
 
 	public function handleMobEquipment(MobEquipmentPacket $packet) : bool{
-		return $this->player->handleMobEquipment($packet);
+		$this->player->getInventory()->equipItem($packet->hotbarSlot);
+		$this->player->setUsingItem(false);
+
+		return true;
 	}
 
 	public function handleMobArmorEquipment(MobArmorEquipmentPacket $packet) : bool{
@@ -107,11 +111,26 @@ class SimpleNetworkHandler extends NetworkHandler{
 	}
 
 	public function handleInteract(InteractPacket $packet) : bool{
-		return $this->player->handleInteract($packet);
+		$target = $this->player->getLevel()->getEntity($packet->target);
+		if($target === null){
+			return false;
+		}
+
+		switch($packet->action){
+			case InteractPacket::ACTION_LEAVE_VEHICLE:
+			case InteractPacket::ACTION_MOUSEOVER:
+				break; //TODO: handle these
+			default:
+				$this->player->getServer()->getLogger()->debug("Unhandled/unknown interaction type " . $packet->action . "received from " . $this->player->getName());
+
+				return false;
+		}
+
+		return true;
 	}
 
 	public function handleBlockPickRequest(BlockPickRequestPacket $packet) : bool{
-		return $this->player->handleBlockPickRequest($packet);
+		return $this->player->pickBlock(new Vector3($packet->blockX, $packet->blockY, $packet->blockZ), $packet->addUserData);
 	}
 
 	public function handleEntityPickRequest(EntityPickRequestPacket $packet) : bool{
@@ -131,7 +150,7 @@ class SimpleNetworkHandler extends NetworkHandler{
 	}
 
 	public function handleContainerClose(ContainerClosePacket $packet) : bool{
-		return $this->player->handleContainerClose($packet);
+		return $this->player->closeWindow($packet->windowId);
 	}
 
 	public function handlePlayerHotbar(PlayerHotbarPacket $packet) : bool{

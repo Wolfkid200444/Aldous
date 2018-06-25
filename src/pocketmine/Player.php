@@ -100,19 +100,15 @@ use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
-use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
 use pocketmine\network\mcpe\protocol\ChunkRadiusUpdatedPacket;
-use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
-use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
 use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\network\mcpe\protocol\MobEffectPacket;
-use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
@@ -2357,46 +2353,11 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return false; //TODO
 	}
 
-	public function handleMobEquipment(MobEquipmentPacket $packet) : bool{
-		$item = $this->inventory->getItem($packet->hotbarSlot);
-
-		if(!$item->equals($packet->item)){
-			$this->server->getLogger()->debug("Tried to equip " . $packet->item . " but have " . $item . " in target slot");
-			$this->inventory->sendContents($this);
-			return false;
-		}
-
-		$this->inventory->equipItem($packet->hotbarSlot);
-
-		$this->setUsingItem(false);
-
-		return true;
-	}
-
-	public function handleInteract(InteractPacket $packet) : bool{
-		$target = $this->level->getEntity($packet->target);
-		if($target === null){
-			return false;
-		}
-
-		switch($packet->action){
-			case InteractPacket::ACTION_LEAVE_VEHICLE:
-			case InteractPacket::ACTION_MOUSEOVER:
-				break; //TODO: handle these
-			default:
-				$this->server->getLogger()->debug("Unhandled/unknown interaction type " . $packet->action . "received from " . $this->getName());
-
-				return false;
-		}
-
-		return true;
-	}
-
-	public function handleBlockPickRequest(BlockPickRequestPacket $packet) : bool{
-		$block = $this->level->getBlockAt($packet->blockX, $packet->blockY, $packet->blockZ);
+	public function pickBlock(Vector3 $pos, bool $addTileNbt) : bool{
+		$block = $this->level->getBlock($pos);
 
 		$item = $block->getPickedItem();
-		if($packet->addUserData){
+		if($addTileNbt){
 			$tile = $this->getLevel()->getTile($block);
 			if($tile instanceof Tile){
 				$nbt = $tile->getCleanedNBT();
@@ -2419,7 +2380,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		}
 
 		return true;
-
 	}
 
 	public function handlePlayerAction(PlayerActionPacket $packet) : bool{
@@ -2560,26 +2520,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->level->dropItem($this->add(0, 1.3, 0), $item, $motion, 40);
 
 		return true;
-	}
-
-	public function handleContainerClose(ContainerClosePacket $packet) : bool{
-		if($packet->windowId === 0){
-			return true;
-		}
-
-		if(isset($this->windowIndex[$packet->windowId])){
-			$this->server->getPluginManager()->callEvent(new InventoryCloseEvent($this->windowIndex[$packet->windowId], $this));
-			$this->removeWindow($this->windowIndex[$packet->windowId]);
-			return true;
-		}elseif($packet->windowId === 255){
-			//Closed a fake window
-			//TODO: this could be something else other than crafting grid
-			$this->resetCraftingGridType();
-
-			return true;
-		}
-
-		return false;
 	}
 
 	public function handleAdventureSettings(AdventureSettingsPacket $packet) : bool{
@@ -3534,6 +3474,34 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 			$this->removeWindow($window, $removePermanentWindows);
 		}
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param int $windowId
+	 *
+	 * @return bool
+	 */
+	public function closeWindow(int $windowId) : bool{
+		if($windowId === ContainerIds::INVENTORY){
+			throw new \InvalidArgumentException("Cannot close own inventory");
+		}
+
+		if(isset($this->windowIndex[$windowId])){
+			$this->server->getPluginManager()->callEvent(new InventoryCloseEvent($this->windowIndex[$windowId], $this));
+			$this->removeWindow($this->windowIndex[$windowId]);
+			return true;
+		}
+		if($windowId === 255){
+			//Closed a fake window
+			//TODO: this could be something else other than crafting grid
+			$this->resetCraftingGridType();
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected function sendAllInventories(){
