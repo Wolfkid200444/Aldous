@@ -110,7 +110,6 @@ use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
-use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
 use pocketmine\network\mcpe\protocol\SetSpawnPositionPacket;
@@ -2382,91 +2381,68 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return true;
 	}
 
-	public function handlePlayerAction(PlayerActionPacket $packet) : bool{
-		$packet->entityRuntimeId = $this->id;
-		$pos = new Vector3($packet->x, $packet->y, $packet->z);
-
-		switch($packet->action){
-			case PlayerActionPacket::ACTION_START_BREAK:
-				if($pos->distanceSquared($this) > 10000){
-					break;
-				}
-
-				$target = $this->level->getBlock($pos);
-
-				$ev = new PlayerInteractEvent($this, $this->inventory->getItemInHand(), $target, null, $packet->face, $target->getId() === 0 ? PlayerInteractEvent::LEFT_CLICK_AIR : PlayerInteractEvent::LEFT_CLICK_BLOCK);
-				if($this->level->checkSpawnProtection($this, $target)){
-					$ev->setCancelled();
-				}
-
-				$this->getServer()->getPluginManager()->callEvent($ev);
-				if($ev->isCancelled()){
-					$this->inventory->sendHeldItem($this);
-					break;
-				}
-
-				$block = $target->getSide($packet->face);
-				if($block->getId() === Block::FIRE){
-					$this->level->setBlock($block, BlockFactory::get(Block::AIR));
-					break;
-				}
-
-				if(!$this->isCreative()){
-					//TODO: improve this to take stuff like swimming, ladders, enchanted tools into account, fix wrong tool break time calculations for bad tools (pmmp/PocketMine-MP#211)
-					$breakTime = ceil($target->getBreakTime($this->inventory->getItemInHand()) * 20);
-					if($breakTime > 0){
-						$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_BLOCK_START_BREAK, (int) (65535 / $breakTime));
-					}
-				}
-
-				break;
-
-			case PlayerActionPacket::ACTION_ABORT_BREAK:
-			case PlayerActionPacket::ACTION_STOP_BREAK:
-				$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_BLOCK_STOP_BREAK);
-				break;
-			case PlayerActionPacket::ACTION_START_SLEEPING:
-				//unused
-				break;
-			case PlayerActionPacket::ACTION_STOP_SLEEPING:
-				$this->stopSleep();
-				break;
-			case PlayerActionPacket::ACTION_JUMP:
-				$this->jump();
-				return true;
-			case PlayerActionPacket::ACTION_START_SPRINT:
-				$this->toggleSprint(true);
-				return true;
-			case PlayerActionPacket::ACTION_STOP_SPRINT:
-				$this->toggleSprint(false);
-				return true;
-			case PlayerActionPacket::ACTION_START_SNEAK:
-				$this->toggleSneak(true);
-				return true;
-			case PlayerActionPacket::ACTION_STOP_SNEAK:
-				$this->toggleSneak(false);
-				return true;
-			case PlayerActionPacket::ACTION_START_GLIDE:
-			case PlayerActionPacket::ACTION_STOP_GLIDE:
-				break; //TODO
-			case PlayerActionPacket::ACTION_CONTINUE_BREAK:
-				$block = $this->level->getBlock($pos);
-				$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_PARTICLE_PUNCH_BLOCK, BlockFactory::toStaticRuntimeId($block->getId(), $block->getDamage()) | ($packet->face << 24));
-				//TODO: destroy-progress level event
-				break;
-			case PlayerActionPacket::ACTION_START_SWIMMING:
-				break; //TODO
-			case PlayerActionPacket::ACTION_STOP_SWIMMING:
-				//TODO: handle this when it doesn't spam every damn tick (yet another spam bug!!)
-				break;
-			default:
-				$this->server->getLogger()->debug("Unhandled/unknown player action type " . $packet->action . " from " . $this->getName());
-				return false;
+	/**
+	 * @internal Called by the session handler when a player left-clicks on a block to start breaking it.
+	 *
+	 * @param Vector3 $pos
+	 * @param int     $face
+	 *
+	 * @return bool
+	 */
+	public function startBreakBlock(Vector3 $pos, int $face) : bool{
+		if($pos->distanceSquared($this) > 10000){
+			throw new \InvalidArgumentException("Block at $pos is too far away (current position is " . $this->asVector3() . ")");
 		}
 
-		$this->setUsingItem(false);
+		$target = $this->level->getBlock($pos);
+
+		$ev = new PlayerInteractEvent($this, $this->inventory->getItemInHand(), $target, null, $face, $target->getId() === Block::AIR ? PlayerInteractEvent::LEFT_CLICK_AIR : PlayerInteractEvent::LEFT_CLICK_BLOCK);
+		if($this->level->checkSpawnProtection($this, $target)){
+			$ev->setCancelled();
+		}
+
+		$this->getServer()->getPluginManager()->callEvent($ev);
+		if($ev->isCancelled()){
+			$this->inventory->sendHeldItem($this);
+			return false;
+		}
+
+		$block = $target->getSide($face);
+		if($block->getId() === Block::FIRE){
+			$this->level->setBlock($block, BlockFactory::get(Block::AIR));
+			return true;
+		}
+
+		if(!$this->isCreative()){
+			//TODO: improve this to take stuff like swimming, ladders, enchanted tools into account, fix wrong tool break time calculations for bad tools (pmmp/PocketMine-MP#211)
+			$breakTime = ceil($target->getBreakTime($this->inventory->getItemInHand()) * 20);
+			if($breakTime > 0){
+				$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_BLOCK_START_BREAK, (int) (65535 / $breakTime));
+			}
+		}
 
 		return true;
+	}
+
+	/**
+	 * @internal Called when the player punches a block while breaking it.
+	 *
+	 * @param Vector3 $pos
+	 * @param int     $face
+	 */
+	public function continueBreakBlock(Vector3 $pos, int $face) : void{
+		$block = $this->level->getBlock($pos);
+		$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_PARTICLE_PUNCH_BLOCK, BlockFactory::toStaticRuntimeId($block->getId(), $block->getDamage()) | ($face << 24));
+		//TODO: destroy-progress level event
+	}
+
+	/**
+	 * @internal Called when a player stops breaking a block, without successfully breaking it.
+	 *
+	 * @param Vector3 $pos
+	 */
+	public function stopBreakBlock(Vector3 $pos) : void{
+		$this->level->broadcastLevelEvent($pos, LevelEventPacket::EVENT_BLOCK_STOP_BREAK);
 	}
 
 	public function toggleSprint(bool $sprint) : void{
