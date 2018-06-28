@@ -100,14 +100,14 @@ use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use pocketmine\network\mcpe\protocol\BatchPacket;
-use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
+use pocketmine\network\mcpe\protocol\BlockActorDataPacket;
 use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
 use pocketmine\network\mcpe\protocol\ChunkRadiusUpdatedPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\DisconnectPacket;
-use pocketmine\network\mcpe\protocol\EntityEventPacket;
+use pocketmine\network\mcpe\protocol\ActorEventPacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
 use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
@@ -2233,14 +2233,14 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return true;
 	}
 
-	public function handleEntityEvent(EntityEventPacket $packet) : bool{
+	public function handleActorEvent(ActorEventPacket $packet) : bool{
 		if(!$this->spawned or !$this->isAlive()){
 			return true;
 		}
 		$this->resetCraftingGridType();
 
 		switch($packet->event){
-			case EntityEventPacket::EATING_ITEM:
+			case ActorEventPacket::EATING_ITEM:
 				if($packet->data === 0){
 					return false;
 				}
@@ -2889,7 +2889,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return $handled;
 	}
 
-	public function handleBlockEntityData(BlockEntityDataPacket $packet) : bool{
+	public function handleBlockActorData(BlockActorDataPacket $packet) : bool{
 		if(!$this->spawned or !$this->isAlive()){
 			return true;
 		}

@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
-use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
+use pocketmine\network\mcpe\protocol\BlockActorDataPacket;
 use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
 use pocketmine\network\mcpe\protocol\BossEventPacket;
@@ -37,9 +37,9 @@ use pocketmine\network\mcpe\protocol\CommandRequestPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\network\mcpe\protocol\CraftingEventPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
-use pocketmine\network\mcpe\protocol\EntityEventPacket;
-use pocketmine\network\mcpe\protocol\EntityFallPacket;
-use pocketmine\network\mcpe\protocol\EntityPickRequestPacket;
+use pocketmine\network\mcpe\protocol\ActorEventPacket;
+use pocketmine\network\mcpe\protocol\ActorFallPacket;
+use pocketmine\network\mcpe\protocol\ActorPickRequestPacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
 use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
@@ -124,8 +124,8 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 		return $this->player->handleLevelSoundEvent($packet);
 	}
 
-	public function handleEntityEvent(EntityEventPacket $packet) : bool{
-		return $this->player->handleEntityEvent($packet);
+	public function handleActorEvent(ActorEventPacket $packet) : bool{
+		return $this->player->handleActorEvent($packet);
 	}
 
 	public function handleInventoryTransaction(InventoryTransactionPacket $packet) : bool{
@@ -148,7 +148,7 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 		return $this->player->handleBlockPickRequest($packet);
 	}
 
-	public function handleEntityPickRequest(EntityPickRequestPacket $packet) : bool{
+	public function handleActorPickRequest(ActorPickRequestPacket $packet) : bool{
 		return false; //TODO
 	}
 
@@ -156,7 +156,7 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 		return $this->player->handlePlayerAction($packet);
 	}
 
-	public function handleEntityFall(EntityFallPacket $packet) : bool{
+	public function handleActorFall(ActorFallPacket $packet) : bool{
 		return true; //Not used
 	}
 
@@ -180,8 +180,8 @@ class PlayerNetworkSessionAdapter extends NetworkSession{
 		return $this->player->handleAdventureSettings($packet);
 	}
 
-	public function handleBlockEntityData(BlockEntityDataPacket $packet) : bool{
-		return $this->player->handleBlockEntityData($packet);
+	public function handleBlockActorData(BlockActorDataPacket $packet) : bool{
+		return $this->player->handleBlockActorData($packet);
 	}
 
 	public function handlePlayerInput(PlayerInputPacket $packet) : bool{

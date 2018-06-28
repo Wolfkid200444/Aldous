@@ -28,7 +28,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 use pocketmine\network\mcpe\NetworkSession;
 
-class AddPaintingPacket extends AddHangingEntityPacket{
+class AddPaintingPacket extends AddHangingActorPacket{
 	public const NETWORK_ID = ProtocolInfo::ADD_PAINTING_PACKET;
 
 	/** @var string */

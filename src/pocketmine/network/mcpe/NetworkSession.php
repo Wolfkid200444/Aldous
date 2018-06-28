@@ -23,16 +23,19 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe;
 
+use pocketmine\network\mcpe\protocol\ActorEventPacket;
+use pocketmine\network\mcpe\protocol\ActorFallPacket;
+use pocketmine\network\mcpe\protocol\ActorPickRequestPacket;
+use pocketmine\network\mcpe\protocol\AddActorPacket;
 use pocketmine\network\mcpe\protocol\AddBehaviorTreePacket;
-use pocketmine\network\mcpe\protocol\AddEntityPacket;
-use pocketmine\network\mcpe\protocol\AddHangingEntityPacket;
-use pocketmine\network\mcpe\protocol\AddItemEntityPacket;
+use pocketmine\network\mcpe\protocol\AddHangingActorPacket;
+use pocketmine\network\mcpe\protocol\AddItemActorPacket;
 use pocketmine\network\mcpe\protocol\AddPaintingPacket;
 use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
-use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
+use pocketmine\network\mcpe\protocol\BlockActorDataPacket;
 use pocketmine\network\mcpe\protocol\BlockEventPacket;
 use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
@@ -52,9 +55,6 @@ use pocketmine\network\mcpe\protocol\CraftingDataPacket;
 use pocketmine\network\mcpe\protocol\CraftingEventPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\DisconnectPacket;
-use pocketmine\network\mcpe\protocol\EntityEventPacket;
-use pocketmine\network\mcpe\protocol\EntityFallPacket;
-use pocketmine\network\mcpe\protocol\EntityPickRequestPacket;
 use pocketmine\network\mcpe\protocol\EventPacket;
 use pocketmine\network\mcpe\protocol\ExplodePacket;
 use pocketmine\network\mcpe\protocol\FullChunkDataPacket;
@@ -76,8 +76,8 @@ use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\ModalFormRequestPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
-use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
-use pocketmine\network\mcpe\protocol\MoveEntityDeltaPacket;
+use pocketmine\network\mcpe\protocol\MoveActorAbsolutePacket;
+use pocketmine\network\mcpe\protocol\MoveActorDeltaPacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use pocketmine\network\mcpe\protocol\NetworkStackLatencyPacket;
 use pocketmine\network\mcpe\protocol\NpcRequestPacket;
@@ -90,7 +90,7 @@ use pocketmine\network\mcpe\protocol\PlayerInputPacket;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\PlayerSkinPacket;
 use pocketmine\network\mcpe\protocol\PurchaseReceiptPacket;
-use pocketmine\network\mcpe\protocol\RemoveEntityPacket;
+use pocketmine\network\mcpe\protocol\RemoveActorPacket;
 use pocketmine\network\mcpe\protocol\RemoveObjectivePacket;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
 use pocketmine\network\mcpe\protocol\ResourcePackChunkDataPacket;
@@ -104,13 +104,13 @@ use pocketmine\network\mcpe\protocol\RiderJumpPacket;
 use pocketmine\network\mcpe\protocol\ServerSettingsRequestPacket;
 use pocketmine\network\mcpe\protocol\ServerSettingsResponsePacket;
 use pocketmine\network\mcpe\protocol\ServerToClientHandshakePacket;
+use pocketmine\network\mcpe\protocol\SetActorDataPacket;
+use pocketmine\network\mcpe\protocol\SetActorLinkPacket;
+use pocketmine\network\mcpe\protocol\SetActorMotionPacket;
 use pocketmine\network\mcpe\protocol\SetCommandsEnabledPacket;
 use pocketmine\network\mcpe\protocol\SetDefaultGameTypePacket;
 use pocketmine\network\mcpe\protocol\SetDifficultyPacket;
 use pocketmine\network\mcpe\protocol\SetDisplayObjectivePacket;
-use pocketmine\network\mcpe\protocol\SetEntityDataPacket;
-use pocketmine\network\mcpe\protocol\SetEntityLinkPacket;
-use pocketmine\network\mcpe\protocol\SetEntityMotionPacket;
 use pocketmine\network\mcpe\protocol\SetHealthPacket;
 use pocketmine\network\mcpe\protocol\SetLastHurtByPacket;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
@@ -129,7 +129,7 @@ use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\StopSoundPacket;
 use pocketmine\network\mcpe\protocol\StructureBlockUpdatePacket;
 use pocketmine\network\mcpe\protocol\SubClientLoginPacket;
-use pocketmine\network\mcpe\protocol\TakeItemEntityPacket;
+use pocketmine\network\mcpe\protocol\TakeItemActorPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\network\mcpe\protocol\TransferPacket;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
@@ -192,27 +192,27 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleAddEntity(AddEntityPacket $packet) : bool{
+	public function handleAddActor(AddActorPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleRemoveEntity(RemoveEntityPacket $packet) : bool{
+	public function handleRemoveActor(RemoveActorPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleAddItemEntity(AddItemEntityPacket $packet) : bool{
+	public function handleAddItemActor(AddItemActorPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleAddHangingEntity(AddHangingEntityPacket $packet) : bool{
+	public function handleAddHangingActor(AddHangingActorPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleTakeItemEntity(TakeItemEntityPacket $packet) : bool{
+	public function handleTakeItemActor(TakeItemActorPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleMoveEntityAbsolute(MoveEntityAbsolutePacket $packet) : bool{
+	public function handleMoveActorAbsolute(MoveActorAbsolutePacket $packet) : bool{
 		return false;
 	}
 
@@ -248,7 +248,7 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleEntityEvent(EntityEventPacket $packet) : bool{
+	public function handleActorEvent(ActorEventPacket $packet) : bool{
 		return false;
 	}
 
@@ -280,7 +280,7 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleEntityPickRequest(EntityPickRequestPacket $packet) : bool{
+	public function handleActorPickRequest(ActorPickRequestPacket $packet) : bool{
 		return false;
 	}
 
@@ -288,7 +288,7 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleEntityFall(EntityFallPacket $packet) : bool{
+	public function handleActorFall(ActorFallPacket $packet) : bool{
 		return false;
 	}
 
@@ -296,15 +296,15 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleSetEntityData(SetEntityDataPacket $packet) : bool{
+	public function handleSetActorData(SetActorDataPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleSetEntityMotion(SetEntityMotionPacket $packet) : bool{
+	public function handleSetActorMotion(SetActorMotionPacket $packet) : bool{
 		return false;
 	}
 
-	public function handleSetEntityLink(SetEntityLinkPacket $packet) : bool{
+	public function handleSetActorLink(SetActorLinkPacket $packet) : bool{
 		return false;
 	}
 
@@ -364,7 +364,7 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleBlockEntityData(BlockEntityDataPacket $packet) : bool{
+	public function handleBlockActorData(BlockActorDataPacket $packet) : bool{
 		return false;
 	}
 
@@ -584,7 +584,7 @@ abstract class NetworkSession{
 		return false;
 	}
 
-	public function handleMoveEntityDelta(MoveEntityDeltaPacket $packet) : bool{
+	public function handleMoveActorDelta(MoveActorDeltaPacket $packet) : bool{
 		return false;
 	}
 
@@ -603,4 +603,5 @@ abstract class NetworkSession{
 	public function handleNetworkStackLatency(NetworkStackLatencyPacket $packet) : bool{
 		return false;
 	}
+
 }

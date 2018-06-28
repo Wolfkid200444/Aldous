@@ -25,28 +25,39 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-
 use pocketmine\network\mcpe\NetworkSession;
 
-class SetEntityDataPacket extends DataPacket{
-	public const NETWORK_ID = ProtocolInfo::SET_ENTITY_DATA_PACKET;
+class AddHangingActorPacket extends DataPacket{
+	public const NETWORK_ID = ProtocolInfo::ADD_HANGING_ACTOR_PACKET;
 
+	/** @var int|null */
+	public $entityUniqueId = null;
 	/** @var int */
 	public $entityRuntimeId;
-	/** @var array */
-	public $metadata;
+	/** @var int */
+	public $x;
+	/** @var int */
+	public $y;
+	/** @var int */
+	public $z;
+	/** @var int */
+	public $direction;
 
 	protected function decodePayload(){
+		$this->entityUniqueId = $this->getEntityUniqueId();
 		$this->entityRuntimeId = $this->getEntityRuntimeId();
-		$this->metadata = $this->getEntityMetadata();
+		$this->getBlockPosition($this->x, $this->y, $this->z);
+		$this->direction = $this->getVarInt();
 	}
 
 	protected function encodePayload(){
+		$this->putEntityUniqueId($this->entityUniqueId ?? $this->entityRuntimeId);
 		$this->putEntityRuntimeId($this->entityRuntimeId);
-		$this->putEntityMetadata($this->metadata);
+		$this->putBlockPosition($this->x, $this->y, $this->z);
+		$this->putVarInt($this->direction);
 	}
 
 	public function handle(NetworkSession $session) : bool{
-		return $session->handleSetEntityData($this);
+		return $session->handleAddHangingActor($this);
 	}
 }

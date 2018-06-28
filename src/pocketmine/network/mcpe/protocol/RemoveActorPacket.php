@@ -28,24 +28,21 @@ namespace pocketmine\network\mcpe\protocol;
 
 use pocketmine\network\mcpe\NetworkSession;
 
-class TakeItemEntityPacket extends DataPacket{
-	public const NETWORK_ID = ProtocolInfo::TAKE_ITEM_ENTITY_PACKET;
+class RemoveActorPacket extends DataPacket{
+	public const NETWORK_ID = ProtocolInfo::REMOVE_ACTOR_PACKET;
 
 	/** @var int */
-	public $target;
-	/** @var int */
-	public $eid;
+	public $entityUniqueId;
 
 	protected function decodePayload(){
-
+		$this->entityUniqueId = $this->getEntityUniqueId();
 	}
 
 	protected function encodePayload(){
-		$this->putEntityRuntimeId($this->target);
-		$this->putEntityRuntimeId($this->eid);
+		$this->putEntityUniqueId($this->entityUniqueId);
 	}
 
 	public function handle(NetworkSession $session) : bool{
-		return $session->handleTakeItemEntity($this);
+		return $session->handleRemoveActor($this);
 	}
 }

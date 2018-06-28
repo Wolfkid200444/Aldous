@@ -43,12 +43,12 @@ class PacketPool{
 		static::registerPacket(new SetTimePacket());
 		static::registerPacket(new StartGamePacket());
 		static::registerPacket(new AddPlayerPacket());
-		static::registerPacket(new AddEntityPacket());
-		static::registerPacket(new RemoveEntityPacket());
-		static::registerPacket(new AddItemEntityPacket());
-		static::registerPacket(new AddHangingEntityPacket());
-		static::registerPacket(new TakeItemEntityPacket());
-		static::registerPacket(new MoveEntityAbsolutePacket());
+		static::registerPacket(new AddActorPacket());
+		static::registerPacket(new RemoveActorPacket());
+		static::registerPacket(new AddItemActorPacket());
+		static::registerPacket(new AddHangingActorPacket());
+		static::registerPacket(new TakeItemActorPacket());
+		static::registerPacket(new MoveActorAbsolutePacket());
 		static::registerPacket(new MovePlayerPacket());
 		static::registerPacket(new RiderJumpPacket());
 		static::registerPacket(new UpdateBlockPacket());
@@ -57,7 +57,7 @@ class PacketPool{
 		static::registerPacket(new LevelSoundEventPacket());
 		static::registerPacket(new LevelEventPacket());
 		static::registerPacket(new BlockEventPacket());
-		static::registerPacket(new EntityEventPacket());
+		static::registerPacket(new ActorEventPacket());
 		static::registerPacket(new MobEffectPacket());
 		static::registerPacket(new UpdateAttributesPacket());
 		static::registerPacket(new InventoryTransactionPacket());
@@ -65,13 +65,13 @@ class PacketPool{
 		static::registerPacket(new MobArmorEquipmentPacket());
 		static::registerPacket(new InteractPacket());
 		static::registerPacket(new BlockPickRequestPacket());
-		static::registerPacket(new EntityPickRequestPacket());
+		static::registerPacket(new ActorPickRequestPacket());
 		static::registerPacket(new PlayerActionPacket());
-		static::registerPacket(new EntityFallPacket());
+		static::registerPacket(new ActorFallPacket());
 		static::registerPacket(new HurtArmorPacket());
-		static::registerPacket(new SetEntityDataPacket());
-		static::registerPacket(new SetEntityMotionPacket());
-		static::registerPacket(new SetEntityLinkPacket());
+		static::registerPacket(new SetActorDataPacket());
+		static::registerPacket(new SetActorMotionPacket());
+		static::registerPacket(new SetActorLinkPacket());
 		static::registerPacket(new SetHealthPacket());
 		static::registerPacket(new SetSpawnPositionPacket());
 		static::registerPacket(new AnimatePacket());
@@ -86,7 +86,7 @@ class PacketPool{
 		static::registerPacket(new CraftingEventPacket());
 		static::registerPacket(new GuiDataPickItemPacket());
 		static::registerPacket(new AdventureSettingsPacket());
-		static::registerPacket(new BlockEntityDataPacket());
+		static::registerPacket(new BlockActorDataPacket());
 		static::registerPacket(new PlayerInputPacket());
 		static::registerPacket(new FullChunkDataPacket());
 		static::registerPacket(new SetCommandsEnabledPacket());
@@ -141,7 +141,7 @@ class PacketPool{
 		static::registerPacket(new SetScorePacket());
 		static::registerPacket(new LabTablePacket());
 		static::registerPacket(new UpdateBlockSyncedPacket());
-		static::registerPacket(new MoveEntityDeltaPacket());
+		static::registerPacket(new MoveActorDeltaPacket());
 		static::registerPacket(new SetScoreboardIdentityPacket());
 		static::registerPacket(new SetLocalPlayerAsInitializedPacket());
 		static::registerPacket(new UpdateSoftEnumPacket());
@@ -175,4 +175,5 @@ class PacketPool{
 
 		return $pk;
 	}
+
 }

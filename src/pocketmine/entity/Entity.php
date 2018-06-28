@@ -62,12 +62,12 @@ use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\FloatTag;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\network\mcpe\protocol\AddEntityPacket;
-use pocketmine\network\mcpe\protocol\EntityEventPacket;
-use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
-use pocketmine\network\mcpe\protocol\RemoveEntityPacket;
-use pocketmine\network\mcpe\protocol\SetEntityDataPacket;
-use pocketmine\network\mcpe\protocol\SetEntityMotionPacket;
+use pocketmine\network\mcpe\protocol\AddActorPacket;
+use pocketmine\network\mcpe\protocol\ActorEventPacket;
+use pocketmine\network\mcpe\protocol\MoveActorAbsolutePacket;
+use pocketmine\network\mcpe\protocol\RemoveActorPacket;
+use pocketmine\network\mcpe\protocol\SetActorDataPacket;
+use pocketmine\network\mcpe\protocol\SetActorMotionPacket;
 use pocketmine\Player;
 use pocketmine\plugin\Plugin;
 use pocketmine\Server;
@@ -1134,7 +1134,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 	protected function broadcastMovement(bool $teleport = false) : void{
 		if($this->chunk !== null){
-			$pk = new MoveEntityAbsolutePacket();
+			$pk = new MoveActorAbsolutePacket();
 			$pk->entityRuntimeId = $this->id;
 			$pk->position = $this->getOffsetPosition($this);
 
@@ -1146,7 +1146,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 			$pk->zRot = $this->yaw;
 
 			if($teleport){
-				$pk->flags |= MoveEntityAbsolutePacket::FLAG_TELEPORT;
+				$pk->flags |= MoveActorAbsolutePacket::FLAG_TELEPORT;
 			}
 
 			$this->level->addChunkPacket($this->chunk->getX(), $this->chunk->getZ(), $pk);
@@ -1155,7 +1155,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 	protected function broadcastMotion() : void{
 		if($this->chunk !== null){
-			$pk = new SetEntityMotionPacket();
+			$pk = new SetActorMotionPacket();
 			$pk->entityRuntimeId = $this->id;
 			$pk->motion = $this->getMotion();
 
@@ -1917,7 +1917,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	 * @param Player $player
 	 */
 	protected function sendSpawnPacket(Player $player) : void{
-		$pk = new AddEntityPacket();
+		$pk = new AddActorPacket();
 		$pk->entityRuntimeId = $this->getId();
 		$pk->type = static::NETWORK_ID;
 		$pk->position = $this->asVector3();
@@ -1966,7 +1966,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	public function despawnFrom(Player $player, bool $send = true) : void{
 		if(isset($this->hasSpawned[$player->getLoaderId()])){
 			if($send){
-				$pk = new RemoveEntityPacket();
+				$pk = new RemoveActorPacket();
 				$pk->entityUniqueId = $this->id;
 				$player->dataPacket($pk);
 			}
@@ -2081,7 +2081,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 			$player = [$player];
 		}
 
-		$pk = new SetEntityDataPacket();
+		$pk = new SetActorDataPacket();
 		$pk->entityRuntimeId = $this->getId();
 		$pk->metadata = $data ?? $this->propertyManager->getAll();
 
@@ -2098,7 +2098,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	}
 
 	public function broadcastEntityEvent(int $eventId, ?int $eventData = null, ?array $players = null) : void{
-		$pk = new EntityEventPacket();
+		$pk = new ActorEventPacket();
 		$pk->entityRuntimeId = $this->id;
 		$pk->event = $eventId;
 		$pk->data = $eventData ?? 0;
