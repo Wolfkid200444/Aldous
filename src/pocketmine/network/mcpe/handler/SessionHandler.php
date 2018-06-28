@@ -140,7 +140,7 @@ use pocketmine\network\mcpe\protocol\WSConnectPacket;
  *
  * This class is an automatically generated stub. Do not edit it manually.
  */
-abstract class NetworkHandler{
+abstract class SessionHandler{
 
 	public function handleLogin(LoginPacket $packet) : bool{
 		return false;

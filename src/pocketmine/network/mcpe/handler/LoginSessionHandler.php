@@ -35,7 +35,7 @@ use pocketmine\PlayerParameters;
 use pocketmine\Server;
 use pocketmine\utils\UUID;
 
-class LoginNetworkHandler extends NetworkHandler{
+class LoginSessionHandler extends SessionHandler{
 
 	/** @var Server */
 	private $server;

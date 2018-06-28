@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class LevelEventPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::LEVEL_EVENT_PACKET;
@@ -130,7 +130,7 @@ class LevelEventPacket extends DataPacket{
 		$this->putVarInt($this->data);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleLevelEvent($this);
 	}
 }

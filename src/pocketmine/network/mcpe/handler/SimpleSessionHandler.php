@@ -62,7 +62,7 @@ use pocketmine\Player;
 /**
  * Temporary network handler implementation.
  */
-class SimpleNetworkHandler extends NetworkHandler{
+class SimpleSessionHandler extends SessionHandler{
 
 	/** @var Player */
 	private $player;

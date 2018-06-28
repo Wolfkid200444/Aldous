@@ -33,7 +33,7 @@ use pocketmine\network\mcpe\protocol\ResourcePackStackPacket;
 use pocketmine\resourcepacks\ResourcePack;
 use pocketmine\Server;
 
-class ResourcePacksNetworkHandler extends NetworkHandler{
+class ResourcePacksSessionHandler extends SessionHandler{
 
 	/** @var Server */
 	private $server;

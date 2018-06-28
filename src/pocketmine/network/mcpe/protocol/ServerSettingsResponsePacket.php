@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class ServerSettingsResponsePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::SERVER_SETTINGS_RESPONSE_PACKET;
@@ -45,7 +45,7 @@ class ServerSettingsResponsePacket extends DataPacket{
 		$this->putString($this->formData);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleServerSettingsResponse($this);
 	}
 }

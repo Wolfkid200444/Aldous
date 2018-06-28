@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class UpdateBlockPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::UPDATE_BLOCK_PACKET;
@@ -70,7 +70,7 @@ class UpdateBlockPacket extends DataPacket{
 		$this->putUnsignedVarInt($this->dataLayerId);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleUpdateBlock($this);
 	}
 }

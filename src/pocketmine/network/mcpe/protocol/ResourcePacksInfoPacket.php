@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\resourcepacks\ResourcePack;
 
 class ResourcePacksInfoPacket extends DataPacket{
@@ -81,7 +81,7 @@ class ResourcePacksInfoPacket extends DataPacket{
 		}
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleResourcePacksInfo($this);
 	}
 }

@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class MapInfoRequestPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::MAP_INFO_REQUEST_PACKET;
@@ -43,7 +43,7 @@ class MapInfoRequestPacket extends DataPacket{
 		$this->putEntityUniqueId($this->mapId);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleMapInfoRequest($this);
 	}
 }

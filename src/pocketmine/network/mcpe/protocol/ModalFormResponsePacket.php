@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class ModalFormResponsePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::MODAL_FORM_RESPONSE_PACKET;
@@ -45,7 +45,7 @@ class ModalFormResponsePacket extends DataPacket{
 		$this->putString($this->formData);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleModalFormResponse($this);
 	}
 }

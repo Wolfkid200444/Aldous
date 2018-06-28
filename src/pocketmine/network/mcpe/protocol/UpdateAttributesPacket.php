@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 
 use pocketmine\entity\Attribute;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class UpdateAttributesPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::UPDATE_ATTRIBUTES_PACKET;
@@ -47,7 +47,7 @@ class UpdateAttributesPacket extends DataPacket{
 		$this->putAttributeList(...$this->entries);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleUpdateAttributes($this);
 	}
 }

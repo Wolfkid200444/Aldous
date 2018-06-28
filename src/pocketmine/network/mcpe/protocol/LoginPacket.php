@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\utils\BinaryStream;
 use pocketmine\utils\MainLogger;
 use pocketmine\utils\Utils;
@@ -143,7 +143,7 @@ class LoginPacket extends DataPacket{
 		//TODO
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleLogin($this);
 	}
 }

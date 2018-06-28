@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 use pocketmine\entity\Attribute;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\network\mcpe\protocol\types\EntityLink;
 
 class AddEntityPacket extends DataPacket{
@@ -113,7 +113,7 @@ class AddEntityPacket extends DataPacket{
 		}
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleAddEntity($this);
 	}
 }

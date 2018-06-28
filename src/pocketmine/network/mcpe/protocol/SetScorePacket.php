@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\network\mcpe\protocol\types\ScorePacketEntry;
 
 class SetScorePacket extends DataPacket{
@@ -59,7 +59,7 @@ class SetScorePacket extends DataPacket{
 		}
 	}
 
-	public function handle(NetworkHandler $session) : bool{
-		return $session->handleSetScore($this);
+	public function handle(SessionHandler $handler) : bool{
+		return $handler->handleSetScore($this);
 	}
 }

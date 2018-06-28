@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class AddPaintingPacket extends AddHangingEntityPacket{
 	public const NETWORK_ID = ProtocolInfo::ADD_PAINTING_PACKET;
@@ -44,7 +44,7 @@ class AddPaintingPacket extends AddHangingEntityPacket{
 		$this->putString($this->title);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleAddPainting($this);
 	}
 }

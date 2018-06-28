@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 use pocketmine\entity\Skin;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\utils\UUID;
 
 class PlayerSkinPacket extends DataPacket{
@@ -68,7 +68,7 @@ class PlayerSkinPacket extends DataPacket{
 		$this->putString($this->skin->getGeometryData());
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handlePlayerSkin($this);
 	}
 }

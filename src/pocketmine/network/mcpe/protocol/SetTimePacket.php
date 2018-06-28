@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class SetTimePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::SET_TIME_PACKET;
@@ -41,7 +41,7 @@ class SetTimePacket extends DataPacket{
 		$this->putVarInt($this->time);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleSetTime($this);
 	}
 }

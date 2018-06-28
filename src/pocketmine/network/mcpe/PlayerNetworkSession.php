@@ -25,12 +25,12 @@ namespace pocketmine\network\mcpe;
 
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\network\mcpe\handler\DeathNetworkHandler;
-use pocketmine\network\mcpe\handler\LoginNetworkHandler;
-use pocketmine\network\mcpe\handler\NetworkHandler;
-use pocketmine\network\mcpe\handler\PreSpawnNetworkHandler;
-use pocketmine\network\mcpe\handler\ResourcePacksNetworkHandler;
-use pocketmine\network\mcpe\handler\SimpleNetworkHandler;
+use pocketmine\network\mcpe\handler\DeathSessionHandler;
+use pocketmine\network\mcpe\handler\LoginSessionHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
+use pocketmine\network\mcpe\handler\PreSpawnSessionHandler;
+use pocketmine\network\mcpe\handler\ResourcePacksSessionHandler;
+use pocketmine\network\mcpe\handler\SimpleSessionHandler;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\DisconnectPacket;
 use pocketmine\network\mcpe\protocol\LoginPacket;
@@ -76,7 +76,7 @@ abstract class PlayerNetworkSession{
 	/** @var \SplQueue|CompressBatchedTask[] */
 	protected $batchQueue;
 
-	/** @var NetworkHandler */
+	/** @var SessionHandler */
 	protected $handler;
 
 	public function __construct(Server $server, NetworkInterface $interface, string $ip, int $port){
@@ -88,7 +88,7 @@ abstract class PlayerNetworkSession{
 
 		$this->batchQueue = new \SplQueue();
 
-		$this->handler = new LoginNetworkHandler($this->server, $this);
+		$this->handler = new LoginSessionHandler($this->server, $this);
 
 		$this->server->getNetwork()->addTrackedSession($this);
 	}
@@ -214,27 +214,27 @@ abstract class PlayerNetworkSession{
 		$this->loggedIn = true;
 		$this->sendPlayStatus(PlayStatusPacket::LOGIN_SUCCESS);
 
-		$this->handler = new ResourcePacksNetworkHandler($this->server, $this);
+		$this->handler = new ResourcePacksSessionHandler($this->server, $this);
 		$this->handler->sendResourcePacksInfo();
 	}
 
 	public function startSpawnSequence() : void{
 		$this->player = $this->server->createPlayer($this, $this->playerParams);
-		$this->handler = new PreSpawnNetworkHandler($this->player);
+		$this->handler = new PreSpawnSessionHandler($this->player);
 		$this->playerParams = null;
 	}
 
 	public function onSpawn() : void{
 		$this->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
-		$this->handler = new SimpleNetworkHandler($this->player);
+		$this->handler = new SimpleSessionHandler($this->player);
 	}
 
 	public function onDeath() : void{
-		$this->handler = new DeathNetworkHandler($this->player);
+		$this->handler = new DeathSessionHandler($this->player);
 	}
 
 	public function onRespawn() : void{
-		$this->handler = new SimpleNetworkHandler($this->player);
+		$this->handler = new SimpleSessionHandler($this->player);
 	}
 
 	protected function handleBatch(string $buffer) : void{
@@ -428,11 +428,11 @@ abstract class PlayerNetworkSession{
 		}
 	}
 
-	public function getHandler() : NetworkHandler{
+	public function getHandler() : SessionHandler{
 		return $this->handler;
 	}
 
-	public function setHandler(NetworkHandler $handler) : void{
+	public function setHandler(SessionHandler $handler) : void{
 		$this->handler = $handler;
 	}
 }

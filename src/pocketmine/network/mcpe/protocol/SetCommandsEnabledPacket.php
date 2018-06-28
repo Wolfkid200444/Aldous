@@ -26,7 +26,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class SetCommandsEnabledPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::SET_COMMANDS_ENABLED_PACKET;
@@ -42,7 +42,7 @@ class SetCommandsEnabledPacket extends DataPacket{
 		$this->putBool($this->enabled);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleSetCommandsEnabled($this);
 	}
 }

@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class RiderJumpPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::RIDER_JUMP_PACKET;
@@ -43,7 +43,7 @@ class RiderJumpPacket extends DataPacket{
 		$this->putVarInt($this->jumpStrength);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleRiderJump($this);
 	}
 }

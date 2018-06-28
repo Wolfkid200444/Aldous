@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class ExplodePacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::EXPLODE_PACKET;
@@ -66,7 +66,7 @@ class ExplodePacket extends DataPacket{
 		}
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleExplode($this);
 	}
 }

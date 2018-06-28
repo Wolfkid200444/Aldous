@@ -23,10 +23,10 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
-use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\Player;
 
-class PreSpawnNetworkHandler extends NetworkHandler{
+class DeathSessionHandler extends SessionHandler{
 	/** @var Player */
 	private $player;
 
@@ -34,9 +34,15 @@ class PreSpawnNetworkHandler extends NetworkHandler{
 		$this->player = $player;
 	}
 
-	public function handleRequestChunkRadius(RequestChunkRadiusPacket $packet) : bool{
-		$this->player->setViewDistance($packet->radius);
-
-		return true;
+	public function handlePlayerAction(PlayerActionPacket $packet) : bool{
+		switch($packet->action){
+			case PlayerActionPacket::ACTION_RESPAWN:
+				$this->player->respawn();
+				return true;
+			case PlayerActionPacket::ACTION_DIMENSION_CHANGE_REQUEST:
+				//TODO: players send this when they die in another dimension
+				break;
+		}
+		return false;
 	}
 }

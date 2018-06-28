@@ -25,7 +25,7 @@ namespace pocketmine\network\mcpe\protocol;
 
 #include <rules/DataPacket.h>
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class TransferPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::TRANSFER_PACKET;
@@ -45,7 +45,7 @@ class TransferPacket extends DataPacket{
 		$this->putLShort($this->port);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleTransfer($this);
 	}
 }

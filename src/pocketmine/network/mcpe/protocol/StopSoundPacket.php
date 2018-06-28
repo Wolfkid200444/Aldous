@@ -27,7 +27,7 @@ namespace pocketmine\network\mcpe\protocol;
 #include <rules/DataPacket.h>
 
 
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 
 class StopSoundPacket extends DataPacket{
 	public const NETWORK_ID = ProtocolInfo::STOP_SOUND_PACKET;
@@ -47,7 +47,7 @@ class StopSoundPacket extends DataPacket{
 		$this->putBool($this->stopAll);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleStopSound($this);
 	}
 }

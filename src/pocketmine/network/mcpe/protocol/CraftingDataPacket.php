@@ -30,7 +30,7 @@ use pocketmine\inventory\FurnaceRecipe;
 use pocketmine\inventory\ShapedRecipe;
 use pocketmine\inventory\ShapelessRecipe;
 use pocketmine\item\Item;
-use pocketmine\network\mcpe\handler\NetworkHandler;
+use pocketmine\network\mcpe\handler\SessionHandler;
 use pocketmine\network\mcpe\NetworkBinaryStream;
 
 class CraftingDataPacket extends DataPacket{
@@ -215,7 +215,7 @@ class CraftingDataPacket extends DataPacket{
 		$this->putBool($this->cleanRecipes);
 	}
 
-	public function handle(NetworkHandler $handler) : bool{
+	public function handle(SessionHandler $handler) : bool{
 		return $handler->handleCraftingData($this);
 	}
 }
