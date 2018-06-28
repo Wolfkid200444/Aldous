@@ -88,7 +88,7 @@ abstract class PlayerNetworkSession{
 
 		$this->batchQueue = new \SplQueue();
 
-		$this->handler = new LoginSessionHandler($this->server, $this);
+		$this->setHandler(new LoginSessionHandler($this->server, $this));
 
 		$this->server->getNetwork()->addTrackedSession($this);
 	}
@@ -214,27 +214,28 @@ abstract class PlayerNetworkSession{
 		$this->loggedIn = true;
 		$this->sendPlayStatus(PlayStatusPacket::LOGIN_SUCCESS);
 
-		$this->handler = new ResourcePacksSessionHandler($this->server, $this);
-		$this->handler->sendResourcePacksInfo();
+		$this->setHandler(new ResourcePacksSessionHandler($this->server, $this));
 	}
 
 	public function startSpawnSequence() : void{
 		$this->player = $this->server->createPlayer($this, $this->playerParams);
-		$this->handler = new PreSpawnSessionHandler($this->player);
-		$this->playerParams = null;
+		if($this->player->isConnected()){ //plugins might cause the player to be disconnected by the time this is reached
+			$this->setHandler(new PreSpawnSessionHandler($this->player));
+			$this->playerParams = null;
+		}
 	}
 
 	public function onSpawn() : void{
 		$this->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
-		$this->handler = new SimpleSessionHandler($this->player);
+		$this->setHandler(new SimpleSessionHandler($this->player));
 	}
 
 	public function onDeath() : void{
-		$this->handler = new DeathSessionHandler($this->player);
+		$this->setHandler(new DeathSessionHandler($this->player));
 	}
 
 	public function onRespawn() : void{
-		$this->handler = new SimpleSessionHandler($this->player);
+		$this->setHandler(new SimpleSessionHandler($this->player));
 	}
 
 	protected function handleBatch(string $buffer) : void{
@@ -434,5 +435,6 @@ abstract class PlayerNetworkSession{
 
 	public function setHandler(SessionHandler $handler) : void{
 		$this->handler = $handler;
+		$this->handler->setUp();
 	}
 }

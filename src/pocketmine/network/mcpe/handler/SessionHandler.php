@@ -142,6 +142,10 @@ use pocketmine\network\mcpe\protocol\WSConnectPacket;
  */
 abstract class SessionHandler{
 
+	public function setUp() : void{
+
+	}
+
 	public function handleLogin(LoginPacket $packet) : bool{
 		return false;
 	}

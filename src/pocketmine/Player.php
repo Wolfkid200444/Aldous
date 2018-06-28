@@ -110,18 +110,15 @@ use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
-use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
 use pocketmine\network\mcpe\protocol\SetSpawnPositionPacket;
 use pocketmine\network\mcpe\protocol\SetTitlePacket;
-use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\network\mcpe\protocol\TransferPacket;
 use pocketmine\network\mcpe\protocol\types\CommandData;
 use pocketmine\network\mcpe\protocol\types\CommandEnum;
 use pocketmine\network\mcpe\protocol\types\CommandParameter;
 use pocketmine\network\mcpe\protocol\types\ContainerIds;
-use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\PlayerPermissions;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
@@ -689,6 +686,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->keepMovement = $this->isSpectator() || $this->allowMovementCheats();
 		$this->allowMovementCheats = (bool) $this->server->getProperty("player.anti-cheat.allow-movement-cheats", false);
 
+		if($this->isOp()){
+			$this->setRemoveFormat(false);
+		}
+
 		$level = $this->server->getLevelByName($this->namedtag->getString("Level", "", true));
 		if($level === null){
 			$level = $this->server->getDefaultLevel();
@@ -730,11 +731,19 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->server->getPluginManager()->callEvent($ev = new PlayerLoginEvent($this, "Plugin reason"));
 		if($ev->isCancelled()){
 			$this->disconnect($this->getLeaveMessage(), $ev->getKickMessage());
-
-			return;
 		}
 
-		$this->doSpawnSequence();
+		//TODO: doubtful that this should be here
+		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logIn", [
+			TextFormat::AQUA . $this->username . TextFormat::WHITE,
+			$this->networkSession->getIp(),
+			$this->networkSession->getPort(),
+			$this->id,
+			$this->level->getName(),
+			round($this->x, 4),
+			round($this->y, 4),
+			round($this->z, 4)
+		]));
 	}
 
 	/**
@@ -1058,13 +1067,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		if($this->getHealth() <= 0){
 			$this->respawn();
 		}
-	}
-
-	protected function sendRespawnPacket(Vector3 $pos){
-		$pk = new RespawnPacket();
-		$pk->position = $pos->add(0, $this->baseOffset, 0);
-
-		$this->dataPacket($pk);
 	}
 
 	protected function orderChunks() : void{
@@ -1830,72 +1832,11 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 	protected function initEntity() : void{
 		parent::initEntity();
-		$this->addDefaultWindows();
-	}
-
-	protected function doSpawnSequence(){
-		$spawnPosition = $this->getSpawn();
-
-		$pk = new StartGamePacket();
-		$pk->entityUniqueId = $this->id;
-		$pk->entityRuntimeId = $this->id;
-		$pk->playerGamemode = Player::getClientFriendlyGamemode($this->gamemode);
-
-		$pk->playerPosition = $this->getOffsetPosition($this);
-
-		$pk->pitch = $this->pitch;
-		$pk->yaw = $this->yaw;
-		$pk->seed = -1;
-		$pk->dimension = DimensionIds::OVERWORLD; //TODO: implement this properly
-		$pk->worldGamemode = Player::getClientFriendlyGamemode($this->server->getGamemode());
-		$pk->difficulty = $this->level->getDifficulty();
-		$pk->spawnX = $spawnPosition->getFloorX();
-		$pk->spawnY = $spawnPosition->getFloorY();
-		$pk->spawnZ = $spawnPosition->getFloorZ();
-		$pk->hasAchievementsDisabled = true;
-		$pk->time = $this->level->getTime();
-		$pk->eduMode = false;
-		$pk->rainLevel = 0; //TODO: implement these properly
-		$pk->lightningLevel = 0;
-		$pk->commandsEnabled = true;
-		$pk->levelId = "";
-		$pk->worldName = $this->server->getMotd();
-		$this->dataPacket($pk);
-
-		$this->level->sendTime($this);
-
-		$this->sendAttributes(true);
 		$this->setNameTagVisible();
 		$this->setNameTagAlwaysVisible();
 		$this->setCanClimb();
 
-		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logIn", [
-			TextFormat::AQUA . $this->username . TextFormat::WHITE,
-			$this->networkSession->getIp(),
-			$this->networkSession->getPort(),
-			$this->id,
-			$this->level->getName(),
-			round($this->x, 4),
-			round($this->y, 4),
-			round($this->z, 4)
-		]));
-
-		if($this->isOp()){
-			$this->setRemoveFormat(false);
-		}
-
-		$this->sendCommandData();
-		$this->sendSettings();
-		$this->sendPotionEffects($this);
-		$this->sendData($this);
-
-		$this->sendAllInventories();
-		$this->inventory->sendCreativeContents();
-		$this->inventory->sendHeldItem($this);
-		$this->networkSession->sendPreparedBatch($this->server->getCraftingManager()->getCraftingDataPacket());
-
-		$this->server->addOnlinePlayer($this);
-		$this->server->sendFullPlayerListData($this);
+		$this->addDefaultWindows();
 	}
 
 	/**
@@ -3039,7 +2980,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		parent::kill();
 
-		$this->sendRespawnPacket($this->getSpawn());
 		$this->networkSession->onDeath();
 	}
 
@@ -3480,7 +3420,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return false;
 	}
 
-	protected function sendAllInventories(){
+	public function sendAllInventories(){
 		foreach($this->windowIndex as $id => $inventory){
 			$inventory->sendContents($this);
 		}

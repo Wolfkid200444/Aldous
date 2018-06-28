@@ -23,15 +23,26 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
+use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\Player;
 
 class DeathSessionHandler extends SessionHandler{
 	/** @var Player */
 	private $player;
+	/** @var PlayerNetworkSession */
+	private $session;
 
 	public function __construct(Player $player){
 		$this->player = $player;
+		$this->session = $player->getNetworkSession();
+	}
+
+	public function setUp() : void{
+		$pk = new RespawnPacket();
+		$pk->position = $this->player->getOffsetPosition($this->player->getSpawn());
+		$this->session->sendDataPacket($pk);
 	}
 
 	public function handlePlayerAction(PlayerActionPacket $packet) : bool{

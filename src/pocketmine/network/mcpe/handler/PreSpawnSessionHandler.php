@@ -23,15 +23,71 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
+use pocketmine\network\mcpe\PlayerNetworkSession;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\StartGamePacket;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\Player;
 
 class PreSpawnSessionHandler extends SessionHandler{
 	/** @var Player */
 	private $player;
+	/** @var PlayerNetworkSession */
+	private $session;
 
 	public function __construct(Player $player){
 		$this->player = $player;
+		$this->session = $player->getNetworkSession();
+	}
+
+	public function setUp() : void{
+		$spawnPosition = $this->player->getSpawn();
+		$level = $this->player->getLevel();
+		$server = $this->player->getServer();
+		assert($level !== null);
+
+		$pk = new StartGamePacket();
+		$pk->entityUniqueId = $this->player->getId();
+		$pk->entityRuntimeId = $this->player->getId();
+		$pk->playerGamemode = Player::getClientFriendlyGamemode($this->player->getGamemode());
+
+		$pk->playerPosition = $this->player->getOffsetPosition($this->player);
+
+		$pk->pitch = $this->player->pitch;
+		$pk->yaw = $this->player->yaw;
+		$pk->seed = -1;
+		$pk->dimension = DimensionIds::OVERWORLD; //TODO: implement this properly
+		$pk->worldGamemode = Player::getClientFriendlyGamemode($server->getGamemode());
+		$pk->difficulty = $level->getDifficulty();
+		$pk->spawnX = $spawnPosition->getFloorX();
+		$pk->spawnY = $spawnPosition->getFloorY();
+		$pk->spawnZ = $spawnPosition->getFloorZ();
+		$pk->hasAchievementsDisabled = true;
+		$pk->time = $level->getTime();
+		$pk->eduMode = false;
+		$pk->rainLevel = 0; //TODO: implement these properly
+		$pk->lightningLevel = 0;
+		$pk->commandsEnabled = true;
+		$pk->levelId = "";
+		$pk->worldName = $server->getMotd();
+		$this->session->sendDataPacket($pk);
+
+		$level->sendTime($this->player);
+
+		$this->player->sendCommandData();
+
+		$this->player->sendSettings();
+		$this->player->sendAttributes(true);
+		$this->player->sendPotionEffects($this->player);
+		$this->player->sendData($this->player);
+
+		$this->player->sendAllInventories();
+		$this->player->getInventory()->sendCreativeContents();
+		$this->player->getInventory()->sendHeldItem($this->player);
+		$this->session->sendPreparedBatch($server->getCraftingManager()->getCraftingDataPacket());
+
+		$server->addOnlinePlayer($this->player);
+		$server->sendFullPlayerListData($this->player);
 	}
 
 	public function handleRequestChunkRadius(RequestChunkRadiusPacket $packet) : bool{

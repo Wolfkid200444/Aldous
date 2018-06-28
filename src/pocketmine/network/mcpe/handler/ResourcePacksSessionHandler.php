@@ -45,7 +45,7 @@ class ResourcePacksSessionHandler extends SessionHandler{
 		$this->session = $session;
 	}
 
-	public function sendResourcePacksInfo() : void{
+	public function setUp() : void{
 		$pk = new ResourcePacksInfoPacket();
 		$manager = $this->server->getResourcePackManager();
 		$pk->resourcePackEntries = $manager->getResourceStack();
