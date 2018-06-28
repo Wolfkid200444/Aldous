@@ -109,10 +109,12 @@ abstract class DataPacket extends NetworkBinaryStream{
 	}
 
 	/**
-	 * Performs handling for this packet. Usually you'll want an appropriately named method in the NetworkSession for this.
+	 * Performs handling for this packet. Usually you'll want an appropriately named method in the SessionHandler for
+	 * this.
 	 *
-	 * This method returns a bool to indicate whether the packet was handled or not. If the packet was unhandled, a debug message will be logged with a hexdump of the packet.
-	 * Typically this method returns the return value of the handler in the supplied NetworkSession. See other packets for examples how to implement this.
+	 * This method returns a bool to indicate whether the packet was handled or not. If the packet was unhandled, a
+	 * debug message will be logged with a hexdump of the packet. Typically this method returns the return value of the
+	 * handler in the supplied SessionHandler. See other packets for examples how to implement this.
 	 *
 	 * @param SessionHandler $handler
 	 *
