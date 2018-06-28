@@ -183,7 +183,7 @@ class SimpleSessionHandler extends SessionHandler{
 				break;
 				//TODO: more actions
 			default:
-				$this->player->getServer()->getLogger()->debug("Unhandled/unknown player action type " . $packet->action . " from " . $this->getName());
+				$this->player->getServer()->getLogger()->debug("Unhandled/unknown player action type " . $packet->action . " from " . $this->player->getName());
 				return false;
 		}
 
