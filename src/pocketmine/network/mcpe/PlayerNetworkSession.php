@@ -247,7 +247,7 @@ abstract class PlayerNetworkSession{
 		}
 	}
 
-	protected function handleDataPacket(DataPacket $packet){
+	protected function handleDataPacket(DataPacket $packet) : void{
 		if(!$this->connected){
 			return;
 		}
