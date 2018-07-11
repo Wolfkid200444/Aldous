@@ -64,12 +64,11 @@ abstract class CustomFormElement implements \JsonSerializable{
 	 * @return array
 	 */
 	final public function jsonSerialize() : array{
-		$data = [
-			"type" => $this->getType(),
-			"text" => $this->getText()
-		];
+		$ret = $this->serializeElementData();
+		$ret["type"] = $this->getType();
+		$ret["text"] = $this->getText();
 
-		return array_merge($data, $this->serializeElementData());
+		return $ret;
 	}
 
 	/**

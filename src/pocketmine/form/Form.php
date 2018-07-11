@@ -75,12 +75,11 @@ abstract class Form implements \JsonSerializable{
 	 * @return array
 	 */
 	final public function jsonSerialize() : array{
-		$jsonBase = [
-			"type" => $this->getType(),
-			"title" => $this->getTitle()
-		];
+		$ret = $this->serializeFormData();
+		$ret["type"] = $this->getType();
+		$ret["title"] = $this->getTitle();
 
-		return array_merge($jsonBase, $this->serializeFormData());
+		return $ret;
 	}
 
 	/**
