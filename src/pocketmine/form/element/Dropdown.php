@@ -36,7 +36,7 @@ class Dropdown extends CustomFormElement{
 	 */
 	public function __construct(string $text, array $options, int $defaultOptionIndex = 0){
 		parent::__construct($text);
-		$this->options = $options;
+		$this->options = array_values($options);
 
 		if(!isset($this->options[$defaultOptionIndex])){
 			throw new \InvalidArgumentException("No option at index $defaultOptionIndex, cannot set as default");
