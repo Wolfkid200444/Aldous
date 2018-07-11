@@ -65,5 +65,4 @@ class MenuOption implements \JsonSerializable{
 
 		return $json;
 	}
-
 }

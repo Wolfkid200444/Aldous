@@ -44,5 +44,4 @@ class Label extends CustomFormElement{
 	public function serializeElementData() : array{
 		return [];
 	}
-
 }

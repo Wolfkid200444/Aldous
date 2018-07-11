@@ -68,5 +68,4 @@ class FormIcon implements \JsonSerializable{
 			"data" => $this->data
 		];
 	}
-
 }

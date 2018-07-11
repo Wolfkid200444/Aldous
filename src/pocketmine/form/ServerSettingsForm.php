@@ -58,5 +58,4 @@ abstract class ServerSettingsForm extends CustomForm{
 
 		return $data;
 	}
-
 }

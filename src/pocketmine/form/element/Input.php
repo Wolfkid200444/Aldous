@@ -94,5 +94,4 @@ class Input extends CustomFormElement{
 			"default" => $this->default
 		];
 	}
-
 }

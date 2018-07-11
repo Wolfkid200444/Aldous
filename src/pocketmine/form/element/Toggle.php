@@ -74,5 +74,4 @@ class Toggle extends CustomFormElement{
 			"default" => $this->default
 		];
 	}
-
 }

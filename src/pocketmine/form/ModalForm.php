@@ -115,5 +115,4 @@ abstract class ModalForm extends Form{
 			"button2" => $this->button2
 		];
 	}
-
 }
