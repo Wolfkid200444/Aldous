@@ -104,7 +104,6 @@ class Slider extends CustomFormElement{
 		return $this->default;
 	}
 
-
 	protected function serializeElementData() : array{
 		return [
 			"min" => $this->min,
