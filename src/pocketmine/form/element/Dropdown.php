@@ -26,8 +26,6 @@ namespace pocketmine\form\element;
 class Dropdown extends CustomFormElement{
 	/** @var int */
 	protected $defaultOptionIndex;
-	/** @var int|null */
-	protected $selectedOption;
 	/** @var string[] */
 	protected $options;
 
@@ -51,23 +49,17 @@ class Dropdown extends CustomFormElement{
 	}
 
 	/**
-	 * @return int|null
-	 */
-	public function getValue() : ?int{
-		return $this->selectedOption;
-	}
-
-	/**
 	 * @param int $value
 	 *
 	 * @throws \TypeError
 	 */
-	public function setValue($value) : void{
+	public function validateValue($value) : void{
 		if(!is_int($value)){
 			throw new \TypeError("Expected int, got " . gettype($value));
 		}
-
-		$this->selectedOption = $value;
+		if(!isset($this->options[$value])){
+			throw new \RuntimeException("Option $value does not exist in " . get_class($this));
+		}
 	}
 
 	/**
@@ -79,25 +71,6 @@ class Dropdown extends CustomFormElement{
 	 */
 	public function getOption(int $index) : ?string{
 		return $this->options[$index] ?? null;
-	}
-
-	/**
-	 * Returns the text of the selected option.
-	 * @return string
-	 */
-	public function getSelectedOption() : string{
-		$index = $this->getValue();
-		if($index === null){
-			throw new \InvalidStateException("No option selected (form closed or hasn't been submitted yet)");
-		}
-
-		$option = $this->getOption($index);
-
-		if($option !== null){
-			return $option;
-		}
-
-		throw new \InvalidStateException("No option found at index $index");
 	}
 
 	/**
@@ -121,8 +94,7 @@ class Dropdown extends CustomFormElement{
 		return $this->options;
 	}
 
-
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [
 			"options" => $this->options,
 			"default" => $this->defaultOptionIndex

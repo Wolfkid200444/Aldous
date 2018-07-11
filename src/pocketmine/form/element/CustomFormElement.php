@@ -49,19 +49,14 @@ abstract class CustomFormElement implements \JsonSerializable{
 	}
 
 	/**
-	 * Returns the value of the component after it's been set by a form response from a player.
-	 * @return mixed
-	 */
-	abstract public function getValue();
-
-	/**
-	 * Sets the component's value to the specified argument. This function should do appropriate type checking and throw
-	 * whatever errors necessary if the type of value is not as expected.
+	 * Validates that the given value is of the correct type and fits the constraints for the component. This function
+	 * should do appropriate type checking and throw whatever errors necessary if the value is not valid.
 	 *
 	 * @param mixed $value
+	 * @throws \Exception
 	 * @throws \TypeError
 	 */
-	abstract public function setValue($value) : void;
+	abstract public function validateValue($value) : void;
 
 	/**
 	 * Returns an array of properties which can be serialized to JSON for sending.
@@ -81,5 +76,5 @@ abstract class CustomFormElement implements \JsonSerializable{
 	 * Returns an array of extra data needed to serialize this element to JSON for showing to a player on a form.
 	 * @return array
 	 */
-	abstract public function serializeElementData() : array;
+	abstract protected function serializeElementData() : array;
 }

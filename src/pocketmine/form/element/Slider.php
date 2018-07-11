@@ -33,8 +33,6 @@ class Slider extends CustomFormElement{
 	private $step = 1.0;
 	/** @var float */
 	private $default;
-	/** @var float|null */
-	private $value;
 
 	public function __construct(string $text, float $min, float $max, float $step = 1.0, ?float $default = null){
 		parent::__construct($text);
@@ -65,23 +63,17 @@ class Slider extends CustomFormElement{
 	}
 
 	/**
-	 * @return float|null
-	 */
-	public function getValue() : ?float{
-		return $this->value;
-	}
-
-	/**
 	 * @param float $value
 	 *
 	 * @throws \TypeError
 	 */
-	public function setValue($value) : void{
+	public function validateValue($value) : void{
 		if(!is_float($value) and !is_int($value)){
 			throw new \TypeError("Expected float, got " . gettype($value));
 		}
-
-		$this->value = $value;
+		if($value < $this->min or $value > $this->max){
+			throw new \RuntimeException("Value $value is out of bounds (min $this->min, max $this->max)");
+		}
 	}
 
 	/**
@@ -113,7 +105,7 @@ class Slider extends CustomFormElement{
 	}
 
 
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [
 			"min" => $this->min,
 			"max" => $this->max,

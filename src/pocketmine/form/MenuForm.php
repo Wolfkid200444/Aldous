@@ -37,9 +37,6 @@ abstract class MenuForm extends Form{
 	/** @var MenuOption[] */
 	private $options;
 
-	/** @var int|null */
-	private $selectedOption;
-
 	/**
 	 * @param string       $title
 	 * @param string       $text
@@ -62,64 +59,24 @@ abstract class MenuForm extends Form{
 	}
 
 	/**
-	 * Returns the index of the option selected by the user.
-	 * @return int|null
-	 */
-	public function getSelectedOptionIndex() : ?int{
-		return $this->selectedOption;
-	}
-
-	/**
-	 * Sets the selected option to the specified index or null. null = no selection.
-	 * @param int $option
-	 */
-	public function setSelectedOptionIndex(int $option) : void{
-		$this->selectedOption = $option;
-	}
-
-	/**
-	 * Returns the menu option selected by the user.
+	 * @param Player $player Player submitting this form.
+	 * @param int    $selectedOption Selected option, can be used with getOption().
 	 *
-	 * @return MenuOption
-	 * @throws \InvalidStateException if no option is selected or if the selected option doesn't exist
+	 * @return null|Form A form to show to the player after this one, or null.
 	 */
-	public function getSelectedOption() : MenuOption{
-		$index = $this->getSelectedOptionIndex();
-		if($index === null){
-			throw new \InvalidStateException("No option selected (form closed or hasn't been submitted yet)");
-		}
-
-		$option = $this->getOption($index);
-
-		if($option !== null){
-			return $option;
-		}
-
-		throw new \InvalidStateException("No option found at index $index");
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * {@link getSelectedOption} can be used to get the option selected by the user.
-	 */
-	public function onSubmit(Player $player) : ?Form{
+	public function onSubmit(Player $player, int $selectedOption) : ?Form{
 		return null;
 	}
 
 	/**
 	 * Called when a player clicks the close button on this form without selecting an option.
+	 *
 	 * @param Player $player
 	 * @return Form|null a form which will be opened immediately (before queued forms) as a response to this form, or null if not applicable.
 	 */
 	public function onClose(Player $player) : ?Form{
 		return null;
 	}
-
-	public function clearResponseData() : void{
-		$this->selectedOption = null;
-	}
-
 
 	final public function handleResponse(Player $player, $data) : ?Form{
 		if($data === null){
@@ -130,14 +87,13 @@ abstract class MenuForm extends Form{
 			if(!isset($this->options[$data])){
 				throw new \RuntimeException($player->getName() . " selected an option that doesn't seem to exist ($data)");
 			}
-			$this->setSelectedOptionIndex($data);
-			return $this->onSubmit($player);
+			return $this->onSubmit($player, $data);
 		}
 
 		throw new \UnexpectedValueException("Expected int or NULL, got " . gettype($data));
 	}
 
-	public function serializeFormData() : array{
+	protected function serializeFormData() : array{
 		return [
 			"content" => $this->content,
 			"buttons" => $this->options //yes, this is intended (MCPE calls them buttons)

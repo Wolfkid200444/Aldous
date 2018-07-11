@@ -49,7 +49,7 @@ abstract class ServerSettingsForm extends CustomForm{
 		return $this->icon;
 	}
 
-	public function serializeFormData() : array{
+	protected function serializeFormData() : array{
 		$data = parent::serializeFormData();
 
 		if($this->hasIcon()){

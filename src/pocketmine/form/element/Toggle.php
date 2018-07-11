@@ -29,8 +29,6 @@ namespace pocketmine\form\element;
 class Toggle extends CustomFormElement{
 	/** @var bool */
 	private $default;
-	/** @var bool */
-	private $value;
 
 	public function __construct(string $text, bool $defaultValue = false){
 		parent::__construct($text);
@@ -49,27 +47,17 @@ class Toggle extends CustomFormElement{
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function getValue() : bool{
-		return $this->value;
-	}
-
-	/**
 	 * @param bool $value
 	 *
 	 * @throws \TypeError
 	 */
-	public function setValue($value) : void{
+	public function validateValue($value) : void{
 		if(!is_bool($value)){
 			throw new \TypeError("Expected bool, got " . gettype($value));
 		}
-
-		$this->value = $value;
 	}
 
-
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [
 			"default" => $this->default
 		];

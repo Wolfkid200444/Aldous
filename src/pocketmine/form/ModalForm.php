@@ -37,9 +37,6 @@ abstract class ModalForm extends Form{
 	/** @var string */
 	private $button2;
 
-	/** @var bool|null */
-	private $choice;
-
 	/**
 	 * @param string $title Text to put on the title of the dialog.
 	 * @param string $text Text to put in the body.
@@ -66,49 +63,24 @@ abstract class ModalForm extends Form{
 	}
 
 	/**
-	 * If called from {@link onSubmit} this will return true if the user chose Yes, or false if they chose No.
+	 * @param Player $player Player submitting this form
+	 * @param bool   $choice Selected option. True for yes button, false for no button.
 	 *
-	 * Will return null if called before the form is submitted.
-	 *
-	 * @return bool|null
+	 * @return null|Form A form to show to the player after this one, or null.
 	 */
-	public function getChoice() : ?bool{
-		return $this->choice;
-	}
-
-	/**
-	 * Sets the option selected by the player. true = Yes, false = No
-	 *
-	 * @param bool $choice
-	 */
-	public function setChoice(bool $choice) : void{
-		$this->choice = $choice;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * {@link getChoice} can be used in here to find out which option the player selected.
-	 */
-	public function onSubmit(Player $player) : ?Form{
+	public function onSubmit(Player $player, bool $choice) : ?Form{
 		return null;
 	}
-
-	public function clearResponseData() : void{
-		$this->choice = null;
-	}
-
 
 	final public function handleResponse(Player $player, $data) : ?Form{
 		if(!is_bool($data)){
 			throw new \UnexpectedValueException("Expected bool, got " . gettype($data));
 		}
 
-		$this->setChoice($data);
-		return $this->onSubmit($player);
+		return $this->onSubmit($player, $data);
 	}
 
-	public function serializeFormData() : array{
+	protected function serializeFormData() : array{
 		return [
 			"content" => $this->content,
 			"button1" => $this->button1,

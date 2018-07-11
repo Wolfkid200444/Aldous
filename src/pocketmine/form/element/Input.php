@@ -33,8 +33,6 @@ class Input extends CustomFormElement{
 	private $hint;
 	/** @var string */
 	private $default;
-	/** @var string|null */
-	private $value;
 
 	/**
 	 * @param string $text
@@ -52,23 +50,14 @@ class Input extends CustomFormElement{
 	}
 
 	/**
-	 * @return string|null
-	 */
-	public function getValue() : ?string{
-		return $this->value;
-	}
-
-	/**
 	 * @param string $value
 	 *
 	 * @throws \TypeError
 	 */
-	public function setValue($value) : void{
+	public function validateValue($value) : void{
 		if(!is_string($value)){
 			throw new \TypeError("Expected string, got " . gettype($value));
 		}
-
-		$this->value = $value;
 	}
 
 	/**
@@ -87,8 +76,7 @@ class Input extends CustomFormElement{
 		return $this->default;
 	}
 
-
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [
 			"placeholder" => $this->hint,
 			"default" => $this->default

@@ -3374,8 +3374,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @param bool $prepend if true, the form will be sent immediately after the current form is closed (if any), before other queued forms.
 	 */
 	public function sendForm(Form $form, bool $prepend = false) : void{
-		$form->setInUse();
-
 		if($this->sentForm !== null){
 			if($prepend){
 				array_unshift($this->formQueue, $form);
@@ -3412,9 +3410,8 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->sentForm = null;
 
 		try{
-			if($form !== null){
-				$form->setInUse(); //forms in the queue will already be marked as "in use", we only need to check here
-			}else{
+			if($form === null){
+				/** @var Form $form */
 				$form = array_shift($this->formQueue);
 			}
 

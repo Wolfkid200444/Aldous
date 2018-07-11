@@ -32,16 +32,11 @@ class Label extends CustomFormElement{
 		return "label";
 	}
 
-	public function getValue(){
-		return null;
-	}
-
-	public function setValue($value) : void{
+	public function validateValue($value) : void{
 		assert($value === null);
 	}
 
-
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [];
 	}
 }

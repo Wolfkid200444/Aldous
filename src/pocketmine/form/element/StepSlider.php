@@ -29,8 +29,7 @@ class StepSlider extends Dropdown{
 		return "step_slider";
 	}
 
-
-	public function serializeElementData() : array{
+	protected function serializeElementData() : array{
 		return [
 			"steps" => $this->options,
 			"default" => $this->defaultOptionIndex

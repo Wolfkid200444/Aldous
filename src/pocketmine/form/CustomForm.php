@@ -66,19 +66,25 @@ abstract class CustomForm extends Form{
 		return $this->elements;
 	}
 
-	public function onSubmit(Player $player) : ?Form{
+	/**
+	 * @param Player $player
+	 * @param mixed  ...$data
+	 *
+	 * @return null|Form
+	 */
+	public function onSubmit(Player $player, ...$data) : ?Form{
 		return null;
 	}
 
 	/**
 	 * Called when a player closes the form without submitting it.
+	 *
 	 * @param Player $player
 	 * @return Form|null a form which will be opened immediately (before queued forms) as a response to this form, or null if not applicable.
 	 */
 	public function onClose(Player $player) : ?Form{
 		return null;
 	}
-
 
 	public function handleResponse(Player $player, $data) : ?Form{
 		if($data === null){
@@ -88,16 +94,16 @@ abstract class CustomForm extends Form{
 		if(is_array($data)){
 			/** @var array $data */
 			foreach($data as $index => $value){
-				$this->elements[$index]->setValue($value);
+				$this->elements[$index]->validateValue($value);
 			}
 
-			return $this->onSubmit($player);
+			return $this->onSubmit($player, ...$data);
 		}
 
 		throw new \UnexpectedValueException("Expected array or NULL, got " . gettype($data));
 	}
 
-	public function serializeFormData() : array{
+	protected function serializeFormData() : array{
 		return [
 			"content" => $this->elements
 		];
