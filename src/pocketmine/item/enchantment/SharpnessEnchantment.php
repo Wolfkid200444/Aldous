@@ -21,22 +21,17 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\level\generator\populator;
+namespace pocketmine\item\enchantment;
 
-use pocketmine\level\ChunkManager;
-use pocketmine\utils\Random;
+use pocketmine\entity\Entity;
 
-class Mineshaft extends Populator{
-	private static $DISTANCE = 256;
-	private static $VARIATION = 16;
-	private static $ODD = 3;
-	private static $BASE_Y = 35;
-	private static $RAND_Y = 11;
+class SharpnessEnchantment extends MeleeWeaponEnchantment{
 
-	public function populate(ChunkManager $level, int $chunkX, int $chunkZ, Random $random){
-		if($random->nextRange(0, self::$ODD) === 0){
-			//$mineshaft = new Mineshaft($random);
-		}
+	public function isApplicableTo(Entity $victim) : bool{
+		return true;
 	}
 
+	public function getDamageBonus(int $enchantmentLevel) : float{
+		return 0.5 * ($enchantmentLevel + 1);
+	}
 }

@@ -30,7 +30,7 @@ use pocketmine\timings\Timings;
 
 class PermissibleBase implements Permissible{
 	/** @var ServerOperator */
-	private $opable = null;
+	private $opable;
 
 	/** @var Permissible */
 	private $parent = null;
@@ -59,24 +59,14 @@ class PermissibleBase implements Permissible{
 	 * @return bool
 	 */
 	public function isOp() : bool{
-		if($this->opable === null){
-			return false;
-		}else{
-			return $this->opable->isOp();
-		}
+		return $this->opable->isOp();
 	}
 
 	/**
 	 * @param bool $value
-	 *
-	 * @throws \Exception
 	 */
 	public function setOp(bool $value){
-		if($this->opable === null){
-			throw new \LogicException("Cannot change op value as no ServerOperator is set");
-		}else{
-			$this->opable->setOp($value);
-		}
+		$this->opable->setOp($value);
 	}
 
 	/**
@@ -187,11 +177,11 @@ class PermissibleBase implements Permissible{
 	}
 
 	/**
-	 * @param bool[]               $children
-	 * @param bool                 $invert
-	 * @param PermissionAttachment $attachment
+	 * @param bool[]                    $children
+	 * @param bool                      $invert
+	 * @param PermissionAttachment|null $attachment
 	 */
-	private function calculateChildPermissions(array $children, $invert, $attachment){
+	private function calculateChildPermissions(array $children, bool $invert, ?PermissionAttachment $attachment){
 		foreach($children as $name => $v){
 			$perm = Server::getInstance()->getPluginManager()->getPermission($name);
 			$value = ($v xor $invert);

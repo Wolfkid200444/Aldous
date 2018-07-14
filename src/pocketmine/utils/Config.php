@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\utils;
 
-use pocketmine\scheduler\FileWriteTask;
 use pocketmine\Server;
 
 
@@ -187,11 +186,9 @@ class Config{
 	}
 
 	/**
-	 * @param bool $async
-	 *
 	 * @return bool
 	 */
-	public function save(bool $async = false) : bool{
+	public function save() : bool{
 		if($this->correct){
 			try{
 				$content = null;
@@ -216,11 +213,7 @@ class Config{
 						throw new \InvalidStateException("Config type is unknown, has not been set or not detected");
 				}
 
-				if($async){
-					Server::getInstance()->getScheduler()->scheduleAsyncTask(new FileWriteTask($this->file, $content));
-				}else{
-					file_put_contents($this->file, $content);
-				}
+				file_put_contents($this->file, $content);
 			}catch(\Throwable $e){
 				$logger = Server::getInstance()->getLogger();
 				$logger->critical("Could not save Config " . $this->file . ": " . $e->getMessage());
@@ -550,7 +543,7 @@ class Config{
 	 * @param string $content
 	 */
 	private function parseProperties(string $content){
-		if(preg_match_all('/([a-zA-Z0-9\-_\.]*)=([^\r\n]*)/u', $content, $matches) > 0){ //false or 0 matches
+		if(preg_match_all('/([a-zA-Z0-9\-_\.]+)[ \t]*=([^\r\n]*)/u', $content, $matches) > 0){ //false or 0 matches
 			foreach($matches[1] as $i => $k){
 				$v = trim($matches[2][$i]);
 				switch(strtolower($v)){
@@ -572,5 +565,4 @@ class Config{
 			}
 		}
 	}
-
 }

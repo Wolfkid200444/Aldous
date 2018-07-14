@@ -21,8 +21,24 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\level\biome;
+namespace pocketmine\item\enchantment;
 
-abstract class NormalBiome extends Biome{
+use pocketmine\entity\Entity;
+use pocketmine\entity\Living;
 
+class KnockbackEnchantment extends MeleeWeaponEnchantment{
+
+	public function isApplicableTo(Entity $victim) : bool{
+		return $victim instanceof Living;
+	}
+
+	public function getDamageBonus(int $enchantmentLevel) : float{
+		return 0;
+	}
+
+	public function onPostAttack(Entity $attacker, Entity $victim, int $enchantmentLevel) : void{
+		if($victim instanceof Living){
+			$victim->knockBack($attacker, 0, $victim->x - $attacker->x, $victim->z - $attacker->z, $enchantmentLevel * 0.5);
+		}
+	}
 }

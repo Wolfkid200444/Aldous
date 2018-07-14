@@ -30,9 +30,11 @@ use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\event\player\PlayerExperienceChangeEvent;
 use pocketmine\inventory\EnderChestInventory;
+use pocketmine\inventory\EntityInventoryEventProcessor;
 use pocketmine\inventory\InventoryHolder;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\item\Consumable;
+use pocketmine\item\Durable;
 use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\FoodSource;
 use pocketmine\item\Item;
@@ -515,6 +517,42 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 		return $this->xpCooldown === 0;
 	}
 
+	public function onPickupXp(int $xpValue) : void{
+		static $mainHandIndex = -1;
+
+		//TODO: replace this with a more generic equipment getting/setting interface
+		/** @var Durable[] $equipment */
+		$equipment = [];
+
+		if(($item = $this->inventory->getItemInHand()) instanceof Durable and $item->hasEnchantment(Enchantment::MENDING)){
+			$equipment[$mainHandIndex] = $item;
+		}
+		//TODO: check offhand
+		foreach($this->armorInventory->getContents() as $k => $item){
+			if($item instanceof Durable and $item->hasEnchantment(Enchantment::MENDING)){
+				$equipment[$k] = $item;
+			}
+		}
+
+		if(!empty($equipment)){
+			$repairItem = $equipment[$k = array_rand($equipment)];
+			if($repairItem->getDamage() > 0){
+				$repairAmount = min($repairItem->getDamage(), $xpValue * 2);
+				$repairItem->setDamage($repairItem->getDamage() - $repairAmount);
+				$xpValue -= (int) ceil($repairAmount / 2);
+
+				if($k === $mainHandIndex){
+					$this->inventory->setItemInHand($repairItem);
+				}else{
+					$this->armorInventory->setItem($k, $repairItem);
+				}
+			}
+		}
+
+		$this->addXp($xpValue); //this will still get fired even if the value is 0 due to mending, to play sounds
+		$this->resetXpCooldown();
+	}
+
 	/**
 	 * Sets the duration in ticks until the human can pick up another XP orb.
 	 *
@@ -570,6 +608,9 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 
 		$inventoryTag = $this->namedtag->getListTag("Inventory");
 		if($inventoryTag !== null){
+			$armorListener = $this->armorInventory->getEventProcessor();
+			$this->armorInventory->setEventProcessor(null);
+
 			/** @var CompoundTag $item */
 			foreach($inventoryTag as $i => $item){
 				$slot = $item->getByte("Slot");
@@ -581,6 +622,8 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 					$this->inventory->setItem($slot - 9, Item::nbtDeserialize($item));
 				}
 			}
+
+			$this->armorInventory->setEventProcessor($armorListener);
 		}
 
 		$enderChestInventoryTag = $this->namedtag->getListTag("EnderChestInventory");
@@ -593,6 +636,7 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 
 		$this->inventory->setHeldItemIndex($this->namedtag->getInt("SelectedInventorySlot", 0), false);
 
+		$this->inventory->setEventProcessor(new EntityInventoryEventProcessor($this));
 
 		$this->setFood((float) $this->namedtag->getInt("foodLevel", (int) $this->getFood(), true));
 		$this->setExhaustion($this->namedtag->getFloat("foodExhaustionLevel", $this->getExhaustion(), true));

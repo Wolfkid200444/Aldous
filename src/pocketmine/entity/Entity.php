@@ -53,7 +53,6 @@ use pocketmine\level\Level;
 use pocketmine\level\Location;
 use pocketmine\level\Position;
 use pocketmine\math\AxisAlignedBB;
-use pocketmine\math\Math;
 use pocketmine\math\Vector2;
 use pocketmine\math\Vector3;
 use pocketmine\metadata\Metadatable;
@@ -554,9 +553,12 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		$this->setGenericFlag(self::DATA_FLAG_AFFECTED_BY_GRAVITY, true);
 		$this->setGenericFlag(self::DATA_FLAG_HAS_COLLISION, true);
 
+		$this->initEntity();
+		$this->propertyManager->clearDirtyProperties(); //Prevents resending properties that were set during construction
+
 		$this->chunk->addEntity($this);
 		$this->level->addEntity($this);
-		$this->initEntity();
+
 		$this->lastUpdate = $this->server->getTick();
 		$this->server->getPluginManager()->callEvent(new EntitySpawnEvent($this));
 
@@ -876,8 +878,6 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 				$this->setNameTagVisible($this->namedtag->getByte("CustomNameVisible", 1) !== 0);
 			}
 		}
-
-		$this->scheduleUpdate();
 	}
 
 	protected function addAttributes() : void{
@@ -1101,7 +1101,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	}
 
 	public function canBeCollidedWith() : bool{
-		return true;
+		return $this->isAlive();
 	}
 
 	protected function updateMovement(bool $teleport = false) : void{
@@ -1333,11 +1333,6 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 		$this->lastUpdate = $currentTick;
 
-		if($this->needsDespawn){
-			$this->close();
-			return false;
-		}
-
 		if(!$this->isAlive()){
 			if($this->onDeathUpdate($tickDiff)){
 				$this->flagForDespawn();
@@ -1382,6 +1377,9 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	}
 
 	final public function scheduleUpdate() : void{
+		if($this->closed){
+			throw new \InvalidStateException("Cannot schedule update on garbage entity " . get_class($this));
+		}
 		$this->level->updateEntities[$this->id] = $this;
 	}
 
@@ -1482,7 +1480,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 		Timings::$entityMoveTimer->startTiming();
 
-		$newBB = $this->boundingBox->getOffsetBoundingBox($dx, $dy, $dz);
+		$newBB = $this->boundingBox->offsetCopy($dx, $dy, $dz);
 
 		$list = $this->level->getCollisionCubes($this, $newBB, false);
 
@@ -1570,7 +1568,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 			assert(abs($dx) <= 20 and abs($dy) <= 20 and abs($dz) <= 20, "Movement distance is excessive: dx=$dx, dy=$dy, dz=$dz");
 
-			$list = $this->level->getCollisionCubes($this, $this->level->getTickRate() > 1 ? $this->boundingBox->getOffsetBoundingBox($dx, $dy, $dz) : $this->boundingBox->addCoord($dx, $dy, $dz), false);
+			$list = $this->level->getCollisionCubes($this, $this->level->getTickRate() > 1 ? $this->boundingBox->offsetCopy($dx, $dy, $dz) : $this->boundingBox->addCoord($dx, $dy, $dz), false);
 
 			foreach($list as $bb){
 				$dy = $bb->calculateYOffset($this->boundingBox, $dy);
@@ -1980,6 +1978,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	 */
 	public function flagForDespawn() : void{
 		$this->needsDespawn = true;
+		$this->scheduleUpdate();
 	}
 
 	public function isFlaggedForDespawn() : bool{
@@ -2123,5 +2122,4 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	public function __toString(){
 		return (new \ReflectionClass($this))->getShortName() . "(" . $this->getId() . ")";
 	}
-
 }
