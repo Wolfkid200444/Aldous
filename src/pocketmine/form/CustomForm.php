@@ -92,8 +92,14 @@ abstract class CustomForm extends Form{
 		}
 
 		if(is_array($data)){
+			if(($actual = count($data)) !== ($expected = count($this->elements))){
+				throw new \RuntimeException("Invalid response data count for custom form: expected $expected result data, got $actual");
+			}
 			/** @var array $data */
 			foreach($data as $index => $value){
+				if(!isset($this->elements[$index])){
+					throw new \RuntimeException("Invalid response data for custom form: element at offset $index does not exist");
+				}
 				$this->elements[$index]->validateValue($value);
 			}
 
