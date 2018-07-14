@@ -35,12 +35,13 @@ class Input extends CustomFormElement{
 	private $default;
 
 	/**
+	 * @param string $name
 	 * @param string $text
 	 * @param string $hintText
 	 * @param string $defaultText
 	 */
-	public function __construct(string $text, string $hintText = "", string $defaultText = ""){
-		parent::__construct($text);
+	public function __construct(string $name, string $text, string $hintText = "", string $defaultText = ""){
+		parent::__construct($name, $text);
 		$this->hint = $hintText;
 		$this->default = $defaultText;
 	}

@@ -31,6 +31,8 @@ abstract class CustomForm extends Form{
 
 	/** @var CustomFormElement[] */
 	private $elements;
+	/** @var CustomFormElement[] */
+	private $elementMap = [];
 
 	/**
 	 * @param string              $title
@@ -41,6 +43,9 @@ abstract class CustomForm extends Form{
 
 		parent::__construct($title);
 		$this->elements = array_values($elements);
+		foreach($this->elements as $element){
+			$this->elementMap[$element->getName()] = $element;
+		}
 	}
 
 	/**
@@ -60,6 +65,15 @@ abstract class CustomForm extends Form{
 	}
 
 	/**
+	 * @param string $name
+	 *
+	 * @return null|CustomFormElement
+	 */
+	public function getElementByName(string $name) : ?CustomFormElement{
+		return $this->elementMap[$name] ?? null;
+	}
+
+	/**
 	 * @return CustomFormElement[]
 	 */
 	public function getAllElements() : array{
@@ -68,11 +82,11 @@ abstract class CustomForm extends Form{
 
 	/**
 	 * @param Player $player
-	 * @param mixed  ...$data
+	 * @param array  $data
 	 *
 	 * @return null|Form
 	 */
-	public function onSubmit(Player $player, ...$data) : ?Form{
+	public function onSubmit(Player $player, array $data) : ?Form{
 		return null;
 	}
 
@@ -95,15 +109,19 @@ abstract class CustomForm extends Form{
 			if(($actual = count($data)) !== ($expected = count($this->elements))){
 				throw new \RuntimeException("Invalid response data count for custom form: expected $expected result data, got $actual");
 			}
+
+			$values = [];
+
 			/** @var array $data */
 			foreach($data as $index => $value){
 				if(!isset($this->elements[$index])){
 					throw new \RuntimeException("Invalid response data for custom form: element at offset $index does not exist");
 				}
 				$this->elements[$index]->validateValue($value);
+				$values[$this->elements[$index]->getName()] = $value;
 			}
 
-			return $this->onSubmit($player, ...$data);
+			return $this->onSubmit($player, $values);
 		}
 
 		throw new \UnexpectedValueException("Expected array or NULL, got " . gettype($data));

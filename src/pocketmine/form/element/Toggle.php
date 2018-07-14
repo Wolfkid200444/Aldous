@@ -30,8 +30,8 @@ class Toggle extends CustomFormElement{
 	/** @var bool */
 	private $default;
 
-	public function __construct(string $text, bool $defaultValue = false){
-		parent::__construct($text);
+	public function __construct(string $name, string $text, bool $defaultValue = false){
+		parent::__construct($name, $text);
 		$this->default = $defaultValue;
 	}
 

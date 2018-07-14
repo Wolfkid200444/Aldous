@@ -28,9 +28,12 @@ namespace pocketmine\form\element;
  */
 abstract class CustomFormElement implements \JsonSerializable{
 	/** @var string */
+	private $name;
+	/** @var string */
 	private $text;
 
-	public function __construct(string $text){
+	public function __construct(string $name, string $text){
+		$this->name = $name;
 		$this->text = $text;
 	}
 
@@ -39,6 +42,14 @@ abstract class CustomFormElement implements \JsonSerializable{
 	 * @return string
 	 */
 	abstract public function getType() : string;
+
+	/**
+	 * Returns the element's name. This is used to identify the element in code.
+	 * @return string
+	 */
+	public function getName() : string{
+		return $this->name;
+	}
 
 	/**
 	 * Returns the element's label. Usually this is used to explain to the user what a control does.

@@ -34,8 +34,8 @@ class Slider extends CustomFormElement{
 	/** @var float */
 	private $default;
 
-	public function __construct(string $text, float $min, float $max, float $step = 1.0, ?float $default = null){
-		parent::__construct($text);
+	public function __construct(string $name, string $text, float $min, float $max, float $step = 1.0, ?float $default = null){
+		parent::__construct($name, $text);
 
 		if($this->min > $this->max){
 			throw new \InvalidArgumentException("Slider min value should be less than max value");

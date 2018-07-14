@@ -30,12 +30,13 @@ class Dropdown extends CustomFormElement{
 	protected $options;
 
 	/**
+	 * @param string   $name
 	 * @param string   $text
 	 * @param string[] $options
 	 * @param int      $defaultOptionIndex
 	 */
-	public function __construct(string $text, array $options, int $defaultOptionIndex = 0){
-		parent::__construct($text);
+	public function __construct(string $name, string $text, array $options, int $defaultOptionIndex = 0){
+		parent::__construct($name, $text);
 		$this->options = array_values($options);
 
 		if(!isset($this->options[$defaultOptionIndex])){
