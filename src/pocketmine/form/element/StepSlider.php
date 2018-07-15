@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
-class StepSlider extends Dropdown{
+class StepSlider extends BaseSelector{
 
 	public function getType() : string{
 		return "step_slider";
