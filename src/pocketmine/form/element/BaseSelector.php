@@ -54,7 +54,7 @@ abstract class BaseSelector extends CustomFormElement{
 	 */
 	public function validateValue($value) : void{
 		if(!is_int($value)){
-			throw new FormValidationException("Expected int value, got " . gettype($value));
+			throw new FormValidationException("Expected int, got " . gettype($value));
 		}
 		if(!isset($this->options[$value])){
 			throw new FormValidationException("Option $value does not exist");
