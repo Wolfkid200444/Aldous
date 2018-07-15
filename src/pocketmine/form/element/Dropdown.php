@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
+use pocketmine\form\FormValidationException;
+
 class Dropdown extends CustomFormElement{
 	/** @var int */
 	protected $defaultOptionIndex;
@@ -52,14 +54,14 @@ class Dropdown extends CustomFormElement{
 	/**
 	 * @param int $value
 	 *
-	 * @throws \TypeError
+	 * @throws FormValidationException
 	 */
 	public function validateValue($value) : void{
 		if(!is_int($value)){
-			throw new \TypeError("Expected int, got " . gettype($value));
+			throw new FormValidationException("Expected int value, got " . gettype($value));
 		}
 		if(!isset($this->options[$value])){
-			throw new \RuntimeException("Option $value does not exist in " . get_class($this));
+			throw new FormValidationException("Option $value does not exist");
 		}
 	}
 

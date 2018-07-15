@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
+use pocketmine\form\FormValidationException;
+
 /**
  * Base class for UI elements which can be placed on custom forms.
  */
@@ -64,8 +66,7 @@ abstract class CustomFormElement implements \JsonSerializable{
 	 * should do appropriate type checking and throw whatever errors necessary if the value is not valid.
 	 *
 	 * @param mixed $value
-	 * @throws \Exception
-	 * @throws \TypeError
+	 * @throws FormValidationException
 	 */
 	abstract public function validateValue($value) : void;
 

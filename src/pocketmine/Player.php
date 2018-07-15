@@ -69,6 +69,7 @@ use pocketmine\event\player\PlayerToggleSprintEvent;
 use pocketmine\event\player\PlayerTransferEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\form\Form;
+use pocketmine\form\FormValidationException;
 use pocketmine\inventory\CraftingGrid;
 use pocketmine\inventory\Inventory;
 use pocketmine\inventory\PlayerCursorInventory;
@@ -3402,24 +3403,21 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		try{
 			$form = $this->sentForm->handleResponse($this, $responseData);
-		}catch(\Throwable $e){
+		}catch(FormValidationException $e){
+			$this->server->getLogger()->critical("Failed to validate form " . get_class($this->sentForm) . ": " . $e->getMessage());
 			$this->server->getLogger()->logException($e);
 		}
 
 		$this->sentFormId = null;
 		$this->sentForm = null;
 
-		try{
-			if($form === null){
-				/** @var Form $form */
-				$form = array_shift($this->formQueue);
-			}
+		if($form === null){
+			/** @var Form $form */
+			$form = array_shift($this->formQueue);
+		}
 
-			if($form !== null){
-				$this->sendFormRequestPacket($form);
-			}
-		}catch(\Throwable $e){
-			$this->server->getLogger()->logException($e);
+		if($form !== null){
+			$this->sendFormRequestPacket($form);
 		}
 
 		return true;

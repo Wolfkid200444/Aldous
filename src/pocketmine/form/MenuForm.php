@@ -85,12 +85,12 @@ abstract class MenuForm extends Form{
 
 		if(is_int($data)){
 			if(!isset($this->options[$data])){
-				throw new \RuntimeException($player->getName() . " selected an option that doesn't seem to exist ($data)");
+				throw new FormValidationException("Option $data does not exist");
 			}
 			return $this->onSubmit($player, $data);
 		}
 
-		throw new \UnexpectedValueException("Expected int or NULL, got " . gettype($data));
+		throw new FormValidationException("Expected int or null, got " . gettype($data));
 	}
 
 	protected function serializeFormData() : array{

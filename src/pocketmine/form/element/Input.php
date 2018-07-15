@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
+use pocketmine\form\FormValidationException;
+
 /**
  * Element which accepts text input. The text-box can have a default value, and may also have a text hint when there is
  * no text in the box.
@@ -53,11 +55,11 @@ class Input extends CustomFormElement{
 	/**
 	 * @param string $value
 	 *
-	 * @throws \TypeError
+	 * @throws FormValidationException
 	 */
 	public function validateValue($value) : void{
 		if(!is_string($value)){
-			throw new \TypeError("Expected string, got " . gettype($value));
+			throw new FormValidationException("Expected string, got " . gettype($value));
 		}
 	}
 

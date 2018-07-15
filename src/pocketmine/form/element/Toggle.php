@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
+use pocketmine\form\FormValidationException;
+
 /**
  * Represents a UI on/off switch. The switch may have a default value.
  */
@@ -49,11 +51,11 @@ class Toggle extends CustomFormElement{
 	/**
 	 * @param bool $value
 	 *
-	 * @throws \TypeError
+	 * @throws FormValidationException
 	 */
 	public function validateValue($value) : void{
 		if(!is_bool($value)){
-			throw new \TypeError("Expected bool, got " . gettype($value));
+			throw new FormValidationException("Expected bool, got " . gettype($value));
 		}
 	}
 

@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\form\element;
 
+use pocketmine\form\FormValidationException;
+
 class Slider extends CustomFormElement{
 
 	/** @var float */
@@ -65,14 +67,14 @@ class Slider extends CustomFormElement{
 	/**
 	 * @param float $value
 	 *
-	 * @throws \TypeError
+	 * @throws FormValidationException
 	 */
 	public function validateValue($value) : void{
 		if(!is_float($value) and !is_int($value)){
-			throw new \TypeError("Expected float, got " . gettype($value));
+			throw new FormValidationException("Expected float, got " . gettype($value));
 		}
 		if($value < $this->min or $value > $this->max){
-			throw new \RuntimeException("Value $value is out of bounds (min $this->min, max $this->max)");
+			throw new FormValidationException("Value $value is out of bounds (min $this->min, max $this->max)");
 		}
 	}
 

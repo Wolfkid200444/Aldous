@@ -74,7 +74,7 @@ abstract class ModalForm extends Form{
 
 	final public function handleResponse(Player $player, $data) : ?Form{
 		if(!is_bool($data)){
-			throw new \UnexpectedValueException("Expected bool, got " . gettype($data));
+			throw new FormValidationException("Expected bool, got " . gettype($data));
 		}
 
 		return $this->onSubmit($player, $data);

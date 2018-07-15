@@ -110,7 +110,7 @@ abstract class CustomForm extends Form{
 
 		if(is_array($data)){
 			if(($actual = count($data)) !== ($expected = count($this->elements))){
-				throw new \RuntimeException("Invalid response data count for custom form: expected $expected result data, got $actual");
+				throw new FormValidationException("Expected $expected result data, got $actual");
 			}
 
 			$values = [];
@@ -118,16 +118,21 @@ abstract class CustomForm extends Form{
 			/** @var array $data */
 			foreach($data as $index => $value){
 				if(!isset($this->elements[$index])){
-					throw new \RuntimeException("Invalid response data for custom form: element at offset $index does not exist");
+					throw new FormValidationException("Element at offset $index does not exist");
 				}
-				$this->elements[$index]->validateValue($value);
-				$values[$this->elements[$index]->getName()] = $value;
+				$element = $this->elements[$index];
+				try{
+					$element->validateValue($value);
+				}catch(FormValidationException $e){
+					throw new FormValidationException("Validation failed for element \"" . $element->getName() . "\": " . $e->getMessage(), 0, $e);
+				}
+				$values[$element->getName()] = $value;
 			}
 
 			return $this->onSubmit($player, $values);
 		}
 
-		throw new \UnexpectedValueException("Expected array or NULL, got " . gettype($data));
+		throw new FormValidationException("Expected array or null, got " . gettype($data));
 	}
 
 	protected function serializeFormData() : array{
