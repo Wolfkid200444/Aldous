@@ -32,7 +32,7 @@ class Slider extends CustomFormElement{
 	/** @var float */
 	private $max;
 	/** @var float */
-	private $step = 1.0;
+	private $step;
 	/** @var float */
 	private $default;
 
