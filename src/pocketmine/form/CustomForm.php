@@ -84,12 +84,12 @@ abstract class CustomForm extends Form{
 	}
 
 	/**
-	 * @param Player $player
-	 * @param array  $data
+	 * @param Player             $player
+	 * @param CustomFormResponse $data
 	 *
 	 * @return null|Form
 	 */
-	public function onSubmit(Player $player, array $data) : ?Form{
+	public function onSubmit(Player $player, CustomFormResponse $data) : ?Form{
 		return null;
 	}
 
@@ -129,7 +129,7 @@ abstract class CustomForm extends Form{
 				$values[$element->getName()] = $value;
 			}
 
-			return $this->onSubmit($player, $values);
+			return $this->onSubmit($player, new CustomFormResponse($values));
 		}
 
 		throw new FormValidationException("Expected array or null, got " . gettype($data));
