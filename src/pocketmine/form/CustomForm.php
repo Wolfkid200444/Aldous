@@ -52,13 +52,6 @@ abstract class CustomForm extends Form{
 	}
 
 	/**
-	 * @return string
-	 */
-	public function getType() : string{
-		return Form::TYPE_CUSTOM_FORM;
-	}
-
-	/**
 	 * @param int $index
 	 *
 	 * @return CustomFormElement|null
@@ -133,6 +126,13 @@ abstract class CustomForm extends Form{
 		}
 
 		throw new FormValidationException("Expected array or null, got " . gettype($data));
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getType() : string{
+		return "custom_form";
 	}
 
 	protected function serializeFormData() : array{

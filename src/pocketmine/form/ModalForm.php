@@ -50,10 +50,6 @@ abstract class ModalForm extends Form{
 		$this->button2 = $noButtonText;
 	}
 
-	public function getType() : string{
-		return self::TYPE_MODAL;
-	}
-
 	public function getYesButtonText() : string{
 		return $this->button1;
 	}
@@ -78,6 +74,10 @@ abstract class ModalForm extends Form{
 		}
 
 		return $this->onSubmit($player, $data);
+	}
+
+	protected function getType() : string{
+		return "modal";
 	}
 
 	protected function serializeFormData() : array{

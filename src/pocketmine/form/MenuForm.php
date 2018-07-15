@@ -50,10 +50,6 @@ abstract class MenuForm extends Form{
 		$this->options = array_values($options);
 	}
 
-	public function getType() : string{
-		return Form::TYPE_MENU;
-	}
-
 	public function getOption(int $position) : ?MenuOption{
 		return $this->options[$position] ?? null;
 	}
@@ -91,6 +87,10 @@ abstract class MenuForm extends Form{
 		}
 
 		throw new FormValidationException("Expected int or null, got " . gettype($data));
+	}
+
+	protected function getType() : string{
+		return "form";
 	}
 
 	protected function serializeFormData() : array{

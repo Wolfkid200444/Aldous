@@ -33,22 +33,12 @@ use pocketmine\Player;
  */
 abstract class Form implements \JsonSerializable{
 
-	public const TYPE_MODAL = "modal";
-	public const TYPE_MENU = "form";
-	public const TYPE_CUSTOM_FORM = "custom_form";
-
 	/** @var string */
 	protected $title;
 
 	public function __construct(string $title){
 		$this->title = $title;
 	}
-
-	/**
-	 * Returns the type used to show this form to clients
-	 * @return string
-	 */
-	abstract public function getType() : string;
 
 	/**
 	 * Returns the text shown on the form title-bar.
@@ -82,6 +72,12 @@ abstract class Form implements \JsonSerializable{
 
 		return $ret;
 	}
+
+	/**
+	 * Returns the type used to show this form to clients
+	 * @return string
+	 */
+	abstract protected function getType() : string;
 
 	/**
 	 * Serializes additional data needed to show this form to clients.
