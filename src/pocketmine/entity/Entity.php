@@ -64,7 +64,7 @@ use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\protocol\AddEntityPacket;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
-use pocketmine\network\mcpe\protocol\MoveEntityPacket;
+use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
 use pocketmine\network\mcpe\protocol\RemoveEntityPacket;
 use pocketmine\network\mcpe\protocol\SetEntityDataPacket;
 use pocketmine\network\mcpe\protocol\SetEntityMotionPacket;
@@ -169,7 +169,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	public const DATA_LIMITED_LIFE = 77;
 	public const DATA_ARMOR_STAND_POSE_INDEX = 78; //int
 	public const DATA_ENDER_CRYSTAL_TIME_OFFSET = 79; //int
-	/* 80 (byte) something to do with nametag visibility? */
+	public const DATA_ALWAYS_SHOW_NAMETAG = 80; //byte: -1 = default, 0 = only when looked at, 1 = always
 	public const DATA_COLOR_2 = 81; //byte
 	/* 82 (unknown) */
 	public const DATA_SCORE_TAG = 83; //string
@@ -601,7 +601,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	 * @param bool $value
 	 */
 	public function setNameTagAlwaysVisible(bool $value = true) : void{
-		$this->setGenericFlag(self::DATA_FLAG_ALWAYS_SHOW_NAMETAG, $value);
+		$this->propertyManager->setByte(self::DATA_ALWAYS_SHOW_NAMETAG, $value ? 1 : 0);
 	}
 
 	/**
@@ -1129,13 +1129,20 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 	protected function broadcastMovement(bool $teleport = false) : void{
 		if($this->chunk !== null){
-			$pk = new MoveEntityPacket();
+			$pk = new MoveEntityAbsolutePacket();
 			$pk->entityRuntimeId = $this->id;
 			$pk->position = $this->getOffsetPosition($this);
-			$pk->yaw = $this->yaw;
-			$pk->pitch = $this->pitch;
-			$pk->headYaw = $this->yaw; //TODO
-			$pk->teleported = $teleport;
+
+			//this looks very odd but is correct as of 1.5.0.7
+			//for arrows this is actually x/y/z rotation
+			//for mobs x and z are used for pitch and yaw, and y is used for headyaw
+			$pk->xRot = $this->pitch;
+			$pk->yRot = $this->yaw; //TODO: head yaw
+			$pk->zRot = $this->yaw;
+
+			if($teleport){
+				$pk->flags |= MoveEntityAbsolutePacket::FLAG_TELEPORT;
+			}
 
 			$this->level->addChunkPacket($this->chunk->getX(), $this->chunk->getZ(), $pk);
 		}
@@ -1341,7 +1348,6 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 
 		if($this->hasMovementUpdate()){
 			$this->tryChangeMovement();
-			$this->move($this->motion->x, $this->motion->y, $this->motion->z);
 
 			if(abs($this->motion->x) <= self::MOTION_THRESHOLD){
 				$this->motion->x = 0;
@@ -1351,6 +1357,10 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 			}
 			if(abs($this->motion->z) <= self::MOTION_THRESHOLD){
 				$this->motion->z = 0;
+			}
+
+			if($this->motion->x != 0 or $this->motion->y != 0 or $this->motion->z != 0){
+				$this->move($this->motion->x, $this->motion->y, $this->motion->z);
 			}
 
 			$this->forceMovementUpdate = false;

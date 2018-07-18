@@ -75,7 +75,8 @@ use pocketmine\network\mcpe\protocol\MobEffectPacket;
 use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\ModalFormRequestPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
-use pocketmine\network\mcpe\protocol\MoveEntityPacket;
+use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
+use pocketmine\network\mcpe\protocol\MoveEntityDeltaPacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use pocketmine\network\mcpe\protocol\NpcRequestPacket;
 use pocketmine\network\mcpe\protocol\PhotoTransferPacket;
@@ -110,6 +111,7 @@ use pocketmine\network\mcpe\protocol\SetEntityLinkPacket;
 use pocketmine\network\mcpe\protocol\SetEntityMotionPacket;
 use pocketmine\network\mcpe\protocol\SetHealthPacket;
 use pocketmine\network\mcpe\protocol\SetLastHurtByPacket;
+use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
 use pocketmine\network\mcpe\protocol\SetScorePacket;
 use pocketmine\network\mcpe\protocol\SetSpawnPositionPacket;
@@ -214,7 +216,7 @@ abstract class SessionHandler{
 		return false;
 	}
 
-	public function handleMoveEntity(MoveEntityPacket $packet) : bool{
+	public function handleMoveEntityAbsolute(MoveEntityAbsolutePacket $packet) : bool{
 		return false;
 	}
 
@@ -583,6 +585,14 @@ abstract class SessionHandler{
 	}
 
 	public function handleUpdateBlockSynced(UpdateBlockSyncedPacket $packet) : bool{
+		return false;
+	}
+
+	public function handleMoveEntityDelta(MoveEntityDeltaPacket $packet) : bool{
+		return false;
+	}
+
+	public function handleSetLocalPlayerAsInitialized(SetLocalPlayerAsInitializedPacket $packet) : bool{
 		return false;
 	}
 }

@@ -49,7 +49,7 @@ class PacketPool{
 		static::registerPacket(new AddItemEntityPacket());
 		static::registerPacket(new AddHangingEntityPacket());
 		static::registerPacket(new TakeItemEntityPacket());
-		static::registerPacket(new MoveEntityPacket());
+		static::registerPacket(new MoveEntityAbsolutePacket());
 		static::registerPacket(new MovePlayerPacket());
 		static::registerPacket(new RiderJumpPacket());
 		static::registerPacket(new UpdateBlockPacket());
@@ -142,6 +142,8 @@ class PacketPool{
 		static::registerPacket(new SetScorePacket());
 		static::registerPacket(new LabTablePacket());
 		static::registerPacket(new UpdateBlockSyncedPacket());
+		static::registerPacket(new MoveEntityDeltaPacket());
+		static::registerPacket(new SetLocalPlayerAsInitializedPacket());
 
 	}
 

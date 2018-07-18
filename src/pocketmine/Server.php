@@ -1016,14 +1016,7 @@ class Server{
 			return false;
 		}
 
-		try{
-			$level = new Level($this, $name, new $providerClass($path));
-		}catch(\Throwable $e){
-
-			$this->logger->error($this->getLanguage()->translateString("pocketmine.level.loadError", [$name, $e->getMessage()]));
-			$this->logger->logException($e);
-			return false;
-		}
+		$level = new Level($this, $name, new $providerClass($path));
 
 		$this->levels[$level->getId()] = $level;
 
@@ -1061,22 +1054,19 @@ class Server{
 
 		if(($providerClass = LevelProviderManager::getProviderByName($this->getProperty("level-settings.default-format", "pmanvil"))) === null){
 			$providerClass = LevelProviderManager::getProviderByName("pmanvil");
+			if($providerClass === null){
+				throw new \InvalidStateException("Default level provider has not been registered");
+			}
 		}
 
-		try{
-			$path = $this->getDataPath() . "worlds/" . $name . "/";
-			/** @var LevelProvider $providerClass */
-			$providerClass::generate($path, $name, $seed, $generator, $options);
+		$path = $this->getDataPath() . "worlds/" . $name . "/";
+		/** @var LevelProvider $providerClass */
+		$providerClass::generate($path, $name, $seed, $generator, $options);
 
-			$level = new Level($this, $name, new $providerClass($path));
-			$this->levels[$level->getId()] = $level;
+		$level = new Level($this, $name, new $providerClass($path));
+		$this->levels[$level->getId()] = $level;
 
-			$level->setTickRate($this->baseTickRate);
-		}catch(\Throwable $e){
-			$this->logger->error($this->getLanguage()->translateString("pocketmine.level.generationError", [$name, $e->getMessage()]));
-			$this->logger->logException($e);
-			return false;
-		}
+		$level->setTickRate($this->baseTickRate);
 
 		$this->getPluginManager()->callEvent(new LevelInitEvent($level));
 
@@ -1291,7 +1281,7 @@ class Server{
 		if(($player = $this->getPlayerExact($name)) !== null){
 			$player->recalculatePermissions();
 		}
-		$this->operators->save(true);
+		$this->operators->save();
 	}
 
 	/**
@@ -1311,7 +1301,7 @@ class Server{
 	 */
 	public function addWhitelist(string $name){
 		$this->whitelist->set(strtolower($name), true);
-		$this->whitelist->save(true);
+		$this->whitelist->save();
 	}
 
 	/**
@@ -1690,7 +1680,7 @@ class Server{
 			}
 
 			if($this->properties->hasChanged()){
-				$this->properties->save(true);
+				$this->properties->save();
 			}
 
 			if(!($this->getDefaultLevel() instanceof Level)){
@@ -2511,6 +2501,8 @@ class Server{
 		try{
 			if(strlen($payload) > 2 and substr($payload, 0, 2) === "\xfe\xfd" and $this->queryHandler instanceof QueryHandler){
 				$this->queryHandler->handle($interface, $address, $port, $payload);
+			}else{
+				$this->logger->debug("Unhandled raw packet from $address $port: " . bin2hex($payload));
 			}
 		}catch(\Throwable $e){
 			if(\pocketmine\DEBUG > 1){
@@ -2571,13 +2563,9 @@ class Server{
 		}
 
 		if(($this->tickCounter & 0b111111111) === 0){
-			try{
-				$this->getPluginManager()->callEvent($this->queryRegenerateTask = new QueryRegenerateEvent($this, 5));
-				if($this->queryHandler !== null){
-					$this->queryHandler->regenerateInfo();
-				}
-			}catch(\Throwable $e){
-				$this->logger->logException($e);
+			$this->getPluginManager()->callEvent($this->queryRegenerateTask = new QueryRegenerateEvent($this, 5));
+			if($this->queryHandler !== null){
+				$this->queryHandler->regenerateInfo();
 			}
 		}
 
