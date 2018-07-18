@@ -324,6 +324,9 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	/** @var int[] ID => ticks map */
 	protected $usedItemsCooldown = [];
 
+	/** @var int */
+	private $lastActionTick = -1;
+
 	/**
 	 * @return TranslationContainer|string
 	 */
@@ -2263,6 +2266,16 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		return true;
 	}
 
+	private function checkActionTick() : bool{
+		$tick = $this->server->getTick();
+		if($this->lastActionTick >= $tick){
+			return false;
+		}
+
+		$this->lastActionTick = $tick;
+		return true;
+	}
+
 	/**
 	 * Don't expect much from this handler. Most of it is roughly hacked and duct-taped together.
 	 *
@@ -2351,6 +2364,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 				return true;
 			case InventoryTransactionPacket::TYPE_USE_ITEM:
+				if(!$this->checkActionTick()){
+					return false;
+				}
+
 				$blockVector = new Vector3($packet->trData->x, $packet->trData->y, $packet->trData->z);
 				$face = $packet->trData->face;
 
@@ -2471,6 +2488,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				}
 				break;
 			case InventoryTransactionPacket::TYPE_USE_ITEM_ON_ENTITY:
+				if(!$this->checkActionTick()){
+					return false;
+				}
+
 				$target = $this->level->getEntity($packet->trData->entityRuntimeId);
 				if($target === null){
 					return false;
@@ -2567,6 +2588,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 				break;
 			case InventoryTransactionPacket::TYPE_RELEASE_ITEM:
+				if(!$this->checkActionTick()){
+					return false;
+				}
+
 				try{
 					$type = $packet->trData->actionType;
 					switch($type){
