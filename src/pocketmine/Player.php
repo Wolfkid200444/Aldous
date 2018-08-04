@@ -55,6 +55,10 @@ use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerEditBookEvent;
 use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\event\player\PlayerGameModeChangeEvent;
+use pocketmine\event\player\PlayerInteractEntityEvent;
+use pocketmine\event\player\PlayerInteractEvent;
+use pocketmine\event\player\PlayerItemConsumeEvent;
+use pocketmine\event\player\PlayerItemHeldEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerKickEvent;
@@ -69,28 +73,24 @@ use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\event\player\PlayerToggleSprintEvent;
 use pocketmine\event\player\PlayerToggleSwimEvent;
 use pocketmine\event\player\PlayerTransferEvent;
-use pocketmine\event\player\PlayerInteractEntityEvent;
-use pocketmine\event\player\PlayerInteractEvent;
-use pocketmine\event\player\PlayerItemConsumeEvent;
-use pocketmine\event\player\PlayerItemHeldEvent;
 use pocketmine\form\Form;
 use pocketmine\form\ServerSettingsForm;
 use pocketmine\inventory\ContainerInventory;
 use pocketmine\inventory\CraftingGrid;
+use pocketmine\inventory\Inventory;
 use pocketmine\inventory\PlayerCursorInventory;
 use pocketmine\inventory\PlayerOffHandInventory;
 use pocketmine\inventory\transaction\action\InventoryAction;
 use pocketmine\inventory\transaction\CraftingTransaction;
-use pocketmine\inventory\transaction\TransactionValidationException;
 use pocketmine\inventory\transaction\InventoryTransaction;
-use pocketmine\inventory\Inventory;
+use pocketmine\inventory\transaction\TransactionValidationException;
 use pocketmine\item\Consumable;
 use pocketmine\item\Durable;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\MeleeWeaponEnchantment;
+use pocketmine\item\Item;
 use pocketmine\item\WritableBook;
 use pocketmine\item\WrittenBook;
-use pocketmine\item\Item;
 use pocketmine\lang\TextContainer;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\level\ChunkLoader;
@@ -107,6 +107,7 @@ use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\network\mcpe\NetworkCipher;
 use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\ProcessLoginTask;
 use pocketmine\network\mcpe\protocol\AdventureSettingsPacket;
 use pocketmine\network\mcpe\protocol\AnimatePacket;
 use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
@@ -117,6 +118,9 @@ use pocketmine\network\mcpe\protocol\ChunkRadiusUpdatedPacket;
 use pocketmine\network\mcpe\protocol\CommandRequestPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
+use pocketmine\network\mcpe\protocol\InteractPacket;
+use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
+use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\network\mcpe\protocol\LoginPacket;
@@ -136,18 +140,14 @@ use pocketmine\network\mcpe\protocol\types\ContainerIds;
 use pocketmine\network\mcpe\protocol\types\PlayerPermissions;
 use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
-use pocketmine\network\mcpe\protocol\InteractPacket;
-use pocketmine\network\mcpe\protocol\InventoryTransactionPacket;
-use pocketmine\network\mcpe\protocol\ItemFrameDropItemPacket;
-use pocketmine\network\mcpe\ProcessLoginTask;
 use pocketmine\permission\PermissibleBase;
 use pocketmine\permission\PermissionAttachment;
 use pocketmine\permission\PermissionAttachmentInfo;
 use pocketmine\permission\PermissionManager;
 use pocketmine\plugin\Plugin;
+use pocketmine\tile\ItemFrame;
 use pocketmine\tile\Spawnable;
 use pocketmine\tile\Tile;
-use pocketmine\tile\ItemFrame;
 use pocketmine\timings\Timings;
 use pocketmine\utils\TextFormat;
 use pocketmine\utils\UUID;
@@ -3373,6 +3373,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
     }
 
     protected function onDeath() : void{
+	    if($this->getLevel()->getName() == "nether" || $this->getLevel()->getName() == "nether"){
+		    $this->switchLevel($this->getServer()->getDefaultLevel());
+	    }
+
         $message = "death.attack.generic";
 
         $params = [
