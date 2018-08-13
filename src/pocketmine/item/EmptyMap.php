@@ -42,7 +42,7 @@ class EmptyMap extends Item{
 	public function onClickAir(Player $player, Vector3 $directionVector) : bool{
 		$map = new FilledMap();
 		// TODO: Create world map
-		$map->onCreateMap($player->level, 0);
+		$map->onCreateMap($player, 0);
 
 		if($player->getInventory()->canAddItem($map)){
 			$player->getInventory()->addItem($map);

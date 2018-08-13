@@ -24,8 +24,24 @@ declare(strict_types=1);
 
 namespace pocketmine\utils;
 
-
 class Color{
+
+	public const COLOR_DYE_BLACK = 0;
+	public const COLOR_DYE_RED = 1;
+	public const COLOR_DYE_GREEN = 2;
+	public const COLOR_DYE_BROWN = 3;
+	public const COLOR_DYE_BLUE = 4;
+	public const COLOR_DYE_PURPLE = 5;
+	public const COLOR_DYE_CYAN = 6;
+	public const COLOR_DYE_LIGHT_GRAY = 7;
+	public const COLOR_DYE_GRAY = 8;
+	public const COLOR_DYE_PINK = 9;
+	public const COLOR_DYE_LIME = 10;
+	public const COLOR_DYE_YELLOW = 11;
+	public const COLOR_DYE_LIGHT_BLUE = 12;
+	public const COLOR_DYE_MAGENTA = 13;
+	public const COLOR_DYE_ORANGE = 14;
+	public const COLOR_DYE_WHITE = 15;
 
 	/** @var int */
 	protected $a, $r, $g, $b;
@@ -47,6 +63,7 @@ class Color{
 
 	/**
 	 * Sets the alpha (opacity) value of this colour, lower = more transparent
+	 *
 	 * @param int $a
 	 */
 	public function setA(int $a){
@@ -63,6 +80,7 @@ class Color{
 
 	/**
 	 * Sets the red value of this colour.
+	 *
 	 * @param int $r
 	 */
 	public function setR(int $r){
@@ -79,6 +97,7 @@ class Color{
 
 	/**
 	 * Sets the green value of this colour.
+	 *
 	 * @param int $g
 	 */
 	public function setG(int $g){
@@ -95,6 +114,7 @@ class Color{
 
 	/**
 	 * Sets the blue value of this colour.
+	 *
 	 * @param int $b
 	 */
 	public function setB(int $b){
@@ -105,6 +125,7 @@ class Color{
 	 * Mixes the supplied list of colours together to produce a result colour.
 	 *
 	 * @param Color ...$colors
+	 *
 	 * @return Color
 	 */
 	public static function mix(Color ...$colors) : Color{
@@ -127,6 +148,7 @@ class Color{
 
 	/**
 	 * Returns a Color from the supplied RGB colour code (24-bit)
+	 *
 	 * @param int $code
 	 *
 	 * @return Color

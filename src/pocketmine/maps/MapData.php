@@ -28,9 +28,11 @@ use pocketmine\math\Vector2;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\IntArrayTag;
 use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
+use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\MapDecoration;
 use pocketmine\network\mcpe\protocol\types\MapTrackedObject;
+use pocketmine\Player;
 use pocketmine\utils\Color;
 
 class MapData{
@@ -56,6 +58,9 @@ class MapData{
 	protected $dirty = true;
 	/** @var bool */
 	protected $fullyExplored = true;
+
+	/** @var MapInfo[] */
+	protected $playersMap = [];
 
 	public function __construct(int $mapId){
 		$this->mapId = $mapId;
@@ -130,7 +135,7 @@ class MapData{
 	 * @return null|Color
 	 */
 	public function getColorAt(int $x, int $y) : ?Color{
-		return $this->colors[$y][$x] ?? null;
+		return $this->colors[$y][$x] ?? new Color(0, 0, 0);
 	}
 
 	/**
@@ -140,7 +145,6 @@ class MapData{
 	public function setCenter(int $x, int $z) : void{
 		$this->xCenter = $x;
 		$this->zCenter = $z;
-		$this->markDirty();
 	}
 
 	/**
@@ -206,8 +210,8 @@ class MapData{
 		$nbt->setInt("xCenter", $this->xCenter);
 		$nbt->setInt("zCenter", $this->zCenter);
 		$nbt->setByte("scale", $this->scale);
-		$nbt->setShort("width", $w = 128 * ($this->scale + 1));
-		$nbt->setShort("height", $h = 128 * ($this->scale + 1));
+		$nbt->setShort("width", $w = 128 * (1 << $this->scale));
+		$nbt->setShort("height", $h = 128 * (1 << $this->scale));
 		$nbt->setByte("fullyExplored", intval($this->fullyExplored));
 
 		if(count($this->colors) > 0){
@@ -263,33 +267,32 @@ class MapData{
 	/**
 	 * @return ClientboundMapItemDataPacket
 	 */
-	public function createDataPacket() : ClientboundMapItemDataPacket{
+	public function createDataPacket(MapInfo $info) : ClientboundMapItemDataPacket{
 		$pk = new ClientboundMapItemDataPacket();
 		$pk->mapId = $this->mapId;
 		$pk->dimensionId = $this->dimension;
-		$pk->height = ($this->scale + 1) * 128;
-		$pk->width = ($this->scale + 1) * 128;
-		$pk->trackedEntities = $this->trackedObjects;
-		$pk->decorations = $this->decorations;
-		$pk->colors = $this->colors;
 		$pk->scale = $this->scale;
 		$pk->eids = []; // why??
-		$pk->xOffset = $this->xCenter;
-		$pk->yOffset = $this->zCenter;
+		$pk->decorations = $this->decorations;
+		$pk->trackedEntities = $this->trackedObjects;
+		$pk->width = 128 * (1 << $this->scale);
+		$pk->height = 128 * (1 << $this->scale);
+		$pk->colors = $this->colors;
 
 		return $pk;
 	}
 
-	/**
-	 * @return ClientboundMapItemDataPacket
-	 */
-	public function getDataPacket() : ClientboundMapItemDataPacket{
-		if($this->isDirty()){
-			$this->cachedDataPacket = $this->createDataPacket();
+	public function getMapDataPacket(Player $player) : ?ClientboundMapItemDataPacket{
+		$info = $this->getMapInfo($player);
 
-			$this->dirty = false;
+		if($info->forceUpdate or $info->packetSendTimer++ % 5 === 0){
+			$info->forceUpdate = false;
+			return $this->createDataPacket($info);
 		}
-		return $this->cachedDataPacket;
+
+		$this->dirty = false;
+
+		return null;
 	}
 
 	/**
@@ -304,5 +307,27 @@ class MapData{
 	 */
 	public function setFullyExplored(bool $fullyExplored) : void{
 		$this->fullyExplored = $fullyExplored;
+	}
+
+	public function getMapInfo(Player $player) : MapInfo{
+		if(!isset($this->playersMap[spl_object_hash($player)])){
+			$this->playersMap[spl_object_hash($player)] = new MapInfo($player);
+		}
+		return $this->playersMap[spl_object_hash($player)];
+	}
+
+	public function requestMapUpdate(Player $player) : void{
+		$pk = new MapInfoRequestPacket();
+		$pk->mapId = $this->getMapId();
+
+		$player->sendDataPacket($pk);
+	}
+
+	public function updateInfo(int $x, int $y): void{
+		$this->markDirty();
+
+		foreach($this->playersMap as $info){
+			$info->update($x, $y);
+		}
 	}
 }

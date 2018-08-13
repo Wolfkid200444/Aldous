@@ -49,7 +49,7 @@ class MapManager{
 		return self::$mapIdCounter++;
 	}
 
-	public static function initMaps() : void{
+	public static function loadIdCounts() : void{
 		@mkdir($path = Server::getInstance()->getDataPath() . "maps/");
 
 		$stream = new LittleEndianNBTStream();
@@ -60,16 +60,20 @@ class MapManager{
 
 			self::$mapIdCounter = $data->getInt("map", 0);
 		}
+	}
+
+	public static function loadMapData(int $id) : void{
+		@mkdir($path = Server::getInstance()->getDataPath() . "maps/");
 
 		$stream = new BigEndianNBTStream();
-		for($i = self::$mapIdCounter; $i >= 0; $i--){
-			$item = $path . "map_" . strval($i) . ".dat";
-			if(is_file($item)){
-				$data = $stream->readCompressed(file_get_contents($item));
-				$map = new MapData($i);
-				$map->readSaveData($data);
-				self::registerMapData($map);
-			}
+
+		if(is_file($fp = $path . "maps/map_". strval($id))){
+			/** @var \pocketmine\nbt\tag\CompoundTag $data */
+			$data = $stream->readCompressed(file_get_contents($fp));
+			$mp = new MapData($id);
+			$mp->readSaveData($data);
+
+			self::registerMapData($mp);
 		}
 	}
 
