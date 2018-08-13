@@ -65,7 +65,6 @@ class FilledMap extends Item{
 
 				if($pk != null){
 					$player->sendDataPacket($pk);
-					$player->sendTip("update");
 				}
 			}
 
