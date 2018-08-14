@@ -10,13 +10,13 @@
  *                           __/ |
  *                          |___/
  *
- * This program is free software: you can redistribute it and/or modify
+ * This program is free software): you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * @author TuranicTeam
- * @link https://github.com/TuranicTeam/Altay
+ * @link https)://github.com/TuranicTeam/Altay
  *
  */
 
@@ -96,7 +96,7 @@ class FilledMap extends Item{
 					$d0 = 0.0;
 
 					for($l1 = $i1 - $j1 - 1; $l1 < $i1 + $j1; ++$l1){
-						if($k1 >= 0 && $l1 >= -1 && $k1 < 128 && $l1 < 128){
+						if($k1 >= 0 and $l1 >= -1 and $k1 < 128 and $l1 < 128){
 							$i2 = $k1 - $l;
 							$j2 = $l1 - $i1;
 							$flag1 = $i2 * $i2 + $j2 * $j2 > ($j1 - 2) * ($j1 - 2);
@@ -104,7 +104,7 @@ class FilledMap extends Item{
 							$l2 = ($k / $i + $l1 - 64) * $i;
 							$multiset = [];
 
-							if($world->isChunkInUse($k2 >> 4, $l2 >> 4)){
+							if($world->isChunkLoaded($k2 >> 4, $l2 >> 4)){
 								$k3 = 0;
 								$d1 = 0.0;
 
@@ -129,9 +129,10 @@ class FilledMap extends Item{
 									$i5 = 0;
 								}
 
+								/** @var int $mapcolor */
 								$mapcolor = end($multiset);
 
-								/*if($mapcolor == 0){
+								if($mapcolor === null){
 									$d2 = (int) $k3 * 0.1 + (int) ($k1 + $l1 & 1) * 0.2;
 									$i5 = 1;
 
@@ -142,13 +143,13 @@ class FilledMap extends Item{
 									if($d2 > 0.9){
 										$i5 = 0;
 									}
-								}*/
+								}
 
 								$d0 = $d1;
 
-								if($l1 >= 0 && $i2 * $i2 + $j2 * $j2 < $j1 * $j1 && (!$flag1 || ($k1 + $l1 & 1) != 0)){
+								if($l1 >= 0 and $i2 * $i2 + $j2 * $j2 < $j1 * $j1 and (!$flag1 || ($k1 + $l1 & 1) != 0)){
 									$b0 = $data->getColorAt($k1, $l1)->toABGR();
-									$b1 = $mapcolor; // TODO: implement color index
+									$b1 = self::colorizeMapColor($mapcolor, $i5);
 
 									if($b0 !== $b1){
 										$data->setColorAt($k1, $l1, Color::fromABGR($b1));
@@ -164,7 +165,6 @@ class FilledMap extends Item{
 		}
 	}
 
-
 	public function onCreateMap(Player $player, int $scale) : void{
 		$this->setMapId($id = MapManager::getNextId());
 		$this->setZoom($scale);
@@ -177,7 +177,7 @@ class FilledMap extends Item{
 		$sc = (1 << $scale) * 128;
 		for($x = 0; $x < $sc; $x++){
 			for($y = 0; $y < $sc; $y++){
-				$data->setColorAt($x, $y, new Color(0,0,0,0));
+				$data->setColorAt($x, $y, new Color(0, 0, 0, 0));
 			}
 		}
 
@@ -222,344 +222,340 @@ class FilledMap extends Item{
 		return $this->getNamedTag()->getLong(self::TAG_MAP_UUID, 0, false);
 	}
 
-	public static function getMapColorByBlock(Block $block){
+
+	/**
+	 * TODO): Separate map colors to blocks
+	 *
+	 * @param Block $block
+	 *
+	 * @return Color
+	 */
+	public static function getMapColorByBlock(Block $block) : Color{
 		$meta = $block->getDamage();
-		switch($id = $block->getId()){
-			case Block::AIR:
+		$id = $block->getId();
+		switch($id){
+			case ($id === Block::AIR):
 				return new Color(0, 0, 0);
-			case Block::GRASS:
-			case Block::SLIME_BLOCK:
+			case ($id === Block::GRASS):
+			case ($id === Block::SLIME_BLOCK):
 				return new Color(127, 178, 56);
-			case Block::SAND:
-			case Block::SANDSTONE:
-			case Block::SANDSTONE_STAIRS:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::SANDSTONE:
-				//case Block::DOUBLE_STONE_SLAB && $meta == StoneSlab::SANDSTONE:
-			case Block::GLOWSTONE:
-			case Block::END_STONE:
-				//case Block::PLANKS && $meta == Planks::BIRCH:
-				//case Block::LOG && $meta == Planks::BIRCH:
-			case Block::BIRCH_FENCE_GATE:
-				//case Block::FENCE && $meta = Planks::BIRCH:
-			case Block::BIRCH_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::BIRCH:
-			case Block::BONE_BLOCK:
-			case Block::END_BRICKS:
+			case ($id === Block::SAND):
+			case ($id === Block::SANDSTONE):
+			case ($id === Block::SANDSTONE_STAIRS):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::SANDSTONE):
+			case ($id === Block::DOUBLE_STONE_SLAB and $meta == StoneSlab::SANDSTONE):
+			case ($id === Block::GLOWSTONE):
+			case ($id === Block::END_STONE):
+			case ($id === Block::PLANKS and $meta == Planks::BIRCH):
+			case ($id === Block::LOG and $meta == Planks::BIRCH):
+			case ($id === Block::BIRCH_FENCE_GATE):
+			case ($id === Block::FENCE and $meta = Planks::BIRCH):
+			case ($id === Block::BIRCH_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::BIRCH):
+			case ($id === Block::BONE_BLOCK):
+			case ($id === Block::END_BRICKS):
 				return new Color(247, 233, 163);
-			case Block::BED_BLOCK:
-			case Block::COBWEB:
+			case ($id === Block::BED_BLOCK):
+			case ($id === Block::COBWEB):
 				return new Color(199, 199, 199);
-			case Block::LAVA:
-			case Block::STILL_LAVA:
-			case Block::TNT:
-			case Block::FIRE:
-			case Block::REDSTONE_BLOCK:
+			case ($id === Block::LAVA):
+			case ($id === Block::STILL_LAVA):
+			case ($id === Block::FLOWING_LAVA):
+			case ($id === Block::TNT):
+			case ($id === Block::FIRE):
+			case ($id === Block::REDSTONE_BLOCK):
 				return new Color(255, 0, 0);
-			case Block::ICE:
-			case Block::PACKED_ICE:
-			case Block::FROSTED_ICE:
+			case ($id === Block::ICE):
+			case ($id === Block::PACKED_ICE):
+			case ($id === Block::FROSTED_ICE):
 				return new Color(160, 160, 255);
-			case Block::IRON_BLOCK:
-			case Block::IRON_DOOR_BLOCK:
-			case Block::IRON_TRAPDOOR:
-			case Block::IRON_BARS:
-			case Block::BREWING_STAND_BLOCK:
-			case Block::ANVIL:
-			case Block::HEAVY_WEIGHTED_PRESSURE_PLATE:
+			case ($id === Block::IRON_BLOCK):
+			case ($id === Block::IRON_DOOR_BLOCK):
+			case ($id === Block::IRON_TRAPDOOR):
+			case ($id === Block::IRON_BARS):
+			case ($id === Block::BREWING_STAND_BLOCK):
+			case ($id === Block::ANVIL):
+			case ($id === Block::HEAVY_WEIGHTED_PRESSURE_PLATE):
 				return new Color(167, 167, 167);
-			case Block::SAPLING:
-			case Block::LEAVES:
-			case Block::LEAVES2:
-			case Block::TALL_GRASS:
-			case Block::DEAD_BUSH:
-			case Block::RED_FLOWER:
-			case Block::DOUBLE_PLANT:
-			case Block::BROWN_MUSHROOM:
-			case Block::RED_MUSHROOM:
-			case Block::WHEAT_BLOCK:
-			case Block::CARROT_BLOCK:
-			case Block::POTATO_BLOCK:
-			case Block::BEETROOT_BLOCK:
-			case Block::CACTUS:
-			case Block::SUGARCANE_BLOCK:
-			case Block::PUMPKIN_STEM:
-			case Block::MELON_STEM:
-			case Block::VINE:
-			case Block::LILY_PAD:
+			case ($id === Block::SAPLING):
+			case ($id === Block::LEAVES):
+			case ($id === Block::LEAVES2):
+			case ($id === Block::TALL_GRASS):
+			case ($id === Block::DEAD_BUSH):
+			case ($id === Block::RED_FLOWER):
+			case ($id === Block::DOUBLE_PLANT):
+			case ($id === Block::BROWN_MUSHROOM):
+			case ($id === Block::RED_MUSHROOM):
+			case ($id === Block::WHEAT_BLOCK):
+			case ($id === Block::CARROT_BLOCK):
+			case ($id === Block::POTATO_BLOCK):
+			case ($id === Block::BEETROOT_BLOCK):
+			case ($id === Block::CACTUS):
+			case ($id === Block::SUGARCANE_BLOCK):
+			case ($id === Block::PUMPKIN_STEM):
+			case ($id === Block::MELON_STEM):
+			case ($id === Block::VINE):
+			case ($id === Block::LILY_PAD):
 				return new Color(0, 124, 0);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_WHITE:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_WHITE:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_WHITE:
-			case Block::SNOW_LAYER:
-			case Block::SNOW_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_WHITE):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_WHITE):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_WHITE):
+			case ($id === Block::SNOW_LAYER):
+			case ($id === Block::SNOW_BLOCK):
 				return new Color(255, 255, 255);
-			case Block::CLAY_BLOCK:
-			case Block::MONSTER_EGG:
+			case ($id === Block::CLAY_BLOCK):
+			case ($id === Block::MONSTER_EGG):
 				return new Color(164, 168, 184);
-			case Block::DIRT:
-			case Block::FARMLAND:
-				//case Block::STONE && $meta == Stone::GRANITE:
-				//case Block::STONE && $meta == Stone::POLISHED_GRANITE:
-				//case Block::SAND && $meta == 1:
-			case Block::RED_SANDSTONE:
-			case Block::RED_SANDSTONE_STAIRS:
-				//case Block::STONE_SLAB2 && ($meta & 0x07) == StoneSlab::RED_SANDSTONE://slab2
-				//case Block::LOG && $meta == Planks::JUNGLE:
-				//case Block::PLANKS && $meta == Planks::JUNGLE:
-			case Block::JUNGLE_FENCE_GATE:
-				//case Block::FENCE && $meta == Planks::JUNGLE:
-			case Block::JUNGLE_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::JUNGLE:
+			case ($id === Block::DIRT):
+			case ($id === Block::FARMLAND):
+			case ($id === Block::STONE and $meta == Stone::GRANITE):
+			case ($id === Block::STONE and $meta == Stone::POLISHED_GRANITE):
+			case ($id === Block::SAND and $meta == 1):
+			case ($id === Block::RED_SANDSTONE):
+			case ($id === Block::RED_SANDSTONE_STAIRS):
+			case ($id === Block::STONE_SLAB2 and ($meta & 0x07) == StoneSlab::RED_SANDSTONE):
+			case ($id === Block::LOG and $meta == Planks::JUNGLE):
+			case ($id === Block::PLANKS and $meta == Planks::JUNGLE):
+			case ($id === Block::JUNGLE_FENCE_GATE):
+			case ($id === Block::FENCE and $meta == Planks::JUNGLE):
+			case ($id === Block::JUNGLE_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::JUNGLE):
 				return new Color(151, 109, 77);
-			case Block::STONE:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::STONE:
-			case Block::COBBLESTONE:
-			case Block::COBBLESTONE_STAIRS:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::COBBLESTONE:
-			case Block::COBBLESTONE_WALL:
-			case Block::MOSS_STONE:
-				//case Block::STONE && $meta == Stone::ANDESITE:
-				//case Block::STONE && $meta == Stone::POLISHED_ANDESITE:
-			case Block::BEDROCK:
-			case Block::GOLD_ORE:
-			case Block::IRON_ORE:
-			case Block::COAL_ORE:
-			case Block::LAPIS_ORE:
-			case Block::DISPENSER:
-			case Block::DROPPER:
-			case Block::STICKY_PISTON:
-			case Block::PISTON:
-			case Block::PISTON_ARM_COLLISION:
-			case Block::MOVINGBLOCK:
-			case Block::MONSTER_SPAWNER:
-			case Block::DIAMOND_ORE:
-			case Block::FURNACE:
-			case Block::STONE_PRESSURE_PLATE:
-			case Block::REDSTONE_ORE:
-			case Block::STONE_BRICK:
-			case Block::STONE_BRICK_STAIRS:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::STONE_BRICK:
-			case Block::ENDER_CHEST:
-			case Block::HOPPER_BLOCK:
-			case Block::GRAVEL:
-			case Block::OBSERVER:
+			case ($id === Block::STONE):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::STONE):
+			case ($id === Block::COBBLESTONE):
+			case ($id === Block::COBBLESTONE_STAIRS):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::COBBLESTONE):
+			case ($id === Block::COBBLESTONE_WALL):
+			case ($id === Block::MOSS_STONE):
+			case ($id === Block::STONE and $meta == Stone::ANDESITE):
+			case ($id === Block::STONE and $meta == Stone::POLISHED_ANDESITE):
+			case ($id === Block::BEDROCK):
+			case ($id === Block::GOLD_ORE):
+			case ($id === Block::IRON_ORE):
+			case ($id === Block::COAL_ORE):
+			case ($id === Block::LAPIS_ORE):
+			case ($id === Block::DISPENSER):
+			case ($id === Block::DROPPER):
+			case ($id === Block::STICKY_PISTON):
+			case ($id === Block::PISTON):
+			case ($id === Block::PISTON_ARM_COLLISION):
+			case ($id === Block::MOVINGBLOCK):
+			case ($id === Block::MONSTER_SPAWNER):
+			case ($id === Block::DIAMOND_ORE):
+			case ($id === Block::FURNACE):
+			case ($id === Block::STONE_PRESSURE_PLATE):
+			case ($id === Block::REDSTONE_ORE):
+			case ($id === Block::STONE_BRICK):
+			case ($id === Block::STONE_BRICK_STAIRS):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::STONE_BRICK):
+			case ($id === Block::ENDER_CHEST):
+			case ($id === Block::HOPPER_BLOCK):
+			case ($id === Block::GRAVEL):
+			case ($id === Block::OBSERVER):
 				return new Color(112, 112, 112);
-			case Block::WATER:
-			case Block::STILL_WATER:
+			case ($id === Block::WATER):
+			case ($id === Block::STILL_WATER):
+			case ($id === Block::FLOWING_WATER):
 				return new Color(64, 64, 255);
-			//case Block::WOOD && $meta == Planks::OAK:
-			//case Block::PLANKS && $meta == Planks::OAK:
-			//case Block::FENCE && $meta == Planks::OAK:
-			case Block::OAK_FENCE_GATE:
-			case Block::OAK_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::OAK:
-			case Block::NOTEBLOCK:
-			case Block::BOOKSHELF:
-			case Block::CHEST:
-			case Block::TRAPPED_CHEST:
-			case Block::CRAFTING_TABLE:
-			case Block::WOODEN_DOOR_BLOCK:
-			case Block::BIRCH_DOOR_BLOCK:
-			case Block::SPRUCE_DOOR_BLOCK:
-			case Block::JUNGLE_DOOR_BLOCK:
-			case Block::ACACIA_DOOR_BLOCK:
-			case Block::DARK_OAK_DOOR_BLOCK:
-			case Block::SIGN_POST:
-			case Block::WALL_SIGN:
-			case Block::WOODEN_PRESSURE_PLATE:
-			case Block::JUKEBOX:
-			case Block::WOODEN_TRAPDOOR:
-			case Block::BROWN_MUSHROOM_BLOCK:
-			case Block::STANDING_BANNER:
-			case Block::WALL_BANNER:
-			case Block::DAYLIGHT_SENSOR:
-			case Block::DAYLIGHT_SENSOR_INVERTED:
+			case ($id === Block::WOOD and $meta == Planks::OAK):
+			case ($id === Block::PLANKS and $meta == Planks::OAK):
+			case ($id === Block::FENCE and $meta == Planks::OAK):
+			case ($id === Block::OAK_FENCE_GATE):
+			case ($id === Block::OAK_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::OAK):
+			case ($id === Block::NOTEBLOCK):
+			case ($id === Block::BOOKSHELF):
+			case ($id === Block::CHEST):
+			case ($id === Block::TRAPPED_CHEST):
+			case ($id === Block::CRAFTING_TABLE):
+			case ($id === Block::WOODEN_DOOR_BLOCK):
+			case ($id === Block::BIRCH_DOOR_BLOCK):
+			case ($id === Block::SPRUCE_DOOR_BLOCK):
+			case ($id === Block::JUNGLE_DOOR_BLOCK):
+			case ($id === Block::ACACIA_DOOR_BLOCK):
+			case ($id === Block::DARK_OAK_DOOR_BLOCK):
+			case ($id === Block::SIGN_POST):
+			case ($id === Block::WALL_SIGN):
+			case ($id === Block::WOODEN_PRESSURE_PLATE):
+			case ($id === Block::JUKEBOX):
+			case ($id === Block::WOODEN_TRAPDOOR):
+			case ($id === Block::BROWN_MUSHROOM_BLOCK):
+			case ($id === Block::STANDING_BANNER):
+			case ($id === Block::WALL_BANNER):
+			case ($id === Block::DAYLIGHT_SENSOR):
+			case ($id === Block::DAYLIGHT_SENSOR_INVERTED):
 				return new Color(143, 119, 72);
-			case Block::QUARTZ_BLOCK:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::QUARTZ:
-			case Block::QUARTZ_STAIRS:
-				//case Block::STONE && $meta == Stone::DIORITE:
-				//case Block::STONE && $meta == Stone::POLISHED_DIORITE:
-			case Block::SEA_LANTERN:
+			case ($id === Block::QUARTZ_BLOCK):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::QUARTZ):
+			case ($id === Block::QUARTZ_STAIRS):
+			case ($id === Block::STONE and $meta == Stone::DIORITE):
+			case ($id === Block::STONE and $meta == Stone::POLISHED_DIORITE):
+			case ($id === Block::SEA_LANTERN):
 				return new Color(255, 252, 245);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_ORANGE:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_ORANGE:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_ORANGE:
-			case Block::PUMPKIN:
-			case Block::JACK_O_LANTERN:
-			case Block::HARDENED_CLAY:
-				//case Block::WOOD && $meta == Planks::ACACIA:
-				//case Block::PLANKS && $meta == Planks::ACACIA:
-				//case Block::FENCE && $meta == Planks::ACACIA:
-			case Block::ACACIA_FENCE_GATE:
-			case Block::ACACIA_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::ACACIA:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_ORANGE):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_ORANGE):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_ORANGE):
+			case ($id === Block::PUMPKIN):
+			case ($id === Block::JACK_O_LANTERN):
+			case ($id === Block::HARDENED_CLAY):
+			case ($id === Block::WOOD and $meta == Planks::ACACIA):
+			case ($id === Block::PLANKS and $meta == Planks::ACACIA):
+			case ($id === Block::FENCE and $meta == Planks::ACACIA):
+			case ($id === Block::ACACIA_FENCE_GATE):
+			case ($id === Block::ACACIA_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::ACACIA):
 				return new Color(216, 127, 51);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_MAGENTA:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_MAGENTA:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_MAGENTA:
-			case Block::PURPUR_BLOCK:
-			case Block::PURPUR_STAIRS:
-				//case Block::STONE_SLAB2 && ($meta & 0x07) == Stone::PURPUR_BLOCK://slab2
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_MAGENTA):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_MAGENTA):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_MAGENTA):
+			case ($id === Block::PURPUR_BLOCK):
+			case ($id === Block::PURPUR_STAIRS):
+			case ($id === Block::STONE_SLAB2 and ($meta & 0x07) == Stone::PURPUR_BLOCK):
 				return new Color(178, 76, 216);
-				//case Block::WOOL && $meta == Color::COLOR_DYE_LIGHT_BLUE:
-				//case Block::CARPET && $meta == Color::COLOR_DYE_LIGHT_BLUE:
-				//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_LIGHT_BLUE:
-				//return new Color(102, 153, 216);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_YELLOW:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_YELLOW:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_YELLOW:
-			case Block::HAY_BALE:
-			case Block::SPONGE:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_LIGHT_BLUE):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_LIGHT_BLUE):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_LIGHT_BLUE):
+				return new Color(102, 153, 216);
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_YELLOW):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_YELLOW):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_YELLOW):
+			case ($id === Block::HAY_BALE):
+			case ($id === Block::SPONGE):
 				return new Color(229, 229, 51);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_LIME:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_LIME:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_LIME:
-			case Block::MELON_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_LIME):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_LIME):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_LIME):
+			case ($id === Block::MELON_BLOCK):
 				return new Color(229, 229, 51);
-				//case Block::WOOL && $meta == Color::COLOR_DYE_PINK:
-				//case Block::CARPET && $meta == Color::COLOR_DYE_PINK:
-				//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_PINK:
-				//return new Color(242, 127, 165);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_GRAY:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_GRAY:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_GRAY:
-			case Block::CAULDRON_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_PINK):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_PINK):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_PINK):
+				return new Color(242, 127, 165);
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_GRAY):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_GRAY):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_GRAY):
+			case ($id === Block::CAULDRON_BLOCK):
 				return new Color(76, 76, 76);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_LIGHT_GRAY:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_LIGHT_GRAY:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_LIGHT_GRAY:
-			case Block::STRUCTURE_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_LIGHT_GRAY):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_LIGHT_GRAY):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_LIGHT_GRAY):
+			case ($id === Block::STRUCTURE_BLOCK):
 				return new Color(153, 153, 153);
-				//case Block::WOOL && $meta == Color::COLOR_DYE_CYAN:
-				//case Block::CARPET && $meta == Color::COLOR_DYE_CYAN:
-				//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_CYAN:
-				//case Block::PRISMARINE && $meta == Prismarine::NORMAL:
-				//return new Color(76, 127, 153);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_PURPLE:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_PURPLE:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_PURPLE:
-			case Block::MYCELIUM:
-			case Block::REPEATING_COMMAND_BLOCK:
-			case Block::CHORUS_PLANT:
-			case Block::CHORUS_FLOWER:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_CYAN):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_CYAN):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_CYAN):
+			case ($id === Block::PRISMARINE and $meta == Prismarine::NORMAL):
+				return new Color(76, 127, 153);
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_PURPLE):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_PURPLE):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_PURPLE):
+			case ($id === Block::MYCELIUM):
+			case ($id === Block::REPEATING_COMMAND_BLOCK):
+			case ($id === Block::CHORUS_PLANT):
+			case ($id === Block::CHORUS_FLOWER):
 				return new Color(127, 63, 178);
-				//case Block::WOOL && $meta == Color::COLOR_DYE_BLUE:
-				//case Block::CARPET && $meta == Color::COLOR_DYE_BLUE:
-				//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_BLUE:
-				//return new Color(51, 76, 178);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_BROWN:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_BROWN:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_BROWN:
-			case Block::SOUL_SAND:
-				//case Block::WOOD && $meta == Planks::DARK_OAK:
-				//case Block::PLANKS && $meta == Planks::DARK_OAK:
-				//case Block::FENCE && $meta == Planks::DARK_OAK:
-			case Block::DARK_OAK_FENCE_GATE:
-			case Block::DARK_OAK_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::DARK_OAK:
-			case Block::COMMAND_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_BLUE):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_BLUE):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_BLUE):
+				return new Color(51, 76, 178);
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_BROWN):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_BROWN):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_BROWN):
+			case ($id === Block::SOUL_SAND):
+			case ($id === Block::WOOD and $meta == Planks::DARK_OAK):
+			case ($id === Block::PLANKS and $meta == Planks::DARK_OAK):
+			case ($id === Block::FENCE and $meta == Planks::DARK_OAK):
+			case ($id === Block::DARK_OAK_FENCE_GATE):
+			case ($id === Block::DARK_OAK_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::DARK_OAK):
+			case ($id === Block::COMMAND_BLOCK):
 				return new Color(102, 76, 51);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_GREEN:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_GREEN:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_GREEN:
-			case Block::END_PORTAL_FRAME:
-			case Block::CHAIN_COMMAND_BLOCK:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_GREEN):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_GREEN):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_GREEN):
+			case ($id === Block::END_PORTAL_FRAME):
+			case ($id === Block::CHAIN_COMMAND_BLOCK):
 				return new Color(102, 127, 51);
-			//case Block::WOOL && $meta == Color::COLOR_DYE_RED:
-			//case Block::CARPET && $meta == Color::COLOR_DYE_RED:
-			//case Block::STAINED_HARDENED_CLAY && $meta == Color::COLOR_DYE_RED:
-			case Block::RED_MUSHROOM_BLOCK:
-			case Block::BRICK_BLOCK:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::BRICK:
-			case Block::BRICK_STAIRS:
-			case Block::ENCHANTING_TABLE:
-			case Block::NETHER_WART_BLOCK:
-			case Block::NETHER_WART_PLANT:
+			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_RED):
+			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_RED):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_RED):
+			case ($id === Block::RED_MUSHROOM_BLOCK):
+			case ($id === Block::BRICK_BLOCK):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::BRICK):
+			case ($id === Block::BRICK_STAIRS):
+			case ($id === Block::ENCHANTING_TABLE):
+			case ($id === Block::NETHER_WART_BLOCK):
+			case ($id === Block::NETHER_WART_PLANT):
 				return new Color(153, 51, 51);
-			//case Block::WOOL && $meta == 0:
-			//case Block::CARPET && $meta == 0:
-			//case Block::STAINED_HARDENED_CLAY && $meta == 0:
-			case Block::DRAGON_EGG:
-			case Block::COAL_BLOCK:
-			case Block::OBSIDIAN:
-			case Block::END_PORTAL:
+			case ($id === Block::WOOL and $meta == 0):
+			case ($id === Block::CARPET and $meta == 0):
+			case ($id === Block::STAINED_HARDENED_CLAY and $meta == 0):
+			case ($id === Block::DRAGON_EGG):
+			case ($id === Block::COAL_BLOCK):
+			case ($id === Block::OBSIDIAN):
+			case ($id === Block::END_PORTAL):
 				return new Color(25, 25, 25);
-			case Block::GOLD_BLOCK:
-			case Block::LIGHT_WEIGHTED_PRESSURE_PLATE:
+			case ($id === Block::GOLD_BLOCK):
+			case ($id === Block::LIGHT_WEIGHTED_PRESSURE_PLATE):
 				return new Color(250, 238, 77);
-				break;
-			case Block::DIAMOND_BLOCK:
-				//case Block::PRISMARINE && $meta == Prismarine::DARK:
-				//case Block::PRISMARINE && $meta == Prismarine::BRICKS:
-			case Block::BEACON:
+			case ($id === Block::DIAMOND_BLOCK):
+			case ($id === Block::PRISMARINE and $meta == Prismarine::DARK):
+			case ($id === Block::PRISMARINE and $meta == Prismarine::BRICKS):
+			case ($id === Block::BEACON):
 				return new Color(92, 219, 213);
-			case Block::LAPIS_BLOCK:
+			case ($id === Block::LAPIS_BLOCK):
 				return new Color(74, 128, 255);
-				break;
-			case Block::EMERALD_BLOCK:
+			case ($id === Block::EMERALD_BLOCK):
 				return new Color(0, 217, 58);
-			case Block::PODZOL:
-				//case Block::WOOD && $meta == Planks::SPRUCE:
-				//case Block::PLANKS && $meta == Planks::SPRUCE:
-				//case Block::FENCE && $meta == Planks::SPRUCE:
-			case Block::SPRUCE_FENCE_GATE:
-			case Block::SPRUCE_STAIRS:
-				//case Block::WOODEN_SLAB && ($meta & 0x07) == Planks::SPRUCE:
+			case ($id === Block::PODZOL):
+			case ($id === Block::WOOD and $meta == Planks::SPRUCE):
+			case ($id === Block::PLANKS and $meta == Planks::SPRUCE):
+			case ($id === Block::FENCE and $meta == Planks::SPRUCE):
+			case ($id === Block::SPRUCE_FENCE_GATE):
+			case ($id === Block::SPRUCE_STAIRS):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::SPRUCE):
 				return new Color(129, 86, 49);
-			case Block::NETHERRACK:
-			case Block::NETHER_QUARTZ_ORE:
-			case Block::NETHER_BRICK_FENCE:
-			case Block::NETHER_BRICK_BLOCK:
-			case Block::MAGMA:
-			case Block::NETHER_BRICK_STAIRS:
-				//case Block::STONE_SLAB && ($meta & 0x07) == StoneSlab::NETHER_BRICK:
+			case ($id === Block::NETHERRACK):
+			case ($id === Block::NETHER_QUARTZ_ORE):
+			case ($id === Block::NETHER_BRICK_FENCE):
+			case ($id === Block::NETHER_BRICK_BLOCK):
+			case ($id === Block::MAGMA):
+			case ($id === Block::NETHER_BRICK_STAIRS):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::NETHER_BRICK):
 				return new Color(112, 2, 0);
 			default:
 				return new Color(0, 0, 0, 0);
 		}
 	}
 
-	/*public static function colorizeMapColor(Color $color, int $value) : int{
-		/*$b1 = (self::getMapColorByBlock($level->getBlock($vec->add(1, 0, 1))))->toABGR();
-		$b2 = (self::getMapColorByBlock($level->getBlock($vec->add(-1, 0, -1))))->toABGR();
+	/**
+	 * @param int $v Color hash
+	 * @param int $value colorization value
+	 *
+	 * @return int
+	 */
+	public static function colorizeMapColor(int $v, int $value) : int{
+		$short1 = 220;
 
-		$i = 0;
-		$j = 0;
-		$k = 0;
-
-		foreach([$color->toABGR(), $b1, $b2] as $l){
-			$i += ($l & 16711680) >> 16;
-			$j += ($l & 65280) >> 8;
-			$k += $l & 255;
+		if($value == 3){
+			$short1 = 135;
 		}
 
-		return ($i / 9 & 255) << 16 | ($j / 9 & 255) << 8 | $k / 9 & 255;
-		 $short1 = 220;
+		if($value == 2){
+			$short1 = 255;
+		}
 
-        if ($value == 3)
-        {
-	        $short1 = 135;
-        }
+		if($value == 1){
+			$short1 = 220;
+		}
 
-        if ($value == 2)
-        {
-	        $short1 = 255;
-        }
-
-        if ($value == 1)
-        {
-	        $short1 = 220;
-        }
-
-        if ($value == 0)
-        {
-	        $short1 = 180;
-        }
-        $v = $color->toABGR();
-         $i = ($v >> 16 & 255) * $short1 / 255;
-         $j = ($v >> 8 & 255) * $short1 / 255;
-         $k = ($v & 255) * $short1 / 255;
-        return -16777216 | $i << 16 | $j << 8 | $k;
-	}*/
+		if($value == 0){
+			$short1 = 180;
+		}
+		$i = ($v >> 16 & 255) * $short1 / 255;
+		$j = ($v >> 8 & 255) * $short1 / 255;
+		$k = ($v & 255) * $short1 / 255;
+		return -16777216 | $i << 16 | $j << 8 | $k;
+	}
 }
