@@ -370,10 +370,7 @@ class SimpleSessionHandler extends SessionHandler{
 	public function handleMapInfoRequest(MapInfoRequestPacket $packet) : bool{
 		$data = MapManager::getMapDataById($packet->mapId);
 		if($data instanceof MapData){
-			$pk = $data->getMapDataPacket($this->player);
-			if($pk !== null){
-				$this->player->sendDataPacket($pk);
-			}
+			$data->sendMapInfo($this->player);
 			return true;
 		}
 		return false;

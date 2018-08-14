@@ -271,15 +271,47 @@ class MapData{
 		$pk = new ClientboundMapItemDataPacket();
 		$pk->mapId = $this->mapId;
 		$pk->dimensionId = $this->dimension;
-		$pk->scale = $this->scale;
-		$pk->eids = []; // why??
+		$pk->scale = 1 << $this->scale;
 		$pk->decorations = $this->decorations;
 		$pk->trackedEntities = $this->trackedObjects;
 		$pk->width = 128 * (1 << $this->scale);
 		$pk->height = 128 * (1 << $this->scale);
 		$pk->colors = $this->colors;
+		$deco = new MapDecoration();
+		$deco->icon = 1;
+		$deco->color = new Color(0, 0, 0);
+		$deco->xOffset = 0;
+		$deco->yOffset = 0;
+		$deco->label = "emre";
+		$deco->rot = 90;
+		$pk->decorations = [$deco];
+		$tr = new MapTrackedObject();
+		$tr->type = MapTrackedObject::TYPE_PLAYER;
+		$tr->entityUniqueId = $info->player->getId();
+		$pk->trackedEntities = [$tr];
 
 		return $pk;
+	}
+
+	public function sendMapInfo(Player $player) : void{
+		$pk = new ClientboundMapItemDataPacket();
+		$pk->mapId = $this->mapId;
+		$pk->scale = $this->scale;
+		$pk->eids = [$player->getId()];
+		$deco = new MapDecoration();
+		$deco->icon = 0;
+		$deco->color = new Color(0, 0, 0);
+		$deco->xOffset = 1;
+		$deco->yOffset = 1;
+		$deco->label = $player->getName();
+		$deco->rot = $player->getDirection() * 90;
+		$pk->decorations = [$deco];
+		$tr = new MapTrackedObject();
+		$tr->type = MapTrackedObject::TYPE_PLAYER;
+		$tr->entityUniqueId = $player->getId();
+		$pk->trackedEntities = [$tr];
+
+		$player->sendDataPacket($pk);
 	}
 
 	public function getMapDataPacket(Player $player) : ?ClientboundMapItemDataPacket{
