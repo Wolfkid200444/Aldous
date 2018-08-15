@@ -38,6 +38,7 @@ use pocketmine\maps\MapManager;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\LongTag;
+use pocketmine\nbt\tag\StringTag;
 use pocketmine\Player;
 use pocketmine\utils\Color;
 
@@ -102,19 +103,26 @@ class FilledMap extends Item{
 							$flag1 = $i2 * $i2 + $j2 * $j2 > ($j1 - 2) * ($j1 - 2);
 							$k2 = ($j / $i + $k1 - 64) * $i;
 							$l2 = ($k / $i + $l1 - 64) * $i;
-							$multiset = [];
 
-							if($world->isChunkLoaded($k2 >> 4, $l2 >> 4)){
+							if($world->isChunkInUse($k2 >> 4, $l2 >> 4)){
 								$k3 = 0;
 								$d1 = 0.0;
+
+								$mapcolor = 0;
 
 								$h = $world->getHighestBlockAt((int) floor($k2), (int) floor($l2));
 
 								if($h > 0){
 									$block = $world->getBlock($tempVector->setComponents($k2, $h, $l2));
+									if($block instanceof Liquid){
+										while($block->getSide(Vector3::SIDE_DOWN) instanceof Liquid and $h > 0){
+											$block = $block->getSide(Vector3::SIDE_DOWN);
+											$h--;
+										}
+									}
 									$d1 += (int) $h / (int) ($i * $i);
 									$color = self::getMapColorByBlock($block);
-									$multiset[] = $color->toABGR();
+									$mapcolor = $color->toABGR();
 								}
 
 								$k3 = $k3 / ($i * $i);
@@ -129,10 +137,7 @@ class FilledMap extends Item{
 									$i5 = 0;
 								}
 
-								/** @var int $mapcolor */
-								$mapcolor = end($multiset);
-
-								if($mapcolor === null){
+								if($mapcolor === 0){
 									$d2 = (int) $k3 * 0.1 + (int) ($k1 + $l1 & 1) * 0.2;
 									$i5 = 1;
 
@@ -180,6 +185,8 @@ class FilledMap extends Item{
 				$data->setColorAt($x, $y, new Color(0, 0, 0, 0));
 			}
 		}
+
+		$this->setCustomName("map_" . strval($id));
 
 		MapManager::registerMapData($data);
 	}
