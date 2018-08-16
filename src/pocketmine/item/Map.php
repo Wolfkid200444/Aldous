@@ -24,31 +24,29 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
-use pocketmine\block\Air;
 use pocketmine\block\Block;
-use pocketmine\block\BlockFactory;
 use pocketmine\block\Liquid;
 use pocketmine\block\Planks;
 use pocketmine\block\Prismarine;
 use pocketmine\block\Stone;
 use pocketmine\block\StoneSlab;
-use pocketmine\level\Level;
 use pocketmine\maps\MapData;
 use pocketmine\maps\MapManager;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\LongTag;
-use pocketmine\nbt\tag\StringTag;
 use pocketmine\Player;
 use pocketmine\utils\Color;
 
-class FilledMap extends Item{
+class Map extends Item{
 
 	public const TAG_MAP_UUID = "map_uuid";
 	public const TAG_ZOOM = "zoom";
 
+	public const TAG_IS_IMAGE = "is_image"; // this for plugins to edit map texture
+
 	public function __construct(int $meta = 0){
-		parent::__construct(self::FILLED_MAP, $meta, "Filled Map");
+		parent::__construct(self::FILLED_MAP, $meta, "Map");
 
 		if($this->getNamedTag()->hasTag("map_uuid")){
 			MapManager::loadMapData($this->getMapId());
@@ -64,12 +62,16 @@ class FilledMap extends Item{
 			if($data->isDirty()){
 				$pk = $data->getMapDataPacket($player);
 
+				$data->updateVisiblePlayers($player, $this);
+
 				if($pk != null){
 					$player->sendDataPacket($pk);
 				}
-			}
 
-			$this->updateMapData($player, $data);
+				if(!$this->isImage()){
+					$this->updateMapData($player, $data);
+				}
+			}
 		}
 	}
 
@@ -159,7 +161,7 @@ class FilledMap extends Item{
 									if($b0 !== $b1){
 										$data->setColorAt($k1, $l1, Color::fromABGR($b1));
 										$data->updateInfo($k1, $l1);
-										$flag = true;
+										//$flag = true;
 									}
 								}
 							}
@@ -185,8 +187,6 @@ class FilledMap extends Item{
 				$data->setColorAt($x, $y, new Color(0, 0, 0, 0));
 			}
 		}
-
-		$this->setCustomName("map_" . strval($id));
 
 		MapManager::registerMapData($data);
 	}
@@ -226,7 +226,21 @@ class FilledMap extends Item{
 	 * @return int
 	 */
 	public function getMapId() : int{
-		return $this->getNamedTag()->getLong(self::TAG_MAP_UUID, 0, false);
+		return $this->getNamedTag()->getLong(self::TAG_MAP_UUID, 0, true);
+	}
+
+	/**
+	 * @param bool $value
+	 */
+	public function setIsImage(bool $value) : void{
+		$this->setNamedTagEntry(new ByteTag(self::TAG_IS_IMAGE, intval($value)));
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isImage() : bool{
+		return boolval($this->getNamedTag()->getByte(self::TAG_IS_IMAGE, 0));
 	}
 
 

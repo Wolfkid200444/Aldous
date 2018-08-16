@@ -45,6 +45,8 @@ class ItemFrame extends Spawnable{
 		}else{
 			$this->item = ItemFactory::get(Item::AIR, 0, 0);
 		}
+
+		$this->item->setItemFrame($this);
 		$this->itemRotation = $nbt->getByte(self::TAG_ITEM_ROTATION, 0, true);
 		$this->itemDropChance = $nbt->getFloat(self::TAG_ITEM_DROP_CHANCE, 1.0, true);
 	}

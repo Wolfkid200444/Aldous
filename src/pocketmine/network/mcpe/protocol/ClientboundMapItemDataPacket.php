@@ -38,6 +38,7 @@ class ClientboundMapItemDataPacket extends DataPacket{
 
     public const BITFLAG_TEXTURE_UPDATE = 0x02;
     public const BITFLAG_DECORATION_UPDATE = 0x04;
+	public const BITFLAG_ENTITY_UPDATE = 0x08;
 
     /** @var int */
     public $mapId;
@@ -145,14 +146,14 @@ class ClientboundMapItemDataPacket extends DataPacket{
         $this->putUnsignedVarInt($type);
         $this->putByte($this->dimensionId);
 
-        if(($type & 0x08) !== 0){ //TODO: find out what these are for
+        if(($type & self::BITFLAG_ENTITY_UPDATE) !== 0){ //TODO: find out what these are for
             $this->putUnsignedVarInt($eidsCount);
             foreach($this->eids as $eid){
                 $this->putEntityUniqueId($eid);
             }
         }
 
-        if(($type & (0x08 | self::BITFLAG_TEXTURE_UPDATE | self::BITFLAG_DECORATION_UPDATE)) !== 0){
+        if(($type & (self::BITFLAG_ENTITY_UPDATE | self::BITFLAG_TEXTURE_UPDATE | self::BITFLAG_DECORATION_UPDATE)) !== 0){
             $this->putByte($this->scale);
         }
 

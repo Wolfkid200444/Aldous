@@ -43,6 +43,7 @@ use pocketmine\nbt\tag\NamedTag;
 use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\Player;
+use pocketmine\tile\ItemFrame;
 use pocketmine\utils\Binary;
 
 class Item implements ItemIds, \JsonSerializable{
@@ -183,6 +184,8 @@ class Item implements ItemIds, \JsonSerializable{
     public $count = 1;
     /** @var string */
     protected $name;
+    /** @var ItemFrame|null */
+    protected $itemFrame = null;
 
     /**
      * Constructs a new Item type. This constructor should ONLY be used when constructing a new item TYPE to register
@@ -987,11 +990,38 @@ class Item implements ItemIds, \JsonSerializable{
         $this->cachedNBT = null;
     }
 
-    public function getRepairCost() : int{
+	/**
+	 * @return int
+	 */
+	public function getRepairCost() : int{
         return $this->getNamedTag()->getInt("RepairCost", 0);
     }
 
-    public function setRepairCost(int $repairCost) : void{
+	/**
+	 * @param int $repairCost
+	 */
+	public function setRepairCost(int $repairCost) : void{
         $this->getNamedTag()->setInt("RepairCost", $repairCost);
     }
+
+	/**
+	 * @return bool
+	 */
+	public function isOnItemFrame() : bool{
+		return $this->itemFrame !== null;
+	}
+
+	/**
+	 * @return null|ItemFrame
+	 */
+	public function getItemFrame() : ?ItemFrame{
+		return $this->itemFrame;
+	}
+
+	/**
+	 * @param null|ItemFrame $itemFrame
+	 */
+	public function setItemFrame(?ItemFrame $itemFrame) : void{
+		$this->itemFrame = $itemFrame;
+	}
 }

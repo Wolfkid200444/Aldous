@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace pocketmine\item;
 
 use pocketmine\math\Vector3;
+use pocketmine\nbt\NBT;
+use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\ListTag;
 use pocketmine\Player;
 
 class EmptyMap extends Item{
@@ -40,8 +43,20 @@ class EmptyMap extends Item{
 	 * @return bool
 	 */
 	public function onClickAir(Player $player, Vector3 $directionVector) : bool{
-		$map = new FilledMap();
+		$map = new Map();
 		$map->onCreateMap($player, 0);
+
+		if($this->meta === 2){ // explorer map
+			$nbt = $map->getNamedTag();
+			$deco = new CompoundTag();
+			$deco->setString("id", $player->getName());
+			$deco->setDouble("rot", 0);
+			$deco->setByte("type", 26);
+			$deco->setDouble("x", $player->getFloorX());
+			$deco->setDouble("z", $player->getFloorZ());
+			$nbt->setTag(new ListTag("Decorations", [$deco], NBT::TAG_Compound));
+			$map->setNamedTag($nbt);
+		}
 
 		if($player->getInventory()->canAddItem($map)){
 			$player->getInventory()->addItem($map);

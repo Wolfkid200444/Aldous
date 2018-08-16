@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\protocol\types;
 
 use pocketmine\nbt\tag\ListTag;
+use pocketmine\nbt\tag\LongTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\nbt\tag\IntTag;
 use pocketmine\utils\Color;
@@ -51,7 +52,7 @@ class MapDecoration{
 			new IntTag("xOffset", $this->xOffset),
 			new IntTag("yOffset", $this->yOffset),
 			new StringTag("label", $this->label),
-			new IntTag("color", $this->color->toABGR())
+			new LongTag("color", $this->color->toABGR())
 		]);
 	}
 
