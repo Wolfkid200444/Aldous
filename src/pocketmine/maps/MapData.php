@@ -270,11 +270,9 @@ class MapData{
 		$pk->colors = $this->colors;
 		$pk->decorations = $this->decorations;
 		$pk->trackedEntities = $this->trackedObjects;
-		$pk->xOffset = max($info->minX, $info->maxX);
-		$pk->yOffset = max($info->minY, $info->maxY);
+		/*$pk->xOffset = max($info->minX, $info->maxX);
+		$pk->yOffset = max($info->minY, $info->maxY);*/
 		$pk->eids = [$info->player->getId()];
-		$pk->xOffset = min($info->minX, $info->maxX);
-		$pk->yOffset = min($info->minY, $info->maxY);
 
 		return $pk;
 	}
