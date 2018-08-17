@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
+use pocketmine\block\Air;
 use pocketmine\block\Block;
 use pocketmine\block\Liquid;
 use pocketmine\block\Planks;
@@ -36,6 +37,7 @@ use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\LongTag;
 use pocketmine\Player;
+use pocketmine\Server;
 use pocketmine\utils\Color;
 
 class Map extends Item{
@@ -67,10 +69,9 @@ class Map extends Item{
 				if($pk != null){
 					$player->sendDataPacket($pk);
 				}
-
-				if(!$this->isImage()){
-					$this->updateMapData($player, $data);
-				}
+			}
+			if(!$this->isImage()){
+				$this->updateMapData($player, $data);
 			}
 		}
 	}
@@ -110,12 +111,18 @@ class Map extends Item{
 								$k3 = 0;
 								$d1 = 0.0;
 
+								$chunk = $world->getChunk($k2 >> 4, $l2 >> 4);
 								$mapcolor = 0;
 
-								$h = $world->getHighestBlockAt((int) floor($k2), (int) floor($l2));
+								$h = $chunk->getHeightMap($k2 & 15, $l2 & 15);
 
 								if($h > 0){
 									$block = $world->getBlock($tempVector->setComponents($k2, $h, $l2));
+									while($h > 0 and $block instanceof Air){
+										$block = $block->getSide(Vector3::SIDE_DOWN);
+										$h--;
+									}
+
 									if($block instanceof Liquid){
 										while($block->getSide(Vector3::SIDE_DOWN) instanceof Liquid and $h > 0){
 											$block = $block->getSide(Vector3::SIDE_DOWN);
@@ -138,8 +145,8 @@ class Map extends Item{
 								if($d2 < -0.6){
 									$i5 = 0;
 								}
-
-								if($mapcolor === 0){
+								$mp = Color::fromABGR($mapcolor);
+								if($mp->getR() === 64 and $mp->getG() === 64 and $mp->getB() === 255){ // water color
 									$d2 = (int) $k3 * 0.1 + (int) ($k1 + $l1 & 1) * 0.2;
 									$i5 = 1;
 
@@ -161,7 +168,7 @@ class Map extends Item{
 									if($b0 !== $b1){
 										$data->setColorAt($k1, $l1, Color::fromABGR($b1));
 										$data->updateInfo($k1, $l1);
-										//$flag = true;
+										$flag = true;
 									}
 								}
 							}
@@ -174,7 +181,6 @@ class Map extends Item{
 
 	public function onCreateMap(Player $player, int $scale) : void{
 		$this->setMapId($id = MapManager::getNextId());
-		$this->setZoom($scale);
 
 		$data = new MapData($id);
 		$data->setScale($scale);
@@ -184,7 +190,7 @@ class Map extends Item{
 		$sc = (1 << $scale) * 128;
 		for($x = 0; $x < $sc; $x++){
 			for($y = 0; $y < $sc; $y++){
-				$data->setColorAt($x, $y, new Color(0, 0, 0, 0));
+				$data->setColorAt($x, $y, new Color(0, 0, 0, 255));
 			}
 		}
 

@@ -371,6 +371,7 @@ class SimpleSessionHandler extends SessionHandler{
 		$data = MapManager::getMapDataById($packet->mapId);
 		if($data instanceof MapData){
 			$pk = $data->getMapDataPacket($this->player);
+			$data->updateVisiblePlayers($this->player, $this->player->getInventory()->getItemInHand());
 
 			if($pk !== null){
 				$this->player->sendDataPacket($pk);

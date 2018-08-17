@@ -24,10 +24,6 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\protocol\types;
 
-use pocketmine\nbt\tag\ListTag;
-use pocketmine\nbt\tag\LongTag;
-use pocketmine\nbt\tag\StringTag;
-use pocketmine\nbt\tag\IntTag;
 use pocketmine\utils\Color;
 
 class MapDecoration{
@@ -44,25 +40,4 @@ class MapDecoration{
 	public $label;
 	/** @var Color */
 	public $color;
-
-	public function toNBT(string $name) : ListTag{
-		return new ListTag($name, [
-			new IntTag("icon", $this->icon),
-			new IntTag("rot", $this->rot),
-			new IntTag("xOffset", $this->xOffset),
-			new IntTag("yOffset", $this->yOffset),
-			new StringTag("label", $this->label),
-			new LongTag("color", $this->color->toABGR())
-		]);
-	}
-
-	public static function fromNBT(ListTag $nbt) : MapDecoration{
-		$d = new MapDecoration();
-		foreach($nbt->getValue() as $item){
-			$d->{$item->getName()} = $item->getName() === "color" ? Color::fromABGR($item->getValue()) : $item->getValue();
-		}
-
-		return $d;
-	}
-
 }

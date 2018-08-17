@@ -27,6 +27,7 @@ namespace pocketmine\maps;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\math\Vector2;
+use pocketmine\nbt\NBT;
 use pocketmine\nbt\tag\ByteArrayTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\ListTag;
@@ -200,13 +201,6 @@ class MapData{
 				}
 			}
 		}
-
-		if($nbt->hasTag("decorations", CompoundTag::class)){
-			$decos = $nbt->getCompoundTag("decorations");
-			for($i = 0; $i < $decos->getCount(); $i++){
-				$this->decorations[$i] = MapDecoration::fromNBT($decos->getListTag(strval($i)));
-			}
-		}
 	}
 
 	public function writeSaveData(CompoundTag $nbt) : void{
@@ -229,13 +223,6 @@ class MapData{
 
 			$nbt->setByteArray("colors", $byteColors, true);
 		}
-
-		$decos = new CompoundTag("decorations");
-		foreach($this->decorations as $i => $decoration){
-			$decos->setTag($decoration->toNBT(strval($i)));
-		}
-
-		$nbt->setTag($decos);
 	}
 
 	/**
@@ -269,6 +256,8 @@ class MapData{
 	}
 
 	/**
+	 * @param MapInfo $info
+	 *
 	 * @return ClientboundMapItemDataPacket
 	 */
 	public function createDataPacket(MapInfo $info) : ClientboundMapItemDataPacket{
@@ -281,6 +270,11 @@ class MapData{
 		$pk->colors = $this->colors;
 		$pk->decorations = $this->decorations;
 		$pk->trackedEntities = $this->trackedObjects;
+		$pk->xOffset = max($info->minX, $info->maxX);
+		$pk->yOffset = max($info->minY, $info->maxY);
+		$pk->eids = [$info->player->getId()];
+		$pk->xOffset = min($info->minX, $info->maxX);
+		$pk->yOffset = min($info->minY, $info->maxY);
 
 		return $pk;
 	}
@@ -288,14 +282,13 @@ class MapData{
 	public function getMapDataPacket(Player $player) : ?ClientboundMapItemDataPacket{
 		$info = $this->getMapInfo($player);
 
-		if($info->forceUpdate or $info->packetSendTimer++ % 5 === 0){
+		//if($info->forceUpdate or $info->packetSendTimer++ % 5 === 0){
 			$info->forceUpdate = false;
+			$this->dirty = false;
 			return $this->createDataPacket($info);
-		}
+		//}
 
-		$this->dirty = false;
-
-		return null;
+		//return null;
 	}
 
 	/**
@@ -340,6 +333,7 @@ class MapData{
 	public function updateVisiblePlayers(Player $player, Item $mapStack){
 		if(!isset($this->playersMap[$hash = spl_object_hash($player)])){
 			$this->playersMap[$hash] = new MapInfo($player);
+
 			$mo = new MapTrackedObject();
 			$mo->entityUniqueId = $player->getId();
 			$mo->type = MapTrackedObject::TYPE_PLAYER;
@@ -426,9 +420,11 @@ class MapData{
 		$deco->rot = $b2;
 		$deco->xOffset = $b0;
 		$deco->yOffset = $b1;
-		$deco->color = new Color(255, 255, 255);
+		$deco->color = new Color(0, 0, 0);
 		$deco->label = $entityIdentifier;
 
 		$this->decorations[$entityIdentifier] = $deco;
+
+		$this->markDirty();
 	}
 }
