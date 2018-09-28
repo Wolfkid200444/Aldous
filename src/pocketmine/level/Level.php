@@ -1390,6 +1390,7 @@ class Level implements ChunkManager, Metadatable{
 			if($chunk !== null){
 				$fullState = $chunk->getFullBlock($x & 0x0f, $y, $z & 0x0f);
 				$id = $fullState >> 4;
+				var_dump($id);
 				$meta = $fullState & 0xf;
 			}else{
 				$addToCache = false;
@@ -1815,6 +1816,7 @@ class Level implements ChunkManager, Metadatable{
 	 */
 	public function useItemOn(Vector3 $vector, Item &$item, int $face, Vector3 $clickVector = null, Player $player = null, bool $playSound = false) : bool{
 		$blockClicked = $this->getBlock($vector);
+
 		$blockReplace = $blockClicked->getSide($face);
 
 		if($clickVector === null){
@@ -2151,7 +2153,7 @@ class Level implements ChunkManager, Metadatable{
 	 */
 	public function setBlockIdAt(int $x, int $y, int $z, int $id){
 		unset($this->blockCache[$chunkHash = Level::chunkHash($x >> 4, $z >> 4)][$blockHash = Level::blockHash($x, $y, $z)]);
-		$this->getChunk($x >> 4, $z >> 4, true)->setBlockId($x & 0x0f, $y, $z & 0x0f, $id & 0xff);
+		$this->getChunk($x >> 4, $z >> 4, true)->setBlockId($x & 0x0f, $y, $z & 0x0f, $id & 416);
 
 		if(!isset($this->changedBlocks[$chunkHash])){
 			$this->changedBlocks[$chunkHash] = [];

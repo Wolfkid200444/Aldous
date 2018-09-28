@@ -58,11 +58,8 @@ class Noteblock extends Solid{
 			$tile = Tile::createTile(Tile::NOTEBLOCK, $this->level, TileNoteBlock::createNBT($this));
 		}
 		
-		$note = $tile->getNote();
-		$nextNote = $note + 1;
-		if($nextNote > 24) $nextNote = 0;
-		
-		$tile->setNote($nextNote);
+		$note = $tile->getNote() + 1;
+		$tile->setNote($note % 24);
 		
 		return $note;
 	}

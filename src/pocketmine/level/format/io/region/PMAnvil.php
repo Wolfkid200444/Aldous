@@ -24,8 +24,8 @@ declare(strict_types=1);
 namespace pocketmine\level\format\io\region;
 
 use pocketmine\level\format\SubChunk;
-use pocketmine\nbt\tag\ByteArrayTag;
 use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\tag\IntArrayTag;
 
 /**
  * This format is exactly the same as the PC Anvil format, with the only difference being that the stored data order
@@ -37,19 +37,19 @@ class PMAnvil extends Anvil{
 
 	protected function serializeSubChunk(SubChunk $subChunk) : CompoundTag{
 		return new CompoundTag("", [
-			new ByteArrayTag("Blocks",     $subChunk->getBlockIdArray()),
-			new ByteArrayTag("Data",       $subChunk->getBlockDataArray()),
-			new ByteArrayTag("SkyLight",   $subChunk->getBlockSkyLightArray()),
-			new ByteArrayTag("BlockLight", $subChunk->getBlockLightArray())
+			new IntArrayTag("Blocks",     $subChunk->getBlockIdArray()),
+			new IntArrayTag("Data",       $subChunk->getBlockDataArray()),
+			new IntArrayTag("SkyLight",   $subChunk->getBlockSkyLightArray()),
+			new IntArrayTag("BlockLight", $subChunk->getBlockLightArray())
 		]);
 	}
 
 	protected function deserializeSubChunk(CompoundTag $subChunk) : SubChunk{
 		return new SubChunk(
-			$subChunk->getByteArray("Blocks"),
-			$subChunk->getByteArray("Data"),
-			$subChunk->getByteArray("SkyLight"),
-			$subChunk->getByteArray("BlockLight")
+			$subChunk->getIntArray("Blocks"),
+			$subChunk->getIntArray("Data"),
+			$subChunk->getIntArray("SkyLight"),
+			$subChunk->getIntArray("BlockLight")
 		);
 	}
 

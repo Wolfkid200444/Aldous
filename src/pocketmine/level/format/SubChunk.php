@@ -23,96 +23,96 @@ declare(strict_types=1);
 
 namespace pocketmine\level\format;
 
+use pocketmine\utils\Binary;
+use pocketmine\utils\BinaryStream;
+
 class SubChunk implements SubChunkInterface{
 
-	protected $ids;
-	protected $data;
-	protected $blockLight;
-	protected $skyLight;
+	/** @var int[] */
+	protected $ids = [];
+	/** @var int[] */
+	protected $data = [];
+	/** @var int[] */
+	protected $blockLight = [];
+	/** @var int[] */
+	protected $skyLight = [];
 
-	private static function assignData(&$target, string $data, int $length, string $value = "\x00"){
-		if(strlen($data) !== $length){
-			assert($data === "", "Invalid non-zero length given, expected $length, got " . strlen($data));
-			$target = str_repeat($value, $length);
+	private static function assignData(&$target, array $data, int $length, int $value = 0){
+		if(count($data) !== $length){
+			assert($data === "", "Invalid non-zero length given, expected $length, got " . count($data));
+			$target = array_fill(0, $length, $value);
 		}else{
 			$target = $data;
 		}
 	}
 
-	public function __construct(string $ids = "", string $data = "", string $skyLight = "", string $blockLight = ""){
+	public function __construct(array $ids = [], array $data = [], array $skyLight = [], array $blockLight = []){
 		self::assignData($this->ids, $ids, 4096);
-		self::assignData($this->data, $data, 2048);
-		self::assignData($this->skyLight, $skyLight, 2048, "\xff");
-		self::assignData($this->blockLight, $blockLight, 2048);
+		self::assignData($this->data, $data, 4096);
+		self::assignData($this->skyLight, $skyLight, 4096, 15);
+		self::assignData($this->blockLight, $blockLight, 4096);
 	}
 
 	public function isEmpty(bool $checkLight = true) : bool{
+		function isFullWith(array $array, $targetValue) : bool{
+			foreach($array as $v){
+				if($v !== $targetValue){
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		return (
-			substr_count($this->ids, "\x00") === 4096 and
+			isFullWith($this->ids, 0) and
 			(!$checkLight or (
-				substr_count($this->skyLight, "\xff") === 2048 and
-				substr_count($this->blockLight, "\x00") === 2048
+				isFullWith($this->skyLight, 15) and
+				isFullWith($this->blockLight, 0)
 			))
 		);
 	}
 
+	public static function getIndex(int $x, int $y, int $z) : int{
+		return ($x * 256) + ($y * 16) + $z;
+	}
+
 	public function getBlockId(int $x, int $y, int $z) : int{
-		return ord($this->ids{($x << 8) | ($z << 4) | $y});
+		return $this->ids[self::getIndex($x, $y, $z)];
 	}
 
 	public function setBlockId(int $x, int $y, int $z, int $id) : bool{
-		$this->ids{($x << 8) | ($z << 4) | $y} = chr($id);
+		$this->ids[self::getIndex($x, $y, $z)] = $id;
 		return true;
 	}
 
 	public function getBlockData(int $x, int $y, int $z) : int{
-		$m = ord($this->data{($x << 7) + ($z << 3) + ($y >> 1)});
-		if(($y & 1) === 0){
-			return $m & 0x0f;
-		}else{
-			return $m >> 4;
-		}
+		return $this->data[self::getIndex($x, $y, $z)];
 	}
 
 	public function setBlockData(int $x, int $y, int $z, int $data) : bool{
-		$i = ($x << 7) | ($z << 3) | ($y >> 1);
-		if(($y & 1) === 0){
-			$this->data{$i} = chr((ord($this->data{$i}) & 0xf0) | ($data & 0x0f));
-		}else{
-			$this->data{$i} = chr((($data & 0x0f) << 4) | (ord($this->data{$i}) & 0x0f));
-		}
+		$this->data[self::getIndex($x, $y, $z)] = $data;
 		return true;
 	}
 
 	public function getFullBlock(int $x, int $y, int $z) : int{
-		$i = ($x << 8) | ($z << 4) | $y;
-		if(($y & 1) === 0){
-			return (ord($this->ids{$i}) << 4) | (ord($this->data{$i >> 1}) & 0x0f);
-		}else{
-			return (ord($this->ids{$i}) << 4) | (ord($this->data{$i >> 1}) >> 4);
-		}
+		$i = self::getIndex($x, $y, $z);
+		return ($this->ids[$i] << 4) | $this->data[$i];
 	}
 
 	public function setBlock(int $x, int $y, int $z, ?int $id = null, ?int $data = null) : bool{
-		$i = ($x << 8) | ($z << 4) | $y;
+		$i = self::getIndex($x, $y, $z);
 		$changed = false;
 		if($id !== null){
-			$block = chr($id);
-			if($this->ids{$i} !== $block){
-				$this->ids{$i} = $block;
+			if($this->ids[$i] !== $id){
+				$this->ids[$i] = $id;
 				$changed = true;
 			}
 		}
 
 		if($data !== null){
-			$i >>= 1;
-			$byte = ord($this->data{$i});
-			if(($y & 1) === 0){
-				$this->data{$i} = chr(($byte & 0xf0) | ($data & 0x0f));
-			}else{
-				$this->data{$i} = chr((($data & 0x0f) << 4) | ($byte & 0x0f));
-			}
-			if($this->data{$i} !== $byte){
+			if($this->data[$i] !== $data){
+				$this->data[$i] = $data;
 				$changed = true;
 			}
 		}
@@ -121,113 +121,113 @@ class SubChunk implements SubChunkInterface{
 	}
 
 	public function getBlockLight(int $x, int $y, int $z) : int{
-		$byte = ord($this->blockLight{($x << 7) + ($z << 3) + ($y >> 1)});
-		if(($y & 1) === 0){
-			return $byte & 0x0f;
-		}else{
-			return $byte >> 4;
-		}
+		return $this->blockLight[self::getIndex($x, $y, $z)];
 	}
 
 	public function setBlockLight(int $x, int $y, int $z, int $level) : bool{
-		$i = ($x << 7) + ($z << 3) + ($y >> 1);
-		$byte = ord($this->blockLight{$i});
-		if(($y & 1) === 0){
-			$this->blockLight{$i} = chr(($byte & 0xf0) | ($level & 0x0f));
-		}else{
-			$this->blockLight{$i} = chr((($level & 0x0f) << 4) | ($byte & 0x0f));
-		}
+		$this->blockLight[self::getIndex($x, $y, $z)] = $level;
 		return true;
 	}
 
 	public function getBlockSkyLight(int $x, int $y, int $z) : int{
-		$byte = ord($this->skyLight{($x << 7) + ($z << 3) + ($y >> 1)});
-		if(($y & 1) === 0){
-			return $byte & 0x0f;
-		}else{
-			return $byte >> 4;
-		}
+		return $this->skyLight[self::getIndex($x, $y, $z)];
 	}
 
 	public function setBlockSkyLight(int $x, int $y, int $z, int $level) : bool{
-		$i = ($x << 7) + ($z << 3) + ($y >> 1);
-		$byte = ord($this->skyLight{$i});
-		if(($y & 1) === 0){
-			$this->skyLight{$i} = chr(($byte & 0xf0) | ($level & 0x0f));
-		}else{
-			$this->skyLight{$i} = chr((($level & 0x0f) << 4) | ($byte & 0x0f));
-		}
+		$this->skyLight[self::getIndex($x, $y, $z)] = $level;
 		return true;
 	}
 
 	public function getHighestBlockAt(int $x, int $z) : int{
-		$low = ($x << 8) | ($z << 4);
-		$i = $low | 0x0f;
-		for(; $i >= $low; --$i){
-			if($this->ids{$i} !== "\x00"){
-				return $i & 0x0f;
+		for($y = 15; $y >= 0; $y--){
+			if(($id = $this->getBlockId($x, $y, $z)) !== 0){
+				return $y;
 			}
 		}
 
 		return -1; //highest block not in this subchunk
 	}
 
-	public function getBlockIdColumn(int $x, int $z) : string{
-		return substr($this->ids, ($x << 8) | ($z << 4), 16);
+	public function getBlockIdColumn(int $x, int $z) : array{
+		$column = [];
+		for($y = 0; $y < 16; $y++){
+			$column[self::getIndex($x, $y, $z)] = $this->getBlockId($x, $y, $z);
+		}
+		return $column;
 	}
 
-	public function getBlockDataColumn(int $x, int $z) : string{
-		return substr($this->data, ($x << 7) | ($z << 3), 8);
+	public function getBlockDataColumn(int $x, int $z) : array{
+		$column = [];
+		for($y = 0; $y < 16; $y++){
+			$column[self::getIndex($x, $y, $z)] = $this->getBlockData($x, $y, $z);
+		}
+		return $column;
 	}
 
-	public function getBlockLightColumn(int $x, int $z) : string{
-		return substr($this->blockLight, ($x << 7) | ($z << 3), 8);
+	public function getBlockLightColumn(int $x, int $z) : array{
+		$column = [];
+		for($y = 0; $y < 16; $y++){
+			$column[self::getIndex($x, $y, $z)] = $this->getBlockLight($x, $y, $z);
+		}
+		return $column;
 	}
 
-	public function getBlockSkyLightColumn(int $x, int $z) : string{
-		return substr($this->skyLight, ($x << 7) | ($z << 3), 8);
+	public function getBlockSkyLightColumn(int $x, int $z) : array{
+		$column = [];
+		for($y = 0; $y < 16; $y++){
+			$column[self::getIndex($x, $y, $z)] = $this->getBlockSkyLight($x, $y, $z);
+		}
+		return $column;
 	}
 
-	public function getBlockIdArray() : string{
-		assert(strlen($this->ids) === 4096, "Wrong length of ID array, expecting 4096 bytes, got " . strlen($this->ids));
+	public function getBlockIdArray() : array{
+		assert(count($this->ids) === 4096, "Wrong length of ID array, expecting 4096 bytes, got " . strlen($this->ids));
 		return $this->ids;
 	}
 
-	public function getBlockDataArray() : string{
-		assert(strlen($this->data) === 2048, "Wrong length of data array, expecting 2048 bytes, got " . strlen($this->data));
+	public function getBlockDataArray() : array{
+		assert(count($this->data) === 4096, "Wrong length of data array, expecting 2048 bytes, got " . strlen($this->data));
 		return $this->data;
 	}
 
-	public function getBlockSkyLightArray() : string{
-		assert(strlen($this->skyLight) === 2048, "Wrong length of skylight array, expecting 2048 bytes, got " . strlen($this->skyLight));
+	public function getBlockSkyLightArray() : array{
+		assert(count($this->skyLight) === 4096, "Wrong length of skylight array, expecting 2048 bytes, got " . strlen($this->skyLight));
 		return $this->skyLight;
 	}
 
-	public function setBlockSkyLightArray(string $data){
-		assert(strlen($data) === 2048, "Wrong length of skylight array, expecting 2048 bytes, got " . strlen($data));
+	public function setBlockSkyLightArray(array $data){
+		assert(count($data) === 4096, "Wrong length of skylight array, expecting 2048 bytes, got " . strlen($data));
 		$this->skyLight = $data;
 	}
 
-	public function getBlockLightArray() : string{
-		assert(strlen($this->blockLight) === 2048, "Wrong length of light array, expecting 2048 bytes, got " . strlen($this->blockLight));
+	public function getBlockLightArray() : array{
+		assert(count($this->blockLight) === 4096, "Wrong length of light array, expecting 2048 bytes, got " . strlen($this->blockLight));
 		return $this->blockLight;
 	}
 
-	public function setBlockLightArray(string $data){
-		assert(strlen($data) === 2048, "Wrong length of light array, expecting 2048 bytes, got " . strlen($data));
+	public function setBlockLightArray(array $data){
+		assert(count($data) === 4096, "Wrong length of light array, expecting 2048 bytes, got " . strlen($data));
 		$this->blockLight = $data;
 	}
 
 	public function networkSerialize() : string{
-		return "\x00" . $this->ids . $this->data;
+		return chr(Chunk::CURRENT_SUB_CHUNK_VERSION) . $data;
 	}
 
 	public function fastSerialize() : string{
+		$ids = "";
+		$data = "";
+		$skyLight = "";
+		$blockLight = "";
+
+		for($i = 0; $i < 4096; $i++){
+			$ids .= Binary::writeVarInt($)
+		}
 		return
-			$this->ids .
-			$this->data .
-			$this->skyLight .
-			$this->blockLight;
+			$ids .
+			$data .
+			$skyLight .
+			$blockLight;
 	}
 
 	public static function fastDeserialize(string $data) : SubChunk{
