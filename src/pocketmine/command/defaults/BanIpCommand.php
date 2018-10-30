@@ -26,6 +26,7 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\event\server\AddressBanEvent;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\network\mcpe\protocol\types\CommandParameter;
 use pocketmine\Player;
@@ -84,7 +85,8 @@ class BanIpCommand extends VanillaCommand{
 				$player->kick($reason !== "" ? $reason : "IP banned.");
 			}
 		}
-
+        $event = new AddressBanEvent($ip, $reason);
+        $event->call();
 		$sender->getServer()->getNetwork()->blockAddress($ip, -1);
 	}
 }
