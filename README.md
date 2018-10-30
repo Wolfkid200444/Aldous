@@ -15,6 +15,8 @@ A server software for Minecraft: Bedrock/W10 Edition. Altay is a fork of [pmmp](
 
 Because Altay has more features and improvements than PocketMine-MP
 
+- Working GameRules
+- Auto Mob Spawning
 - Map Items (API only)
 - Fishing
 - Leashing Mobs
