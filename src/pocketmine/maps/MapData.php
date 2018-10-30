@@ -265,14 +265,14 @@ class MapData{
 		$pk->mapId = $this->mapId;
 		$pk->dimensionId = $this->dimension;
 		$pk->scale = $this->scale;
-		$pk->width = 128 * (1 << $this->scale);
-		$pk->height = 128 * (1 << $this->scale);
+		$pk->width = 128;
+		$pk->height = 128;
 		$pk->colors = $this->colors;
 		$pk->decorations = $this->decorations;
-		$pk->trackedEntities = $this->trackedObjects;
+		//$pk->trackedEntities = $this->trackedObjects;
 		/*$pk->xOffset = max($info->minX, $info->maxX);
 		$pk->yOffset = max($info->minY, $info->maxY);*/
-		$pk->eids = [$info->player->getId()];
+		//$pk->eids = [$info->player->getId()];
 
 		return $pk;
 	}
@@ -418,7 +418,7 @@ class MapData{
 		$deco->rot = $b2;
 		$deco->xOffset = $b0;
 		$deco->yOffset = $b1;
-		$deco->color = new Color(0, 0, 0);
+		$deco->color = new Color(255, 255, 255);
 		$deco->label = $entityIdentifier;
 
 		$this->decorations[$entityIdentifier] = $deco;

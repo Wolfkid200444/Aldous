@@ -33,19 +33,22 @@ use pocketmine\block\Stone;
 use pocketmine\block\StoneSlab;
 use pocketmine\maps\MapData;
 use pocketmine\maps\MapManager;
+use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\ByteTag;
+use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\LongTag;
+use pocketmine\nbt\tag\IntTag;
 use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\utils\Color;
 
 class Map extends Item{
 
-	public const TAG_MAP_UUID = "map_uuid";
-	public const TAG_ZOOM = "zoom";
-
-	public const TAG_IS_IMAGE = "is_image"; // this for plugins to edit map texture
+	public const TAG_MAP_UUID = "map_uuid"; // TAG_Long
+	public const TAG_MAP_DISPLAY_PLAYERS = "map_display_players"; // TAG_Byte
+	public const TAG_MAP_NAME_INDEX = "map_name_index"; // TAG_Int
+	public const TAG_MAP_IS_INIT = "map_is_init"; // TAG_Byte
 
 	public function __construct(int $meta = 0){
 		parent::__construct(self::FILLED_MAP, $meta, "Map");
@@ -70,9 +73,8 @@ class Map extends Item{
 					$player->sendDataPacket($pk);
 				}
 			}
-			if(!$this->isImage()){
-				$this->updateMapData($player, $data);
-			}
+
+			$this->updateMapData($player, $data);
 		}
 	}
 
@@ -119,13 +121,13 @@ class Map extends Item{
 								if($h > 0){
 									$block = $world->getBlock($tempVector->setComponents($k2, $h, $l2));
 									while($h > 0 and $block instanceof Air){
-										$block = $block->getSide(Vector3::SIDE_DOWN);
+										$block = $block->getSide(Facing::DOWN);
 										$h--;
 									}
 
 									if($block instanceof Liquid){
-										while($block->getSide(Vector3::SIDE_DOWN) instanceof Liquid and $h > 0){
-											$block = $block->getSide(Vector3::SIDE_DOWN);
+										while($block->getSide(Facing::DOWN) instanceof Liquid and $h > 0){
+											$block = $block->getSide(Facing::DOWN);
 											$h--;
 										}
 									}
@@ -181,6 +183,9 @@ class Map extends Item{
 
 	public function onCreateMap(Player $player, int $scale) : void{
 		$this->setMapId($id = MapManager::getNextId());
+		$this->setMapInit(true);
+		$this->setMapNameIndex($id + 1);
+		$this->setMapDisplayPlayers(true);
 
 		$data = new MapData($id);
 		$data->setScale($scale);
@@ -204,54 +209,41 @@ class Map extends Item{
 		return 1;
 	}
 
-	/**
-	 * @param int $zoom
-	 */
-	public function setZoom(int $zoom) : void{
-		if($zoom > 4){
-			$zoom = 4;
-		}
-		$this->setNamedTagEntry(new ByteTag(self::TAG_ZOOM, $zoom));
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getZoom() : int{
-		return $this->getNamedTag()->getByte(self::TAG_ZOOM, 0);
-	}
-
-	/**
-	 * @param int $mapId
-	 */
 	public function setMapId(int $mapId) : void{
-		$this->setNamedTagEntry(new LongTag(self::TAG_MAP_UUID, $mapId));
+		$this->getNamedTag()->setLong(self::TAG_MAP_UUID, $mapId);
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getMapId() : int{
 		return $this->getNamedTag()->getLong(self::TAG_MAP_UUID, 0, true);
 	}
 
-	/**
-	 * @param bool $value
-	 */
-	public function setIsImage(bool $value) : void{
-		$this->setNamedTagEntry(new ByteTag(self::TAG_IS_IMAGE, intval($value)));
+	public function setMapNameIndex(int $nameIndex) : void{
+		$this->getNamedTag()->setInt(self::TAG_MAP_NAME_INDEX, $nameIndex);
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function isImage() : bool{
-		return boolval($this->getNamedTag()->getByte(self::TAG_IS_IMAGE, 0));
+	public function getMapNameIndex() : int{
+		return $this->getNamedTag()->getInt(self::TAG_MAP_NAME_INDEX, 0, true);
+	}
+
+	public function setMapDisplayPlayers(bool $value) : void{
+		$this->getNamedTag()->setByte(self::TAG_MAP_DISPLAY_PLAYERS, intval($value));
+	}
+
+	public function isMapDisplayPlayers() : bool{
+		return boolval($this->getNamedTag()->getByte(self::TAG_MAP_DISPLAY_PLAYERS, 0, true));
+	}
+
+	public function setMapInit(bool $value) : void{
+		$this->getNamedTag()->setByte(self::TAG_MAP_IS_INIT, intval($value));
+	}
+
+	public function isMapInit() : bool{
+		return boolval($this->getNamedTag()->getByte(self::TAG_MAP_IS_INIT, 0, true));
 	}
 
 
 	/**
-	 * TODO): Separate map colors to blocks
+	 * TODO: Separate map colors to blocks
 	 *
 	 * @param Block $block
 	 *
@@ -260,7 +252,9 @@ class Map extends Item{
 	public static function getMapColorByBlock(Block $block) : Color{
 		$meta = $block->getDamage();
 		$id = $block->getId();
-		switch($id){
+		return new Color(127, 178, 56);
+		// TODO
+		/*switch($id){
 			case ($id === Block::AIR):
 				return new Color(0, 0, 0);
 			case ($id === Block::GRASS):
@@ -553,7 +547,7 @@ class Map extends Item{
 				return new Color(112, 2, 0);
 			default:
 				return new Color(0, 0, 0, 0);
-		}
+		}*/
 	}
 
 	/**
