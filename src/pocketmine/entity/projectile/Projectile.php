@@ -75,7 +75,6 @@ abstract class Projectile extends Entity{
 
 		$this->setMaxHealth(1);
 		$this->setHealth(1);
-		$this->age = $nbt->getShort("Age", $this->age);
 		$this->damage = $nbt->getDouble("damage", $this->damage);
 
 		do{
@@ -145,7 +144,6 @@ abstract class Projectile extends Entity{
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
 
-		$nbt->setShort("Age", $this->age);
 		$nbt->setDouble("damage", $this->damage);
 
 		if($this->blockHit !== null){
@@ -246,7 +244,7 @@ abstract class Projectile extends Entity{
 			}
 
 			if($ev !== null){
-				$this->server->getPluginManager()->callEvent($ev);
+				$ev->call();
 				$this->onHit($ev);
 
 				if($ev instanceof ProjectileHitEntityEvent){
@@ -320,7 +318,7 @@ abstract class Projectile extends Entity{
 
 			if($this->fireTicks > 0){
 				$ev = new EntityCombustByEntityEvent($this, $entityHit, 5);
-				$this->server->getPluginManager()->callEvent($ev);
+				$ev->call();
 				if(!$ev->isCancelled()){
 					$entityHit->setOnFire($ev->getDuration());
 				}

@@ -36,6 +36,7 @@ use pocketmine\command\defaults\EffectCommand;
 use pocketmine\command\defaults\EnchantCommand;
 use pocketmine\command\defaults\ExtractPluginCommand;
 use pocketmine\command\defaults\GamemodeCommand;
+use pocketmine\command\defaults\GameRuleCommand;
 use pocketmine\command\defaults\GarbageCollectorCommand;
 use pocketmine\command\defaults\GiveCommand;
 use pocketmine\command\defaults\HelpCommand;
@@ -139,7 +140,8 @@ class SimpleCommandMap implements CommandMap{
 			new VersionCommand("version"),
 			new WhitelistCommand("whitelist"),
 			new WorldCommand("world"),
-			new XpCommand("xp")
+			new XpCommand("xp"),
+			new GameRuleCommand("gamerule")
 		]);
 
 		if($this->server->getAltayProperty("developer.commands", true)){
@@ -218,9 +220,9 @@ class SimpleCommandMap implements CommandMap{
 
 	/**
 	 * @param Command $command
-	 * @param bool $isAlias
-	 * @param string $fallbackPrefix
-	 * @param string $label
+	 * @param bool    $isAlias
+	 * @param string  $fallbackPrefix
+	 * @param string  $label
 	 *
 	 * @return bool
 	 */
@@ -328,9 +330,9 @@ class SimpleCommandMap implements CommandMap{
 			}
 
 			$targets = [];
+			$bad = [];
+			$recursive = [];
 
-			$bad = "";
-			$recursive = "";
 			foreach($commandStrings as $commandString){
 				$args = explode(" ", $commandString);
 				$commandName = "";
@@ -338,27 +340,21 @@ class SimpleCommandMap implements CommandMap{
 
 
 				if($command === null){
-					if(strlen($bad) > 0){
-						$bad .= ", ";
-					}
-					$bad .= $commandString;
+					$bad[] = $commandString;
 				}elseif($commandName === $alias){
-					if($recursive !== ""){
-						$recursive .= ", ";
-					}
-					$recursive .= $commandString;
+					$recursive[] = $commandString;
 				}else{
 					$targets[] = $commandString;
 				}
 			}
 
-			if($recursive !== ""){
-				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.recursive", [$alias, $recursive]));
+			if(!empty($recursive)){
+				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.recursive", [$alias, implode(", ", $recursive)]));
 				continue;
 			}
 
-			if(strlen($bad) > 0){
-				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.notFound", [$alias, $bad]));
+			if(!empty($bad)){
+				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.notFound", [$alias, implode(", ", $bad)]));
 				continue;
 			}
 

@@ -95,11 +95,15 @@ class Zombie extends Monster implements Ageable{
 	}
 
 	public function entityBaseTick(int $diff = 1) : bool{
-		if(!$this->isOnFire() and $this->level->isDayTime() and $this->aiEnabled){
+		if(!$this->isOnFire() and $this->level->isDayTime() and !$this->isImmobile()){
 			if(!$this->isUnderwater() and $this->level->canSeeSky($this)){
 				$this->setOnFire(5);
 			}
 		}
 		return parent::entityBaseTick($diff);
+	}
+
+	public function getLivingSound() : ?string{
+		return "mob.zombie.say";
 	}
 }

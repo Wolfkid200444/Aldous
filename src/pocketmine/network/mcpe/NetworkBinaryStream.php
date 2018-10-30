@@ -31,12 +31,16 @@ use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\math\Vector3;
+use pocketmine\nbt\LittleEndianNBTStream;
 use pocketmine\network\mcpe\protocol\types\CommandOriginData;
 use pocketmine\network\mcpe\protocol\types\EntityLink;
+use pocketmine\level\GameRules;
 use pocketmine\utils\BinaryStream;
 use pocketmine\utils\UUID;
 
 class NetworkBinaryStream extends BinaryStream{
+	/** @var LittleEndianNBTStream */
+	private static $itemNbtSerializer = null;
 
 	public function getString() : string{
 		return $this->get($this->getUnsignedVarInt());
@@ -78,10 +82,12 @@ class NetworkBinaryStream extends BinaryStream{
 		$cnt = $auxValue & 0xff;
 
 		$nbtLen = $this->getLShort();
-		$nbt = "";
-
+		$compound = null;
 		if($nbtLen > 0){
-			$nbt = $this->get($nbtLen);
+			if(self::$itemNbtSerializer === null){
+				self::$itemNbtSerializer = new LittleEndianNBTStream();
+			}
+			$compound = self::$itemNbtSerializer->read($this->get($nbtLen));
 		}
 
 		//TODO
@@ -94,7 +100,7 @@ class NetworkBinaryStream extends BinaryStream{
 			$this->getString();
 		}
 
-		return ItemFactory::get($id, $data, $cnt, $nbt);
+		return ItemFactory::get($id, $data, $cnt, $compound);
 	}
 
 
@@ -109,8 +115,20 @@ class NetworkBinaryStream extends BinaryStream{
 		$auxValue = (($item->getDamage() & 0x7fff) << 8) | $item->getCount();
 		$this->putVarInt($auxValue);
 
-		$nbt = $item->getCompoundTag();
-		$this->putLShort(strlen($nbt));
+		$nbt = "";
+		$nbtLen = 0;
+		if($item->hasNamedTag()){
+			if(self::$itemNbtSerializer === null){
+				self::$itemNbtSerializer = new LittleEndianNBTStream();
+			}
+			$nbt = self::$itemNbtSerializer->write($item->getNamedTag());
+			$nbtLen = strlen($nbt);
+			if($nbtLen > 32767){
+				throw new \InvalidArgumentException("NBT encoded length must be < 32768, got $nbtLen bytes");
+			}
+		}
+
+		$this->putLShort($nbtLen);
 		$this->put($nbt);
 
 		$this->putVarInt(0); //CanPlaceOn entry count (TODO)
@@ -237,9 +255,9 @@ class NetworkBinaryStream extends BinaryStream{
 			$max = $this->getLFloat();
 			$current = $this->getLFloat();
 			$default = $this->getLFloat();
-			$name = $this->getString();
+			$id = $this->getString();
 
-			$attr = Attribute::getAttributeByName($name);
+			$attr = Attribute::getAttribute($id);
 			if($attr !== null){
 				$attr->setMinValue($min);
 				$attr->setMaxValue($max);
@@ -248,7 +266,7 @@ class NetworkBinaryStream extends BinaryStream{
 
 				$list[] = $attr;
 			}else{
-				throw new \UnexpectedValueException("Unknown attribute type \"$name\"");
+				throw new \UnexpectedValueException("Unknown attribute type \"$id\"");
 			}
 		}
 
@@ -267,7 +285,7 @@ class NetworkBinaryStream extends BinaryStream{
 			$this->putLFloat($attribute->getMaxValue());
 			$this->putLFloat($attribute->getValue());
 			$this->putLFloat($attribute->getDefaultValue());
-			$this->putString($attribute->getName());
+			$this->putString($attribute->getId());
 		}
 	}
 
@@ -423,13 +441,13 @@ class NetworkBinaryStream extends BinaryStream{
 			$type = $this->getUnsignedVarInt();
 			$value = null;
 			switch($type){
-				case 1:
+				case GameRules::RULE_TYPE_BOOL:
 					$value = $this->getBool();
 					break;
-				case 2:
+				case GameRules::RULE_TYPE_INT:
 					$value = $this->getUnsignedVarInt();
 					break;
-				case 3:
+				case GameRules::RULE_TYPE_FLOAT:
 					$value = $this->getLFloat();
 					break;
 			}
@@ -452,13 +470,13 @@ class NetworkBinaryStream extends BinaryStream{
 			$this->putString($name);
 			$this->putUnsignedVarInt($rule[0]);
 			switch($rule[0]){
-				case 1:
+				case GameRules::RULE_TYPE_BOOL:
 					$this->putBool($rule[1]);
 					break;
-				case 2:
+				case GameRules::RULE_TYPE_INT:
 					$this->putUnsignedVarInt($rule[1]);
 					break;
-				case 3:
+				case GameRules::RULE_TYPE_FLOAT:
 					$this->putLFloat($rule[1]);
 					break;
 			}

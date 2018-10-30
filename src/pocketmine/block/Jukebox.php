@@ -33,10 +33,21 @@ use pocketmine\tile\Tile;
 
 class Jukebox extends Solid{
 
-	protected $id = self::JUKEBOX;
+	public const NO_DISC_INSERTED = 0;
+	public const CONTAINS_A_DISC = 1;
 
-	public function __construct(int $meta = 0){
-		$this->meta = $meta;
+	protected $has_record = false;
+
+	public function readStateFromMeta(int $meta) : void{
+		$this->has_record = intval($meta);
+	}
+
+	public function writeStateToMeta() : int{
+		return intval($this->has_record);
+	}
+
+	public function getStateBitmask() : int{
+		return 2;
 	}
 
 	public function getName() : string{
@@ -52,12 +63,13 @@ class Jukebox extends Solid{
 	}
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
-		$place = parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player);
-		if($place){
+		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
 			Tile::createTile(Tile::JUKEBOX, $this->getLevel(), TileJukebox::createNBT($this, $face, $item, $player));
+
+			return true;
 		}
 
-		return $place;
+		return false;
 	}
 
 	public function onActivate(Item $item, Player $player = null) : bool{
@@ -66,12 +78,16 @@ class Jukebox extends Solid{
 
 			if($jb->getRecordItem() == null){
 				if($item instanceof Record){
+					$this->has_record = true;
+
 					$jb->setRecordItem($item);
 					$jb->playDisc($player);
 					$player->getInventory()->removeItem($item);
 				}
 			}else{
 				$jb->dropDisc();
+
+				$this->has_record = false;
 			}
 		}
 

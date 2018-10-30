@@ -41,6 +41,7 @@ use pocketmine\item\FoodSource;
 use pocketmine\item\Totem;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\NBT;
 use pocketmine\nbt\tag\ByteArrayTag;
 use pocketmine\nbt\tag\CompoundTag;
@@ -72,8 +73,6 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	/** @var EnderChestInventory */
 	protected $enderChestInventory;
 
-	/** @var UUID */
-	protected $uuid;
 	protected $rawUUID;
 
 	public $width = 0.6;
@@ -112,13 +111,6 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	public static function isValidSkin(string $skin) : bool{
 		$len = strlen($skin);
 		return $len === 64 * 64 * 4 or $len === 64 * 32 * 4 or $len === 128 * 128 * 4;
-	}
-
-	/**
-	 * @return UUID|null
-	 */
-	public function getUniqueId() : ?UUID{
-		return $this->uuid;
 	}
 
 	/**
@@ -272,7 +264,8 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	 * @return float the amount of exhaustion level increased
 	 */
 	public function exhaust(float $amount, int $cause = PlayerExhaustEvent::CAUSE_CUSTOM) : float{
-		$this->server->getPluginManager()->callEvent($ev = new PlayerExhaustEvent($this, $amount, $cause));
+		$ev = new PlayerExhaustEvent($this, $amount, $cause);
+		$ev->call();
 		if($ev->isCancelled()){
 			return 0.0;
 		}
@@ -469,7 +462,7 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	protected function setXpAndProgress(?int $level, ?float $progress) : bool{
 		if(!$this->justCreated){
 			$ev = new PlayerExperienceChangeEvent($this, $this->getXpLevel(), $this->getXpProgress(), $level, $progress);
-			$this->server->getPluginManager()->callEvent($ev);
+			$ev->call();
 
 			if($ev->isCancelled()){
 				return false;
@@ -594,8 +587,6 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 			$this->setSkin(new Skin($skin->getString("Name"), $skin->hasTag("Data", StringTag::class) ? $skin->getString("Data") : $skin->getByteArray("Data"), //old data (this used to be saved as a StringTag in older versions of PM)
 				$skin->hasTag("CapeData", ByteArrayTag::class) ? $skin->getByteArray("CapeData", "") : $skin->getString("CapeData", ""), $skin->getString("GeometryName", ""), $skin->hasTag("GeometryData", ByteArrayTag::class) ? $skin->getByteArray("GeometryData", "") : $skin->getString("GeometryData", "")));
 		}
-
-		$this->uuid = UUID::fromData((string) $this->getId(), $this->skin->getSkinData(), $this->getNameTag());
 	}
 
 	protected function initEntity(CompoundTag $nbt) : void{
@@ -765,9 +756,9 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
 
-		$nbt->setInt("foodLevel", (int) $this->getFood(), true);
-		$nbt->setFloat("foodExhaustionLevel", $this->getExhaustion(), true);
-		$nbt->setFloat("foodSaturationLevel", $this->getSaturation(), true);
+		$nbt->setInt("foodLevel", (int) $this->getFood());
+		$nbt->setFloat("foodExhaustionLevel", $this->getExhaustion());
+		$nbt->setFloat("foodSaturationLevel", $this->getSaturation());
 		$nbt->setInt("foodTickTimer", $this->foodTickTimer);
 
 		$nbt->setInt("XpLevel", $this->getXpLevel());
@@ -841,7 +832,7 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 			/* we don't use Server->updatePlayerListData() because that uses batches, which could cause race conditions in async compression mode */
 			$pk = new PlayerListPacket();
 			$pk->type = PlayerListPacket::TYPE_ADD;
-			$pk->entries = [PlayerListEntry::createAdditionEntry($this->uuid, $this->id, $this->getName(), $this->getName(), 0, $this->skin)];
+			$pk->entries = [PlayerListEntry::createAdditionEntry($this->uuid, $this->id, $this->getName(), $this->skin)];
 			$player->sendDataPacket($pk);
 		}
 
@@ -912,10 +903,19 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 
 	/**
 	 * @param Entity $entity
+	 *
+	 * @return bool
 	 */
-	public function onCollideWithEntity(Entity $entity) : void{
-		if(!($entity instanceof Player)){
-			parent::onCollideWithEntity($entity);
-		}
+	public function canCollideWith(Entity $entity) : bool{
+		return !($entity instanceof Human);
+	}
+
+	/**
+	 * @param int $seatNumber
+	 *
+	 * @return Vector3
+	 */
+	public function getRiderSeatPosition(int $seatNumber = 0) : Vector3{
+		return new Vector3(-0.4, -0.15, 0.04);
 	}
 }

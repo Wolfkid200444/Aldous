@@ -29,16 +29,32 @@ use pocketmine\entity\Living;
 use pocketmine\event\block\BlockFormEvent;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
+use pocketmine\level\GameRules;
 use pocketmine\math\AxisAlignedBB;
-use pocketmine\math\Vector3;
+use pocketmine\math\Facing;
 use pocketmine\Server;
 
 class Farmland extends Transparent{
 
 	protected $id = self::FARMLAND;
 
-	public function __construct(int $meta = 0){
-		$this->meta = $meta;
+	/** @var int */
+	protected $wetness = 0; //"moisture" blockstate property in PC
+
+	public function __construct(){
+
+	}
+
+	protected function writeStateToMeta() : int{
+		return $this->wetness;
+	}
+
+	public function readStateFromMeta(int $meta) : void{
+		$this->wetness = $meta;
+	}
+
+	public function getStateBitmask() : int{
+		return 0b111;
 	}
 
 	public function getName() : string{
@@ -58,8 +74,8 @@ class Farmland extends Transparent{
 	}
 
 	public function onNearbyBlockChange() : void{
-		if($this->getSide(Vector3::SIDE_UP)->isSolid()){
-			$this->level->setBlock($this, BlockFactory::get(Block::DIRT), true);
+		if($this->getSide(Facing::UP)->isSolid()){
+			$this->level->setBlock($this, BlockFactory::get(Block::DIRT));
 		}
 	}
 
@@ -69,15 +85,15 @@ class Farmland extends Transparent{
 
 	public function onRandomTick() : void{
 		if(!$this->canHydrate()){
-			if($this->meta > 0){
-				$this->meta--;
-				$this->level->setBlock($this, $this, false, false);
+			if($this->wetness > 0){
+				$this->wetness--;
+				$this->level->setBlock($this, $this, false);
 			}else{
-				$this->level->setBlock($this, BlockFactory::get(Block::DIRT), false, true);
+				$this->level->setBlock($this, BlockFactory::get(Block::DIRT));
 			}
-		}elseif($this->meta < 7){
-			$this->meta = 7;
-			$this->level->setBlock($this, $this, false, false);
+		}elseif($this->wetness < 7){
+			$this->wetness = 7;
+			$this->level->setBlock($this, $this, false);
 		}
 	}
 
@@ -112,12 +128,21 @@ class Farmland extends Transparent{
 	public function onEntityFallenUpon(Entity $entity, float $fallDistance) : void{
 		if($entity instanceof Living){
 			if($this->level->random->nextFloat() < ($fallDistance - 0.5)){
-                Server::getInstance()->getPluginManager()->callEvent($ev = new BlockFormEvent($this, BlockFactory::get(Block::DIRT)));
-                //TODO: check game rule
-                if(!$ev->isCancelled()){
-                    $this->level->setBlock($this, $ev->getNewState(), true);
-                }
+				$ev = new BlockFormEvent($this, BlockFactory::get(Block::DIRT));
+
+				if(!$this->level->getGameRules()->getBool(GameRules::RULE_MOB_GRIEFING, true)){
+					$ev->setCancelled();
+				}
+				$ev->call();
+
+				if(!$ev->isCancelled()){
+					$this->level->setBlock($this, $ev->getNewState(), true);
+				}
 			}
 		}
+	}
+
+	public function getPickedItem() : Item{
+		return ItemFactory::get(Item::DIRT);
 	}
 }

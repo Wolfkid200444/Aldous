@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\handler;
 
 use pocketmine\inventory\transaction\action\InventoryAction;
+use pocketmine\inventory\transaction\AnvilTransaction;
 use pocketmine\inventory\transaction\CraftingTransaction;
 use pocketmine\inventory\transaction\TransactionValidationException;
 use pocketmine\inventory\transaction\InventoryTransaction;
@@ -295,7 +296,8 @@ class SimpleSessionHandler extends SessionHandler{
 				$this->player->continueBreakBlock($pos, $packet->face);
 				break;
 			case PlayerActionPacket::ACTION_SET_ENCHANTMENT_SEED:
-				break; // TODO
+				// TODO
+				break;
 			case PlayerActionPacket::ACTION_START_SWIMMING:
 				if(!$this->player->isSwimming()){
 					$this->player->toggleSwim(true);
@@ -419,7 +421,37 @@ class SimpleSessionHandler extends SessionHandler{
 	}
 
 	public function handleModalFormResponse(ModalFormResponsePacket $packet) : bool{
-		return $this->player->onFormSubmit($packet->formId, json_decode($packet->formData, true));
+		return $this->player->onFormSubmit($packet->formId, self::stupid_json_decode($packet->formData, true));
+	}
+
+	/**
+	 * Hack to work around a stupid bug in Minecraft W10 which causes empty strings to be sent unquoted in form responses.
+	 *
+	 * @param string $json
+	 * @param bool   $assoc
+	 *
+	 * @return mixed
+	 */
+	private static function stupid_json_decode(string $json, bool $assoc = false){
+		if(preg_match('/^\[(.+)\]$/s', $json, $matches) > 0){
+			$parts = preg_split('/(?:"(?:\\"|[^"])*"|)\K(,)/', $matches[1]); //Splits on commas not inside quotes, ignoring escaped quotes
+			foreach($parts as $k => $part){
+				$part = trim($part);
+				if($part === ""){
+					$part = "\"\"";
+				}
+				$parts[$k] = $part;
+			}
+
+			$fixed = "[" . implode(",", $parts) . "]";
+			if(($ret = json_decode($fixed, $assoc)) === null){
+				throw new \InvalidArgumentException("Failed to fix JSON: " . json_last_error_msg() . "(original: $json, modified: $fixed)");
+			}
+
+			return $ret;
+		}
+
+		return json_decode($json, $assoc);
 	}
 
 	public function handleServerSettingsRequest(ServerSettingsRequestPacket $packet) : bool{

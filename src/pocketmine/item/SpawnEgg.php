@@ -30,9 +30,6 @@ use pocketmine\math\Vector3;
 use pocketmine\Player;
 
 class SpawnEgg extends Item{
-	public function __construct(int $meta = 0){
-		parent::__construct(self::SPAWN_EGG, $meta, "Spawn Egg");
-	}
 
 	public function onActivate(Player $player, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector) : bool{
 		$nbt = Entity::createBaseNBT($blockReplace->add(0.5, 0, 0.5), null, lcg_value() * 360, 0);
@@ -41,14 +38,14 @@ class SpawnEgg extends Item{
 			$nbt->setString("CustomName", $this->getCustomName());
 		}
 
-		/** @var Mob $entity */
 		$entity = Entity::createEntity($this->meta, $player->getLevel(), $nbt);
 
 		if($entity instanceof Entity){
-			--$this->count;
-			if($entity instanceof Mob) {
-                $entity->setAiEnabled($player->getServer()->mobAiEnabled);
-            }
+			$this->pop();
+			if($entity instanceof Mob){
+				$entity->setImmobile(!$player->getServer()->mobAiEnabled);
+				$entity->playLivingSound();
+			}
 			$entity->spawnToAll();
 			return true;
 		}

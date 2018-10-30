@@ -23,18 +23,16 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-class Purpur extends Quartz{
+use pocketmine\item\TieredTool;
 
-	protected $id = self::PURPUR_BLOCK;
+class Purpur extends Solid{
 
-	public function getName() : string{
-		static $names = [
-			self::NORMAL => "Purpur Block",
-			self::CHISELED => "Chiseled Purpur", //wtf?
-			self::PILLAR => "Purpur Pillar"
-		];
+	public function getToolType() : int{
+		return BlockToolType::TYPE_PICKAXE;
+	}
 
-		return $names[$this->getVariant()] ?? "Unknown";
+	public function getToolHarvestLevel() : int{
+		return TieredTool::TIER_WOODEN;
 	}
 
 	public function getHardness() : float{

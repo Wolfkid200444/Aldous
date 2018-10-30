@@ -79,8 +79,8 @@ class Wolf extends Tamable{
 		return "Wolf";
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : void{
-		if($this->aiEnabled){
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+		if(!$this->isImmobile()){
 			if($this->isTamed()){
 				if($this->getOwningEntityId() == $player->id){
 					$this->setSitting(!$this->isSitting());
@@ -103,11 +103,13 @@ class Wolf extends Tamable{
 					}else{
 						$this->broadcastEntityEvent(EntityEventPacket::TAME_FAIL);
 					}
+
+					return true;
 				}
 			}
 		}
 
-		parent::onInteract($player, $item, $clickPos, $slot);
+		return parent::onInteract($player, $item, $clickPos, $slot);
 	}
 
 	public function setTargetEntity(?Entity $target) : void{
@@ -127,4 +129,7 @@ class Wolf extends Tamable{
 		$this->setGenericFlag(self::DATA_FLAG_ANGRY, $angry);
 	}
 
+	public function getLivingSound() : ?string{
+		return $this->isAngry() ? "mob.wolf.growl" : "mob.wolf.bark";
+	}
 }

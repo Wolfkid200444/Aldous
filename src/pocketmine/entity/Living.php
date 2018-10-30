@@ -24,11 +24,12 @@ declare(strict_types=1);
 namespace pocketmine\entity;
 
 use pocketmine\block\Block;
+use pocketmine\entity\object\LeashKnot;
 use pocketmine\entity\projectile\Projectile;
-use pocketmine\entity\projectile\ProjectileSource;
 use pocketmine\event\entity\EntityDamageByChildEntityEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityDeathEvent;
 use pocketmine\event\entity\EntityEffectAddEvent;
 use pocketmine\event\entity\EntityEffectRemoveEvent;
 use pocketmine\inventory\ArmorInventory;
@@ -37,12 +38,16 @@ use pocketmine\item\Armor;
 use pocketmine\item\Consumable;
 use pocketmine\item\Durable;
 use pocketmine\item\enchantment\Enchantment;
+use pocketmine\item\Lead;
+use pocketmine\item\Item;
+use pocketmine\item\ItemFactory;
 use pocketmine\math\Vector3;
 use pocketmine\math\VoxelRayTrace;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\FloatTag;
 use pocketmine\nbt\tag\ListTag;
+use pocketmine\nbt\tag\StringTag;
 use pocketmine\nbt\tag\IntTag;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
@@ -51,6 +56,7 @@ use pocketmine\Player;
 use pocketmine\timings\Timings;
 use pocketmine\utils\Binary;
 use pocketmine\utils\Color;
+use pocketmine\utils\UUID;
 
 abstract class Living extends Entity implements Damageable{
 
@@ -75,6 +81,15 @@ abstract class Living extends Entity implements Damageable{
 	/** @var Entity|null */
 	protected $lastAttacker = null;
 
+	/** @var bool */
+	protected $leashed = false;
+
+	/** @var CompoundTag */
+	protected $leashNbt;
+
+	/** @var Entity|null */
+	protected $leashedToEntity;
+
 	abstract public function getName() : string;
 
 	/**
@@ -89,6 +104,34 @@ abstract class Living extends Entity implements Damageable{
 	 */
 	public function setLastAttacker(?Entity $lastAttacker) : void{
 		$this->lastAttacker = $lastAttacker;
+	}
+
+	/**
+	 * @return null|Entity
+	 */
+	public function getLeashedToEntity() : ?Entity{
+		return $this->leashedToEntity;
+	}
+
+	/**
+	 * @param Entity $leashedToEntity
+	 * @param bool   $send
+	 */
+	public function setLeashedToEntity(Entity $leashedToEntity, bool $send = true) : void{
+		$this->leashed = true;
+		$this->leashedToEntity = $leashedToEntity;
+
+		if($send){
+			$this->setGenericFlag(self::DATA_FLAG_LEASHED, true);
+			$this->propertyManager->setLong(self::DATA_LEAD_HOLDER_EID, $leashedToEntity->getId());
+		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isLeashed() : bool{
+		return $this->leashed;
 	}
 
 	protected function initEntity(CompoundTag $nbt) : void{
@@ -121,6 +164,14 @@ abstract class Living extends Entity implements Damageable{
 				$this->addEffect(new EffectInstance($effect, $e->getInt("Duration"), Binary::unsignByte($e->getByte("Amplifier")), $e->getByte("ShowParticles", 1) !== 0, $e->getByte("Ambient", 0) !== 0));
 			}
 		}
+
+		$this->leashed = boolval($nbt->getByte("Leashed", 0));
+
+		if($this->isLeashed() and $nbt->hasTag("Leash", CompoundTag::class)){
+			$this->leashNbt = $nbt->getCompoundTag("Leash");
+		}
+
+		$this->setGenericFlag(self::DATA_FLAG_LEASHED, $this->leashed);
 	}
 
 	protected function addAttributes() : void{
@@ -183,7 +234,7 @@ abstract class Living extends Entity implements Damageable{
 
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
-		$nbt->setFloat("Health", $this->getHealth(), true);
+		$nbt->setFloat("Health", $this->getHealth());
 
 		if(count($this->effects) > 0){
 			$effects = [];
@@ -198,6 +249,22 @@ abstract class Living extends Entity implements Damageable{
 			}
 
 			$nbt->setTag(new ListTag("ActiveEffects", $effects));
+		}
+
+		$nbt->setByte("Leashed", intval($this->leashed));
+		if($this->leashedToEntity !== null){
+			$leashNbt = new CompoundTag("Leash");
+
+			if($this->leashedToEntity instanceof Living){
+				$leashNbt->setString("UUID", $this->leashedToEntity->getUniqueId()->toString());
+			}elseif($this->leashedToEntity instanceof LeashKnot){
+				$pos = $this->leashedToEntity->getHangingPosition();
+				$leashNbt->setInt("X", $pos->x);
+				$leashNbt->setInt("Y", $pos->y);
+				$leashNbt->setInt("Z", $pos->z);
+			}
+
+			$nbt->setTag($leashNbt);
 		}
 
 		return $nbt;
@@ -235,7 +302,8 @@ abstract class Living extends Entity implements Damageable{
 		if(isset($this->effects[$effectId])){
 			$effect = $this->effects[$effectId];
 			$hasExpired = $effect->hasExpired();
-			$this->server->getPluginManager()->callEvent($ev = new EntityEffectRemoveEvent($this, $effect));
+			$ev = new EntityEffectRemoveEvent($this, $effect);
+			$ev->call();
 			if($ev->isCancelled()){
 				if($hasExpired and !$ev->getEffect()->hasExpired()){ //altered duration of an expired effect to make it not get removed
 					$this->sendEffectAdd($ev->getEffect(), true);
@@ -305,7 +373,7 @@ abstract class Living extends Entity implements Damageable{
 		$ev = new EntityEffectAddEvent($this, $effect, $oldEffect);
 		$ev->setCancelled($cancelled);
 
-		$this->server->getPluginManager()->callEvent($ev);
+		$ev->call();
 		if($ev->isCancelled()){
 			return false;
 		}
@@ -595,7 +663,7 @@ abstract class Living extends Entity implements Damageable{
 
 				$deltaX = $this->x - $e->x;
 				$deltaZ = $this->z - $e->z;
-				$this->knockBack($e, $source->getBaseDamage(), $deltaX, $deltaZ, $source->getKnockBack());
+				$this->knockBack($deltaX, $deltaZ, $source->getKnockBack());
 
 				$e->broadcastEntityEvent(EntityEventPacket::ARM_SWING);
 
@@ -619,27 +687,25 @@ abstract class Living extends Entity implements Damageable{
 		$this->broadcastEntityEvent(EntityEventPacket::HURT_ANIMATION);
 	}
 
-	public function knockBack(Entity $attacker, float $damage, float $x, float $z, float $base = 0.4) : void{
+	public function knockBack(float $x, float $z, float $base = 0.4) : void{
 		$f = sqrt($x * $x + $z * $z);
 		if($f <= 0){
 			return;
 		}
 		if(mt_rand() / mt_getrandmax() > $this->getAttributeMap()->getAttribute(Attribute::KNOCKBACK_RESISTANCE)->getValue()){
 			$f = 1 / $f;
-
 			$motion = clone $this->motion;
-
 			$motion->x /= 2;
-			$motion->y /= 2;
 			$motion->z /= 2;
 			$motion->x += $x * $f * $base;
-			$motion->y += $base;
 			$motion->z += $z * $f * $base;
-
-			if($motion->y > $base){
-				$motion->y = $base;
+			if($this->onGround){
+				$motion->y /= 2;
+				$motion->y += $base;
+				if($motion->y > 0.4){
+					$motion->y = 0.4;
+				}
 			}
-
 			$this->setMotion($motion);
 		}
 	}
@@ -647,6 +713,14 @@ abstract class Living extends Entity implements Damageable{
 	public function kill() : void{
 		parent::kill();
 		$this->startDeathAnimation();
+	}
+
+	protected function onDeath() : void{
+		$ev = new EntityDeathEvent($this, $this->getDrops());
+		$ev->call();
+		foreach($ev->getDrops() as $item){
+			$this->getLevel()->dropItem($this, $item);
+		}
 	}
 
 	protected function onDeathUpdate(int $tickDiff) : bool{
@@ -671,6 +745,14 @@ abstract class Living extends Entity implements Damageable{
 		//TODO
 	}
 
+	public function onUpdate(int $currentTick) : bool{
+		if($this->closed) return false;
+
+		$this->updateLeashedState();
+
+		return parent::onUpdate($currentTick);
+	}
+
 	public function entityBaseTick(int $tickDiff = 1) : bool{
 		Timings::$timerLivingEntityBaseTick->startTiming();
 
@@ -684,7 +766,9 @@ abstract class Living extends Entity implements Damageable{
 
 		$hasUpdate = parent::entityBaseTick($tickDiff);
 
-		$this->doEffectsTick($tickDiff);
+		if($this->doEffectsTick($tickDiff)){
+			$hasUpdate = true;
+		}
 
 		if($this->isAlive()){
 			if($this->isInsideOfSolid()){
@@ -693,12 +777,8 @@ abstract class Living extends Entity implements Damageable{
 				$this->attack($ev);
 			}
 
-			if(!$this->canBreathe()){
-				$this->setBreathing(false);
-				$this->doAirSupplyTick($tickDiff);
-			}elseif(!$this->isBreathing()){
-				$this->setBreathing(true);
-				$this->setAirSupplyTicks($this->getMaxAirSupplyTicks());
+			if($this->doAirSupplyTick($tickDiff)){
+				$hasUpdate = true;
 			}
 		}
 
@@ -711,7 +791,7 @@ abstract class Living extends Entity implements Damageable{
 		return $hasUpdate;
 	}
 
-	protected function doEffectsTick(int $tickDiff = 1) : void{
+	protected function doEffectsTick(int $tickDiff = 1) : bool{
 		foreach($this->effects as $instance){
 			$type = $instance->getType();
 			if($type->canTick($instance)){
@@ -722,24 +802,44 @@ abstract class Living extends Entity implements Damageable{
 				$this->removeEffect($instance->getId());
 			}
 		}
+
+		return !empty($this->effects);
 	}
 
 	/**
-	 * Ticks the entity's air supply when it cannot breathe.
+	 * Ticks the entity's air supply, consuming it when underwater and regenerating it when out of water.
 	 *
 	 * @param int $tickDiff
+	 *
+	 * @return bool
 	 */
-	protected function doAirSupplyTick(int $tickDiff) : void{
-		if(($respirationLevel = $this->armorInventory->getHelmet()->getEnchantmentLevel(Enchantment::RESPIRATION)) <= 0 or lcg_value() <= (1 / ($respirationLevel + 1))){
-			$ticks = $this->getAirSupplyTicks() - $tickDiff;
-
-			if($ticks <= -20){
-				$this->setAirSupplyTicks(0);
-				$this->onAirExpired();
-			}else{
-				$this->setAirSupplyTicks($ticks);
+	protected function doAirSupplyTick(int $tickDiff) : bool{
+		$ticks = $this->getAirSupplyTicks();
+		$oldTicks = $ticks;
+		if(!$this->canBreathe()){
+			$this->setBreathing(false);
+			if(($respirationLevel = $this->armorInventory->getHelmet()->getEnchantmentLevel(Enchantment::RESPIRATION)) <= 0 or lcg_value() <= (1 / ($respirationLevel + 1))){
+				$ticks -= $tickDiff;
+				if($ticks <= -20){
+					$ticks = 0;
+					$this->onAirExpired();
+				}
+			}
+		}elseif(!$this->isBreathing()){
+			if($ticks < ($max = $this->getMaxAirSupplyTicks())){
+				$ticks += $tickDiff * 5;
+			}
+			if($ticks >= $max){
+				$ticks = $max;
+				$this->setBreathing(true);
 			}
 		}
+
+		if($ticks !== $oldTicks){
+			$this->setAirSupplyTicks($ticks);
+		}
+
+		return $ticks !== $oldTicks;
 	}
 
 	/**
@@ -922,5 +1022,115 @@ abstract class Living extends Entity implements Damageable{
 			}
 			parent::close();
 		}
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function allowLeashing() : bool{
+		return false;
+	}
+
+	/**
+	 * @param bool $send
+	 * @param bool $dropLead
+	 */
+	public function clearLeashed(bool $send, bool $dropLead) : void{
+		if($this->isLeashed()){
+			$this->leashed = false;
+			$this->leashedToEntity = null;
+
+			if($dropLead){
+				$this->level->dropItem($this, ItemFactory::get(Item::LEAD));
+			}
+
+			if($send){
+				$this->setGenericFlag(self::DATA_FLAG_LEASHED, false);
+				$this->propertyManager->setLong(self::DATA_LEAD_HOLDER_EID, -1);
+
+				$this->broadcastEntityEvent(EntityEventPacket::REMOVE_LEASH);
+			}
+		}
+	}
+
+	public function recreateLeash() : void{
+		if($this->isLeashed() and $this->leashNbt !== null){
+			if($this->leashNbt->hasTag("UUID", StringTag::class)){
+				$uuid = UUID::fromString($this->leashNbt->getString("UUID"));
+
+				foreach($this->level->getCollidingEntities($this->getBoundingBox()->expandedCopy(10, 10, 10)) as $entity){
+					if($entity instanceof Living){
+						if($entity->getUniqueId()->equals($uuid)){
+							$this->setLeashedToEntity($entity);
+							break;
+						}
+					}
+				}
+			}elseif($this->leashNbt->hasTag("X", IntTag::class) and $this->leashNbt->hasTag("Y", IntTag::class) and $this->leashNbt->hasTag("Z", IntTag::class)){
+				$pos = new Vector3($this->leashNbt->getInt("X"), $this->leashNbt->getInt("Y"), $this->leashNbt->getInt("Z"));
+				$knot = LeashKnot::getKnotFromPosition($this->level, $pos);
+
+				if($knot === null){
+					$knot = new LeashKnot($this->level, Entity::createBaseNBT($pos));
+					$knot->spawnToAll();
+				}
+
+				$this->setLeashedToEntity($knot);
+			}else{
+				$this->clearLeashed(false, true);
+			}
+		}
+
+		$this->leashNbt = null;
+	}
+
+	public function updateLeashedState() : void{
+		if($this->leashNbt !== null){
+			$this->recreateLeash();
+		}
+
+		if($this->isLeashed()){
+			if(!$this->isAlive()){
+				$this->clearLeashed(true, true);
+			}
+
+			if($this->leashedToEntity === null or $this->leashedToEntity->isClosed()){
+				$this->clearLeashed(true, true);
+			}
+		}
+	}
+
+	/**
+	 * @param Player  $player
+	 * @param Item    $item
+	 * @param Vector3 $clickPos
+	 * @param int     $slot
+	 *
+	 * @return bool
+	 */
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+		if($this->isLeashed() and $this->leashedToEntity === $player){
+			$this->clearLeashed(true, !$player->isCreative());
+		}else{
+			if($item instanceof Lead and $this->allowLeashing()){
+				$this->setLeashedToEntity($player);
+				$item->pop();
+			}
+		}
+		return parent::onInteract($player, $item, $clickPos, $slot);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function canSpawnHere() : bool{
+		return true;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMaxSpawnedInChunk() : int{
+		return 4;
 	}
 }

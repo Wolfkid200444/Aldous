@@ -72,20 +72,22 @@ class Pig extends Animal{
 		return "Pig";
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : void{
-		if($this->aiEnabled){
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+		if(!$this->isImmobile()){
 			if($item instanceof Saddle){
 				if(!$this->isSaddled()){
 					$this->setSaddled(true);
 					if($player->isSurvival()){
 						$item->pop();
 					}
+					return true;
 				}
 			}elseif($this->isSaddled() and $this->riddenByEntity === null){
 				$player->mountEntity($this);
+				return true;
 			}
 		}
-		parent::onInteract($player, $item, $clickPos, $slot);
+		return parent::onInteract($player, $item, $clickPos, $slot);
 	}
 
 	public function getXpDropAmount() : int{
@@ -115,6 +117,10 @@ class Pig extends Animal{
 	}
 
 	public function getRiderSeatPosition(int $seatNumber = 0) : Vector3{
-		return new Vector3(0, 1, 0);
+		return new Vector3(0, 0.63, 0);
+	}
+
+	public function getLivingSound() : ?string{
+		return "mob.pig.say";
 	}
 }

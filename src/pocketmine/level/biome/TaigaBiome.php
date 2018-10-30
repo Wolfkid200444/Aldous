@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\level\biome;
 
-use pocketmine\block\Sapling;
+use pocketmine\block\utils\WoodType;
+use pocketmine\entity\passive\Wolf;
 use pocketmine\level\generator\populator\TallGrass;
 use pocketmine\level\generator\populator\Tree;
 
@@ -32,7 +33,7 @@ class TaigaBiome extends SnowyBiome{
 	public function __construct(){
 		parent::__construct();
 
-		$trees = new Tree(Sapling::SPRUCE);
+		$trees = new Tree(WoodType::SPRUCE);
 		$trees->setBaseAmount(10);
 		$this->addPopulator($trees);
 
@@ -45,6 +46,8 @@ class TaigaBiome extends SnowyBiome{
 
 		$this->temperature = 0.05;
 		$this->rainfall = 0.8;
+
+		$this->spawnableCreatureList[] = new SpawnListEntry(Wolf::class, 8, 4, 4);
 	}
 
 	public function getName() : string{

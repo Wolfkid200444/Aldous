@@ -26,6 +26,7 @@ namespace pocketmine\block;
 
 use pocketmine\item\TieredTool;
 use pocketmine\item\Item;
+use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\tile\Hopper as TileHopper;
@@ -33,68 +34,95 @@ use pocketmine\tile\Tile;
 
 class Hopper extends Transparent{
 
-    protected $id = self::HOPPER_BLOCK;
-    protected $itemId = Item::HOPPER;
+	protected $id = self::HOPPER_BLOCK;
+	protected $itemId = Item::HOPPER;
 
-    public function __construct(int $meta = 0){
-        $this->meta = $meta;
+	protected $enabled = false; // TODO: redstone
+	protected $facing = Facing::DOWN;
+
+	public function __construct(){
+
+	}
+
+	public function readStateFromMeta(int $meta) : void{
+		$this->enabled = ($meta & 8) != 8;
+		$this->facing = $meta & 7;
+	}
+
+	public function writeStateToMeta() : int{
+		return $this->facing | ($this->enabled ? 0 : 8);
     }
 
-    public function getHardness(): float{
-        return 3;
-    }
+	public function getStateBitmask() : int{
+		return 14;
+	}
 
-    public function getBlastResistance(): float{
-        return 24;
-    }
+	public function getHardness() : float{
+		return 3;
+	}
 
-    public function getToolType(): int{
-        return BlockToolType::TYPE_PICKAXE;
-    }
+	public function getBlastResistance() : float{
+		return 24;
+	}
 
-    public function getToolHarvestLevel(): int{
-        return TieredTool::TIER_WOODEN;
-    }
+	public function getToolType() : int{
+		return BlockToolType::TYPE_PICKAXE;
+	}
 
-    public function getName(): string{
-        return "Hopper";
-    }
+	public function getToolHarvestLevel() : int{
+		return TieredTool::TIER_WOODEN;
+	}
 
-    public function onActivate(Item $item, Player $player = null): bool{
-        if($player instanceof Player){
+	public function getName() : string{
+		return "Hopper";
+	}
 
-            $t = $this->getLevel()->getTile($this);
-            if($t instanceof TileHopper){
-                $hopper = $t;
-            }else{
-                $hopper = Tile::createTile(Tile::HOPPER, $this->getLevel(), TileHopper::createNBT($this));
-            }
+	public function onActivate(Item $item, Player $player = null) : bool{
+		if($player instanceof Player){
+			$hopper = $this->getLevel()->getTile($this);
+			if($hopper instanceof TileHopper){
 
-            if(!$hopper->canOpenWith($item->getCustomName())){
-                return true;
-            }
+				if(!$hopper->canOpenWith($item->getCustomName())){
+					return true;
+				}
 
-            $player->addWindow($hopper->getInventory());
-        }
+				$player->addWindow($hopper->getInventory());
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null): bool{
-        $faces = [
-            0 => Vector3::SIDE_DOWN,
-            1 => Vector3::SIDE_DOWN, // Not used
-            2 => Vector3::SIDE_SOUTH,
-            3 => Vector3::SIDE_NORTH,
-            4 => Vector3::SIDE_EAST,
-            5 => Vector3::SIDE_WEST
-        ];
-        $this->meta = $faces[$face];
+	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
+		$faces = [
+			0 => Facing::DOWN,
+			1 => Facing::DOWN, // Not used
+			2 => Facing::SOUTH,
+			3 => Facing::NORTH,
+			4 => Facing::EAST,
+			5 => Facing::WEST
+		];
+		$this->facing = $faces[$face];
 
-        $this->getLevel()->setBlock($this, $this, true, false);
-        Tile::createTile(Tile::HOPPER, $this->getLevel(), TileHopper::createNBT($this, $face, $item, $player));
-        return true;
-    }
+		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
+			Tile::createTile(Tile::HOPPER, $this->getLevel(), TileHopper::createNBT($this, $face, $item, $player));
 
-    // TODO : ADD REDSTONE
+			return true;
+		}
+		return true;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getFacing() : int{
+		return $this->facing;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isEnabled() : bool{
+		return $this->enabled;
+	}
 }

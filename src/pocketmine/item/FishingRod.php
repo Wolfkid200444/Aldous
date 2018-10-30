@@ -23,14 +23,39 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
-class FishingRod extends Item{
-	public function __construct(int $meta = 0){
-		parent::__construct(self::FISHING_ROD, $meta, "Fishing Rod");
+use pocketmine\entity\Entity;
+use pocketmine\entity\projectile\FishingHook;
+use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\AnimatePacket;
+use pocketmine\Player;
+
+class FishingRod extends Tool{
+
+	public function __construct(){
+		parent::__construct(self::FISHING_ROD, 0, "Fishing Rod");
 	}
 
 	public function getEnchantability() : int{
 		return 1;
 	}
 
-	//TODO
+	public function getMaxDurability() : int{
+		return 64;
+	}
+
+	public function onClickAir(Player $player, Vector3 $directionVector) : bool{
+		if($player->getFishingHook() === null){
+			$hook = new FishingHook($player->level, Entity::createBaseNBT($player), $player);
+			if($hook instanceof FishingHook){
+				$hook->spawnToAll();
+			}
+			$player->animate(AnimatePacket::ACTION_SWING_ARM);
+		}else{
+			$hook = $player->getFishingHook();
+			$hook->handleHookRetraction();
+			$player->animate(AnimatePacket::ACTION_SWING_ARM);
+			$this->applyDamage(1);
+		}
+		return true;
+	}
 }

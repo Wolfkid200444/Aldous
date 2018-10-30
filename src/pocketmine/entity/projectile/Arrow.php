@@ -26,6 +26,10 @@ namespace pocketmine\entity\projectile;
 
 use pocketmine\block\Block;
 use pocketmine\entity\Entity;
+use pocketmine\event\entity\EntityCombustByEntityEvent;
+use pocketmine\event\entity\EntityDamageByChildEntityEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\event\inventory\InventoryPickupArrowEvent;
 use pocketmine\item\Item;
@@ -62,6 +66,9 @@ class Arrow extends Projectile{
 	/** @var float */
 	protected $punchKnockback = 0.0;
 
+	/** @var int */
+	protected $collideTicks = 0;
+
 	public function __construct(Level $level, CompoundTag $nbt, ?Entity $shootingEntity = null, bool $critical = false){
 		parent::__construct($level, $nbt, $shootingEntity);
 		$this->setCritical($critical);
@@ -71,11 +78,13 @@ class Arrow extends Projectile{
 		parent::initEntity($nbt);
 
 		$this->pickupMode = $nbt->getByte(self::TAG_PICKUP, self::PICKUP_ANY, true);
+		$this->collideTicks = $nbt->getShort("life", $this->collideTicks);
 	}
 
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
 		$nbt->setByte(self::TAG_PICKUP, $this->pickupMode);
+		$nbt->setShort("life", $this->collideTicks);
 		return $nbt;
 	}
 
@@ -117,9 +126,14 @@ class Arrow extends Projectile{
 
 		$hasUpdate = parent::entityBaseTick($tickDiff);
 
-		if($this->age > 1200){
-			$this->flagForDespawn();
-			$hasUpdate = true;
+		if($this->isCollided){
+			$this->collideTicks += $tickDiff;
+			if($this->collideTicks > 1200){
+				$this->flagForDespawn();
+				$hasUpdate = true;
+			}
+		}else{
+			$this->collideTicks = 0;
 		}
 
 		return $hasUpdate;
@@ -136,14 +150,37 @@ class Arrow extends Projectile{
 	}
 
 	protected function onHitEntity(Entity $entityHit, RayTraceResult $hitResult) : void{
-		parent::onHitEntity($entityHit, $hitResult);
-		if($this->punchKnockback > 0){
-			$horizontalSpeed = sqrt($this->motion->x ** 2 + $this->motion->z ** 2);
-			if($horizontalSpeed > 0){
-				$multiplier = $this->punchKnockback * 0.6 / $horizontalSpeed;
-				$entityHit->setMotion($entityHit->getMotion()->add($this->motion->x * $multiplier, 0.1, $this->motion->z * $multiplier));
+		$damage = $this->getResultDamage();
+
+		if($damage >= 0){
+			if($this->getOwningEntity() === null){
+				$ev = new EntityDamageByEntityEvent($this, $entityHit, EntityDamageEvent::CAUSE_PROJECTILE, $damage);
+			}else{
+				$ev = new EntityDamageByChildEntityEvent($this->getOwningEntity(), $this, $entityHit, EntityDamageEvent::CAUSE_PROJECTILE, $damage);
+			}
+
+			$entityHit->attack($ev);
+
+			if(!$ev->isCancelled()){
+				if($this->punchKnockback > 0){
+					$horizontalSpeed = sqrt($this->motion->x ** 2 + $this->motion->z ** 2);
+					if($horizontalSpeed > 0){
+						$multiplier = $this->punchKnockback * 0.6 / $horizontalSpeed;
+						$entityHit->setMotion($entityHit->getMotion()->add($this->motion->x * $multiplier, 0.1, $this->motion->z * $multiplier));
+					}
+				}
+			}
+
+			if($this->fireTicks > 0){
+				$ev = new EntityCombustByEntityEvent($this, $entityHit, 5);
+				$ev->call();
+				if(!$ev->isCancelled()){
+					$entityHit->setOnFire($ev->getDuration());
+				}
 			}
 		}
+
+		$this->flagForDespawn();
 	}
 
 	/**
@@ -177,7 +214,7 @@ class Arrow extends Projectile{
 			$ev->setCancelled();
 		}
 
-		$this->server->getPluginManager()->callEvent($ev);
+		$ev->call();
 		if($ev->isCancelled()){
 			return;
 		}

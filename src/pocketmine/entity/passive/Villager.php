@@ -35,9 +35,12 @@ use pocketmine\item\Item;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\ListTag;
+use pocketmine\network\mcpe\protocol\types\WindowTypes;
 use pocketmine\Player;
+use Symfony\Component\Process\Pipes\WindowsPipes;
 
 class Villager extends Mob implements NPC, Ageable{
+
 	public const NETWORK_ID = self::VILLAGER;
 
 	public static $names = [
@@ -183,10 +186,12 @@ class Villager extends Mob implements NPC, Ageable{
 		return $this->getGenericFlag(self::DATA_FLAG_BABY);
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : void{
-		if(!$this->isBaby() and $this->offers instanceof CompoundTag and $this->aiEnabled){
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+		if(!$this->isBaby() and $this->offers instanceof CompoundTag and !$this->isImmobile()){
 			$player->addWindow($this->getInventory());
+			return true;
 		}
+		return false;
 	}
 
 	public function getInventory() : TradeInventory{
@@ -203,5 +208,9 @@ class Villager extends Mob implements NPC, Ageable{
 
 	public function setWilling(bool $isWilling) : void{
 		$this->isWilling = $isWilling;
+	}
+
+	public function getLivingSound() : ?string{
+		return $this->isWilling() ? "mob.villager.haggle" : "mob.villager.idle";
 	}
 }

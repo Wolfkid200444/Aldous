@@ -40,26 +40,19 @@ class FindAttackableTargetBehavior extends Behavior{
 	public function __construct(Mob $mob, string $targetClass = Mob::class){
 		parent::__construct($mob);
 
-		$this->targetDistance = $mob->getFollowRange() ** 2;
+		$this->targetDistance = $mob->getFollowRange();
 		$this->targetClass = $targetClass;
 		$this->mutexBits = 1;
 	}
 
 	public function canStart() : bool{
 		if($this->random->nextBoundedInt(10) === 0){
-			/** @var Entity[] $targets */
-			$targets = array_filter($this->mob->level->getEntities(), function(Entity $e){
-				return get_class($e) === $this->targetClass and $e->isAlive();
-			});
-			$target = null;
-			$lastDist = $this->targetDistance;
-			foreach($targets as $t){
-				if($d = $t->distanceSquared($this->mob) < $lastDist and $t !== $this->mob){
-					if($t instanceof Player and !$t->isSurvival()) continue;
-					$target = $t;
-					$lastDist = $d;
+			$target = $this->mob->level->getNearestEntity($this->mob, sqrt($this->targetDistance), $this->targetClass, false, function(Entity $entity){
+				if($entity instanceof Player){
+					return $entity->isSurvival() and !$entity->isInvisible();
 				}
-			}
+				return !$entity->isInvisible();
+			});
 
 			if($target === null) return false;
 

@@ -27,15 +27,14 @@ namespace pocketmine\block;
 use pocketmine\event\block\BlockSpreadEvent;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
-use pocketmine\math\Vector3;
-use pocketmine\Server;
+use pocketmine\math\Facing;
 
 class Mycelium extends Solid{
 
 	protected $id = self::MYCELIUM;
 
-	public function __construct(int $meta = 0){
-		$this->meta = $meta;
+	public function __construct(){
+
 	}
 
 	public function getName() : string{
@@ -67,8 +66,9 @@ class Mycelium extends Solid{
 		$z = mt_rand($this->z - 1, $this->z + 1);
 		$block = $this->getLevel()->getBlockAt($x, $y, $z);
 		if($block->getId() === Block::DIRT){
-			if($block->getSide(Vector3::SIDE_UP) instanceof Transparent){
-				Server::getInstance()->getPluginManager()->callEvent($ev = new BlockSpreadEvent($block, $this, BlockFactory::get(Block::MYCELIUM)));
+			if($block->getSide(Facing::UP) instanceof Transparent){
+				$ev = new BlockSpreadEvent($block, $this, BlockFactory::get(Block::MYCELIUM));
+				$ev->call();
 				if(!$ev->isCancelled()){
 					$this->getLevel()->setBlock($block, $ev->getNewState());
 				}

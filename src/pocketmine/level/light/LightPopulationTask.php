@@ -23,10 +23,10 @@ declare(strict_types=1);
 
 namespace pocketmine\level\light;
 
+use pocketmine\block\BlockFactory;
 use pocketmine\level\format\Chunk;
 use pocketmine\level\Level;
 use pocketmine\scheduler\AsyncTask;
-use pocketmine\Server;
 
 class LightPopulationTask extends AsyncTask{
 
@@ -37,7 +37,10 @@ class LightPopulationTask extends AsyncTask{
 		$this->chunk = $chunk->fastSerialize();
 	}
 
-	public function onRun(){
+	public function onRun() : void{
+		if(!BlockFactory::isInit()){
+			BlockFactory::init();
+		}
 		/** @var Chunk $chunk */
 		$chunk = Chunk::fastDeserialize($this->chunk);
 
@@ -48,7 +51,7 @@ class LightPopulationTask extends AsyncTask{
 		$this->chunk = $chunk->fastSerialize();
 	}
 
-	public function onCompletion(Server $server){
+	public function onCompletion() : void{
 		/** @var Level $level */
 		$level = $this->fetchLocal();
 		if(!$level->isClosed()){

@@ -72,7 +72,7 @@ class FallingBlock extends Entity{
 
 		$this->block = BlockFactory::get($blockId, $damage);
 
-		$this->propertyManager->setInt(self::DATA_VARIANT, BlockFactory::toStaticRuntimeId($this->block->getId(), $this->block->getDamage()));
+		$this->propertyManager->setInt(self::DATA_VARIANT, $this->block->getRuntimeId());
 	}
 
 	public function canCollideWith(Entity $entity) : bool{
@@ -114,9 +114,10 @@ class FallingBlock extends Entity{
 					//FIXME: anvils are supposed to destroy torches
 					$this->getLevel()->dropItem($this, ItemFactory::get($this->getBlock(), $this->getDamage()));
 				}else{
-					$this->server->getPluginManager()->callEvent($ev = new EntityBlockChangeEvent($this, $block, $blockTarget ?? $this->block));
+					$ev = new EntityBlockChangeEvent($this, $block, $blockTarget ?? $this->block);
+					$ev->call();
 					if(!$ev->isCancelled()){
-						$this->getLevel()->setBlock($pos, $ev->getTo(), true);
+						$this->getLevel()->setBlock($pos, $ev->getTo());
 					}
 				}
 				$hasUpdate = true;
@@ -136,7 +137,7 @@ class FallingBlock extends Entity{
 
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
-		$nbt->setInt("TileID", $this->block->getId(), true);
+		$nbt->setInt("TileID", $this->block->getId());
 		$nbt->setByte("Data", $this->block->getDamage());
 
 		return $nbt;

@@ -24,34 +24,35 @@ declare(strict_types=1);
 
 namespace pocketmine\entity\object;
 
+use pocketmine\block\Block;
+use pocketmine\block\BlockFactory;
 use pocketmine\entity\Entity;
 use pocketmine\entity\EntityIds;
 use pocketmine\entity\Living;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\inventory\AltayEntityEquipment;
+use pocketmine\inventory\ArmorInventory;
 use pocketmine\inventory\utils\EquipmentSlot;
 use pocketmine\item\Armor;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
-use pocketmine\level\Level;
+use pocketmine\level\particle\DestroyBlockParticle;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\NBT;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\ListTag;
-use pocketmine\nbt\tag\IntTag;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
 
 class ArmorStand extends Living{
+
 	public const NETWORK_ID = EntityIds::ARMOR_STAND;
 
-	public const TAG_ARMOR = "Armor";
 	public const TAG_MAINHAND = "Mainhand";
 	public const TAG_OFFHAND = "Offhand";
-	public const TAG_POSE = "Pose";
-	public const TAG_LAST_SIGNAL = "LastSignal";
 	public const TAG_POSE_INDEX = "PoseIndex";
+	public const TAG_ARMOR = "Armor";
 
 	/** @var AltayEntityEquipment */
 	protected $equipment;
@@ -61,74 +62,36 @@ class ArmorStand extends Living{
 
 	protected $gravity = 0.04;
 
-	public function __construct(Level $level, CompoundTag $nbt){
-		$air = Item::get(Item::AIR)->nbtSerialize();
-		if(!$nbt->hasTag(self::TAG_MAINHAND, ListTag::class)){
-			$nbt->setTag(new ListTag(self::TAG_MAINHAND, [
-				$air
-			], NBT::TAG_Compound));
-		}
-
-		if(!$nbt->hasTag(self::TAG_OFFHAND, ListTag::class)){
-			$nbt->setTag(new ListTag(self::TAG_OFFHAND, [
-				$air
-			], NBT::TAG_Compound));
-		}
-
-		if(!$nbt->hasTag(self::TAG_ARMOR, ListTag::class)){
-			$nbt->setTag(new ListTag(self::TAG_ARMOR, [
-				$air, // helmet
-				$air, // chestplate
-				$air, // legging
-				$air  // boots
-			], NBT::TAG_Compound));
-		}
-
-		if(!$nbt->hasTag(self::TAG_POSE, CompoundTag::class)){
-			$nbt->setTag(new CompoundTag(self::TAG_POSE, [
-				new IntTag(self::TAG_LAST_SIGNAL, 0),
-				new IntTag(self::TAG_POSE_INDEX, 0)
-			]));
-		}
-
-		parent::__construct($level, $nbt);
-	}
+	protected $vibrateTimer = 0;
 
 	protected function initEntity(CompoundTag $nbt) : void{
 		$this->setMaxHealth(6);
+		$this->setImmobile(true);
+
 		parent::initEntity($nbt);
 
 		$this->equipment = new AltayEntityEquipment($this);
 
-		/** @var ListTag $armor */
-		$armor = $nbt->getTag(self::TAG_ARMOR);
-		/** @var ListTag $mainhand */
-		$mainhand = $nbt->getTag(self::TAG_MAINHAND);
-		/** @var ListTag $offhand */
-		$offhand = $nbt->getTag(self::TAG_OFFHAND);
+		if($nbt->hasTag(self::TAG_ARMOR, ListTag::class)){
+			$armors = $nbt->getListTag(self::TAG_ARMOR);
 
-		$contents = array_merge(array_map(function(CompoundTag $tag) : Item{ return Item::nbtDeserialize($tag); }, $armor->getAllValues()), [Item::nbtDeserialize($offhand->offsetGet(0))], [Item::nbtDeserialize($mainhand->offsetGet(0))]);
-		$this->equipment->setContents($contents);
+			/** @var CompoundTag $armor */
+			foreach($armors as $armor){
+				$slot = $armor->getByte("Slot", 0);
 
-		/** @var CompoundTag $pose */
-		$pose = $nbt->getTag(self::TAG_POSE);
-		$pose = $pose->getInt(self::TAG_POSE_INDEX, 0);
-		$this->setPose($pose);
-	}
-
-	public function getEquipmentSlot(Item $item) : int{
-		if($item instanceof Armor){
-			return $item->getArmorSlot();
-		}else{
-			switch($item->getId()){
-				case Item::SKULL:
-				case Item::SKULL_BLOCK:
-				case Item::PUMPKIN:
-					return EquipmentSlot::HEAD;
+				$this->armorInventory->setItem($slot, Item::nbtDeserialize($armor));
 			}
-
-			return -1; // mainhand
 		}
+
+		if($nbt->hasTag(self::TAG_MAINHAND, CompoundTag::class)){
+			$this->equipment->setItemInHand(Item::nbtDeserialize($nbt->getCompoundTag(self::TAG_MAINHAND)));
+		}
+		if($nbt->hasTag(self::TAG_OFFHAND, CompoundTag::class)){
+			$this->equipment->setItemInHand(Item::nbtDeserialize($nbt->getCompoundTag(self::TAG_OFFHAND)));
+		}
+
+		$this->setPose(min($nbt->getInt(self::TAG_POSE_INDEX, 0), 12));
+		$this->propertyManager->setString(self::DATA_INTERACTIVE_TAG, "armorstand.change.pose");
 	}
 
 	public function setPose(int $pose) : void{
@@ -139,97 +102,121 @@ class ArmorStand extends Living{
 		return $this->propertyManager->getInt(self::DATA_ARMOR_STAND_POSE_INDEX);
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : void{
-		$player->getInventory()->sendContents($player);
-
+	public function onInteract(Player $player, Item $itemstack, Vector3 $clickPos, int $slot) : bool{
 		if($player->isSneaking()){
-			$pose = $this->getPose();
-			if(++$pose >= 13){
-				$pose = 0;
-			}
-
-			$this->setPose($pose);
-		}else{
-			$diff = $clickPos->getY() - $this->getY();
-			$type = $this->getEquipmentSlot($item);
-			$playerInv = $player->getInventory();
-
-			switch(true){ // yes order matter here.
-				case ($diff < 0.5):
-					$clicked = EquipmentSlot::FEET;
-					break;
-				case ($diff < 1):
-					$clicked = EquipmentSlot::LEGS;
-					break;
-				case ($diff < 1.5):
-					$clicked = EquipmentSlot::CHEST;
-					break;
-				default: // armor stands are only 2-ish blocks tall :shrug:
-					$clicked = EquipmentSlot::HEAD;
-					break;
-			}
-
-			if($item->isNull()){
-				if($clicked == EquipmentSlot::CHEST){
-					if($this->equipment->getItemInHand()->isNull()){
-						$ASchestplate = clone $this->armorInventory->getChestplate();
-						$this->armorInventory->setChestplate($item);
-						$playerInv->setItemInHand(Item::get(Item::AIR));
-						$playerInv->addItem($ASchestplate);
-					}else{
-						$ASiteminhand = clone $this->equipment->getItemInHand();
-						$this->equipment->setItemInHand($item);
-						$playerInv->setItemInHand(Item::get(Item::AIR));
-						$playerInv->addItem($ASiteminhand);
-					}
-				}else{
-					$old = clone $this->armorInventory->getItem($clicked);
-					$this->armorInventory->setItem($clicked, $item);
-					$playerInv->setItemInHand(Item::get(Item::AIR));
-					$playerInv->addItem($old);
-				}
+			if($this->getPose() >= 12){
+				$this->setPose(0);
 			}else{
-				if($type == -1){
-					if($this->equipment->getItemInHand()->equals($item)){
-						$playerInv->addItem(clone $this->equipment->getItemInHand());
-						$this->equipment->setItemInHand(Item::get(Item::AIR));
-					}else{
-						$playerInv->addItem(clone $this->equipment->getItemInHand());
+				$this->setPose($this->getPose() + 1);
+			}
+			return true;
+		}
+		if($this->isValid() and !$player->isSpectator()){
+			$i = 0;
+			$flag = !$itemstack->isNull();
 
-						$ic = clone $item;
-						$this->equipment->setItemInHand($ic->pop());
-						$playerInv->setItemInHand($ic);
-					}
-				}else{
-					$old = clone $this->armorInventory->getItem($type);
-					$this->armorInventory->setItem($type, $item);
-					$playerInv->setItemInHand(Item::get(Item::AIR));
-					$playerInv->addItem($old);
-				}
+			$isArmorSlot = false;
+
+			if($flag and $itemstack instanceof Armor){
+				$i = $itemstack->getArmorSlot();
+				$isArmorSlot = true;
 			}
 
-			$this->equipment->sendContents($this->getViewers());
+			if($flag and ($itemstack->getId() === Item::SKULL or $itemstack->getId() === Item::PUMPKIN)){
+				$i = 0;
+			}
+			$j = 0;
+			$d3 = $clickPos->y - $this->y;
+			$flag2 = false;
+
+			if($d3 >= 0.1 and $d3 < 0.55 and !$this->armorInventory->getItem(ArmorInventory::SLOT_FEET)->isNull()){
+				$j = 3;
+				$flag2 = $isArmorSlot = true;
+			}elseif($d3 >= 0.9 and $d3 < 1.6 and !$this->armorInventory->getItem(ArmorInventory::SLOT_CHEST)->isNull()){
+				$j = 1;
+				$flag2 = $isArmorSlot = true;
+			}elseif($d3 >= 0.4 and $d3 < 1.2 and !$this->armorInventory->getItem(ArmorInventory::SLOT_LEGS)->isNull()){
+				$j = 2;
+				$flag2 = $isArmorSlot = true;
+			}elseif($d3 >= 1.6 and !$this->armorInventory->getItem(ArmorInventory::SLOT_HEAD)->isNull()){
+				$j = 0;
+				$flag2 = $isArmorSlot = true;
+			}elseif(!$this->equipment->getItem($j)->isNull()){
+				$flag2 = true;
+			}
+
+			if($flag){
+				$this->tryChangeEquipment($player, $itemstack, $i, $isArmorSlot);
+			}elseif($flag2){
+				$this->tryChangeEquipment($player, $itemstack, $j, $isArmorSlot);
+			}
+
+			$this->equipment->sendContents($player);
+			$this->armorInventory->sendContents($player);
+
+			return $flag or $flag2;
+		}
+		return false;
+	}
+
+	protected function tryChangeEquipment(Player $player, Item $handItem, int $slot, bool $isArmorSlot = false) : void{
+		$itemstack = $isArmorSlot ? $this->armorInventory->getItem($slot) : $this->equipment->getItem($slot);
+
+		if($player->isCreative() and $itemstack->isNull() and !$handItem->isNull()){
+			$itemstack3 = clone $handItem;
+			$itemstack3->setCount(1);
+			if($isArmorSlot){
+				$this->armorInventory->setItem($slot, $itemstack3);
+			}else{
+				$this->equipment->setItem($slot, $itemstack3);
+			}
+		}elseif(!$handItem->isNull() and $handItem->getCount() > 1){
+			if($itemstack->isNull()){
+				$itemstack2 = clone $handItem;
+				$itemstack2->setCount(1);
+				if($isArmorSlot){
+					$this->armorInventory->setItem($slot, $itemstack2);
+				}else{
+					$this->equipment->setItem($slot, $itemstack2);
+				}
+				$handItem->pop();
+			}
+		}else{
+			if($isArmorSlot){
+				$this->armorInventory->setItem($slot, $handItem);
+			}else{
+				$this->equipment->setItem($slot, $handItem);
+			}
+			$player->getInventory()->clear($player->getInventory()->getHeldItemIndex());
+			$player->getInventory()->addItem($itemstack);
 		}
 	}
 
-	protected function applyGravity() : void{
-		parent::applyGravity();
-		$this->level->broadcastLevelEvent($this, LevelEventPacket::EVENT_SOUND_ARMOR_STAND_FALL);
+	public function fall(float $fallDistance) : void{
+		parent::fall($fallDistance);
+
+		$this->level->broadcastLevelEvent($this, LevelEventPacket::EVENT_SOUND_ARMOR_STAND_FALL, $this->getId());
 	}
 
 	public function saveNBT() : CompoundTag{
 		$nbt = parent::saveNBT();
 
-		$nbt->setTag(new ListTag(self::TAG_MAINHAND, [$this->equipment->getItemInHand()->nbtSerialize()], NBT::TAG_Compound));
-		$nbt->setTag(new ListTag(self::TAG_OFFHAND, [$this->equipment->getOffhandItem()->nbtSerialize()], NBT::TAG_Compound));
+		if($this->equipment instanceof AltayEntityEquipment){
+			$nbt->setTag($this->equipment->getItemInHand()->nbtSerialize(-1, self::TAG_MAINHAND), true);
+			$nbt->setTag($this->equipment->getOffhandItem()->nbtSerialize(-1, self::TAG_OFFHAND), true);
+		}
 
-		$armorNBT = array_map(function(Item $item) : CompoundTag{ return $item->nbtSerialize(); }, $this->getArmorInventory()->getContents());
-		$nbt->setTag(new ListTag(self::TAG_ARMOR, $armorNBT, NBT::TAG_Compound));
+		if($this->armorInventory !== null){
+			$armorTag = new ListTag(self::TAG_ARMOR, [], NBT::TAG_Compound);
 
-		/** @var CompoundTag $poseTag */
-		$poseTag = $nbt->getTag(self::TAG_POSE);
-		$poseTag->setInt(self::TAG_POSE_INDEX, $this->getPose());
-		$nbt->setTag($poseTag);
+			for($i = 0; $i < 4; $i++){
+				$armorTag->push($this->armorInventory->getItem($i)->nbtSerialize($i));
+			}
+
+			$nbt->setTag($armorTag, true);
+		}
+
+		$nbt->setInt(self::TAG_POSE_INDEX, $this->getPose(), true);
 
 		return $nbt;
 	}
@@ -243,30 +230,51 @@ class ArmorStand extends Living{
 			$damager = $source->getDamager();
 			if($damager instanceof Player){
 				if($damager->isCreative()){
-					$this->level->broadcastLevelEvent($this, LevelEventPacket::EVENT_SOUND_ARMOR_STAND_BREAK);
-					$this->level->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_DESTROY, 5);
-					$this->flagForDespawn();
-				}else{
-					$this->level->broadcastLevelEvent($this, LevelEventPacket::EVENT_SOUND_ARMOR_STAND_HIT);
+					$this->kill();
 				}
 			}
 		}
-		if($source->getCause() != EntityDamageEvent::CAUSE_CONTACT){ // cactus
-			Entity::attack($source);
+		if($source->getCause() === EntityDamageEvent::CAUSE_CONTACT){ // cactus
+			$source->setCancelled(true);
+		}
+
+		Entity::attack($source);
+
+		if(!$source->isCancelled()){
+			$this->setGenericFlag(self::DATA_FLAG_VIBRATING, true);
+			$this->vibrateTimer = 20;
 		}
 	}
 
-	protected function sendSpawnPacket(Player $player): void{
+	public function startDeathAnimation() : void{
+		$this->level->addParticle(new DestroyBlockParticle($this, BlockFactory::get(Block::WOODEN_PLANKS)));
+	}
+
+	protected function onDeathUpdate(int $tickDiff) : bool{
+		return true;
+	}
+
+	protected function sendSpawnPacket(Player $player) : void{
 		parent::sendSpawnPacket($player);
 
 		$this->equipment->sendContents($player);
 	}
 
-	public function getName(): string{
-		return "Armor Stand";
+	public function getName() : string{
+		return "ArmorStand";
 	}
 
-	public function hasEntityColissionUpdate() : bool{
+	public function canBePushed() : bool{
 		return false;
+	}
+
+	public function entityBaseTick(int $tickDiff = 1) : bool{
+		$hasUpdate = parent::entityBaseTick($tickDiff);
+
+		if($this->getGenericFlag(self::DATA_FLAG_VIBRATING) and $this->vibrateTimer-- <= 0){
+			$this->setGenericFlag(self::DATA_FLAG_VIBRATING, false);
+		}
+
+		return $hasUpdate;
 	}
 }

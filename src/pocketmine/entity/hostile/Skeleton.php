@@ -111,7 +111,7 @@ class Skeleton extends Monster implements RangedAttackerMob{
 	}
 
 	public function entityBaseTick(int $diff = 1) : bool{
-		if(!$this->isOnFire() and $this->level->isDayTime() and $this->aiEnabled){
+		if(!$this->isOnFire() and $this->level->isDayTime() and !$this->isImmobile()){
 			if(!$this->isUnderwater() and $this->level->canSeeSky($this)){
 				$this->setOnFire(5);
 			}
@@ -123,5 +123,9 @@ class Skeleton extends Monster implements RangedAttackerMob{
 		parent::sendSpawnPacket($player);
 
 		$this->equipment->sendContents([$player]);
+	}
+
+	public function getLivingSound() : ?string{
+		return "mob.skeleton.say";
 	}
 }

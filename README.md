@@ -1,13 +1,13 @@
 <h1>Altay<img src="http://fs1.directupload.net/images/180401/urn5z9ic.png" height="64" width="64" align="left"></img></h1>
 <br />
 
-Fast server software for Minecraft: Bedrock/W10 Edition. Altay is a fork of [pmmp](https://github.com/pmmp/PocketMine-MP).
+A server software for Minecraft: Bedrock/W10 Edition. Altay is a fork of [pmmp](https://github.com/pmmp/PocketMine-MP)
 
 ------------       
 
-| Forum | Jenkins | TravisCI | Discord | Twitter |
-| :---: | :---: | :---: | :---: | :---: |
-| [![Forums](https://img.shields.io/badge/Forum-Altay-red.svg?style=flat-square)](https://www.turanic.net/) | [![Jenkins](https://img.shields.io/jenkins/s/http/jenkins.turanic.net/job/Altay.svg?style=flat-square&colorB=1C6BA0)](http://entengames.net:8081) | [![Travis branch](https://img.shields.io/travis/TuranicTeam/Altay/master.svg?style=flat-square)](https://travis-ci.org/TuranicTeam/Altay) | [![Discord](https://img.shields.io/discord/427472879072968714.svg?style=flat-square&label=discord&colorB=7289da)](https://discord.gg/UsuhCFj) | [![Twitter Follow](https://img.shields.io/twitter/follow/TuranicTeam.svg?style=flat-square&logo=twitter&label=Follow)](https://twitter.com/TuranicTeam) |
+| Jenkins | TravisCI | Discord | Twitter |
+| :---: | :---: | :---: | :---: |
+| [![Build Status](http://entengames.net:8181/job/Altay/badge/icon)](http://entengames.net:8181/job/Altay/) | [![Travis branch](https://img.shields.io/travis/TuranicTeam/Altay/master.svg?style=flat-square)](https://travis-ci.org/TuranicTeam/Altay) | [![Discord](https://img.shields.io/discord/427472879072968714.svg?style=flat-square&label=discord&colorB=7289da)](https://discord.gg/UsuhCFj) | [![Twitter Follow](https://img.shields.io/twitter/follow/TuranicTeam.svg?style=flat-square&logo=twitter&label=Follow)](https://twitter.com/TuranicTeam) |
 
 ------------
 
@@ -15,24 +15,25 @@ Fast server software for Minecraft: Bedrock/W10 Edition. Altay is a fork of [pmm
 
 Because Altay has more features and improvements than PocketMine-MP
 
+- Working GameRules
+- Auto Mob Spawning
+- Map Items (API only)
+- Fishing
+- Leashing Mobs
+- Best MobAI, More mobs
 - More Items, Blocks
 - More Methods
-- Best MobAI, More mobs
-- Entity Riding
+- Entity Riding (API only)
 - Best FormAPI
 - Best BossBarAPI
 - More Technical Fixes
-- Working fake inventories (Anvil, EnchantmentTable, Beacon)
-- More Tiles (Jukebox, ShulkerBox, NoteBlock, Hopper)
+- Working fake inventories (EnchantmentTable, Beacon)
+- More Tiles (Jukebox, ShulkerBox, NoteBlock, Hopper, MobSpawner)
 - Best Command Parameter API ever
 - More Event Handling (Dimension changing, Swimming)
 - More Generators (End, Nether, Void)
-- More Utils
-- More Particles and Sounds
-- More Biomes
 - Villager Trading
 - More Inventory (PlayerOffHandInventory)
-- MobSpawner
 
 And more...
 

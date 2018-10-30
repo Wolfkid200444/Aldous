@@ -102,6 +102,9 @@ class ExperienceOrb extends Entity{
 	public $gravity = 0.04;
 	public $drag = 0.02;
 
+	/** @var int */
+	protected $age = 0;
+
 	/**
 	 * @var int
 	 * Ticker used for determining interval in which to look for new target players.
@@ -159,7 +162,7 @@ class ExperienceOrb extends Entity{
 			return null;
 		}
 
-		$entity = $this->server->findEntity($this->targetPlayerRuntimeId, $this->level);
+		$entity = $this->server->findEntity($this->targetPlayerRuntimeId);
 		if($entity instanceof Human){
 			return $entity;
 		}
@@ -174,6 +177,7 @@ class ExperienceOrb extends Entity{
 	public function entityBaseTick(int $tickDiff = 1) : bool{
 		$hasUpdate = parent::entityBaseTick($tickDiff);
 
+		$this->age += $tickDiff;
 		if($this->age > 6000){
 			$this->flagForDespawn();
 			return true;

@@ -25,23 +25,18 @@ declare(strict_types=1);
 namespace pocketmine\entity\behavior;
 
 use pocketmine\block\Block;
-use pocketmine\block\BlockFactory;
 use pocketmine\block\Grass;
 use pocketmine\block\TallGrass;
-use pocketmine\entity\Mob;
+use pocketmine\entity\Animal;
+use pocketmine\level\GameRules;
 use pocketmine\level\particle\DestroyBlockParticle;
-use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 
 class EatBlockBehavior extends Behavior{
 
 	/** @var int */
 	protected $duration;
-
-	public function __construct(Mob $mob){
-		parent::__construct($mob);
-		$this->mutexBits = 7;
-	}
+	protected $mutexBits = 7;
 
 	public function canStart() : bool{
 		if($this->random->nextBoundedInt(1000) != 0) return false;
@@ -49,32 +44,39 @@ class EatBlockBehavior extends Behavior{
 		$direction = $this->mob->getDirectionVector()->normalize();
 		$coordinates = $this->mob->add($direction->x, 0, $direction->z);
 
-		$shouldStart = $this->mob->level->getBlock($coordinates->getSide(Vector3::SIDE_DOWN)) instanceof Grass || $this->mob->level->getBlock($coordinates) instanceof TallGrass;
-		if(!$shouldStart) return false;
+		return $this->mob->level->getBlock($coordinates->down()) instanceof Grass or $this->mob->level->getBlock($coordinates) instanceof TallGrass;
+	}
 
-		$this->duration = 40;
-
-		$this->mob->resetMotion();
+	public function onStart() : void{
 		$this->mob->broadcastEntityEvent(EntityEventPacket::EAT_GRASS_ANIMATION);
-
-		return true;
+		$this->duration = 40;
+		$this->mob->getNavigator()->clearPath();
 	}
 
 	public function canContinue() : bool{
-		return $this->duration-- > 0;
+		return $this->duration > 0;
+	}
+
+	public function onTick() : void{
+		$this->duration = max(0, $this->duration - 1);
+
+		if($this->duration === 4){
+			$pos = $this->mob->down();
+
+			if($this->mob->level->getBlock($pos) instanceof Grass){
+				if($this->mob->level->getGameRules()->getBool(GameRules::RULE_MOB_GRIEFING)){
+					$this->mob->level->addParticle(new DestroyBlockParticle($this->mob->floor(), Block::get(Block::GRASS)));
+					$this->mob->level->setBlock($pos, Block::get(Block::DIRT));
+				}
+
+				if($this->mob instanceof Animal){
+					$this->mob->eatGrassBonus($pos);
+				}
+			}
+		}
 	}
 
 	public function onEnd() : void{
-		$direction = $this->mob->getDirectionVector()->normalize();
-
-		$coordinates = $this->mob->add($direction->x, 0, $direction->z);
-
-		$broken = $this->mob->level->getBlock($coordinates);
-		if($broken instanceof TallGrass){
-			$this->mob->level->setBlock($coordinates, BlockFactory::get(Block::AIR));
-		}else{
-			$this->mob->level->setBlock($coordinates->getSide(Vector3::SIDE_DOWN), BlockFactory::get(Block::DIRT));
-		}
-		$this->mob->level->addParticle(new DestroyBlockParticle($this->mob, $broken));
+		$this->duration = 0;
 	}
 }

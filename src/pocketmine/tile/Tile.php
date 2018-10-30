@@ -67,9 +67,6 @@ abstract class Tile extends Position{
 	public const SKULL = "Skull";
 	public const SHULKER_BOX = "ShulkerBox";
 
-	/** @var int */
-	public static $tileCount = 1;
-
 	/** @var string[] classes that extend Tile */
 	private static $knownTiles = [];
 	/** @var string[][] */
@@ -77,8 +74,6 @@ abstract class Tile extends Position{
 
 	/** @var string */
 	public $name;
-	/** @var int */
-	public $id;
 	/** @var bool */
 	public $closed = false;
 	/** @var Server */
@@ -87,22 +82,67 @@ abstract class Tile extends Position{
 	protected $timings;
 
 	public static function init(){
-		self::registerTile(Banner::class, [self::BANNER, "minecraft:banner"]);
-		self::registerTile(Beacon::class, [self::BEACON, "minecraft:beacon"]);
-		self::registerTile(Bed::class, [self::BED, "minecraft:bed"]);
-		self::registerTile(Chest::class, [self::CHEST, "minecraft:chest"]);
-		self::registerTile(EnchantTable::class, [self::ENCHANT_TABLE, "minecraft:enchanting_table"]);
-		self::registerTile(EnderChest::class, [self::ENDER_CHEST, "minecraft:ender_chest"]);
-		self::registerTile(FlowerPot::class, [self::FLOWER_POT, "minecraft:flower_pot"]);
-		self::registerTile(Furnace::class, [self::FURNACE, "minecraft:furnace"]);
-		self::registerTile(Hopper::class, [self::HOPPER, "minecraft:hopper"]);
+		self::registerTile(Banner::class, [
+			self::BANNER,
+			"minecraft:banner"
+		]);
+		self::registerTile(Beacon::class, [
+			self::BEACON,
+			"minecraft:beacon"
+		]);
+		self::registerTile(Bed::class, [
+			self::BED,
+			"minecraft:bed"
+		]);
+		self::registerTile(Chest::class, [
+			self::CHEST,
+			"minecraft:chest"
+		]);
+		self::registerTile(EnchantTable::class, [
+			self::ENCHANT_TABLE,
+			"minecraft:enchanting_table"
+		]);
+		self::registerTile(EnderChest::class, [
+			self::ENDER_CHEST,
+			"minecraft:ender_chest"
+		]);
+		self::registerTile(FlowerPot::class, [
+			self::FLOWER_POT,
+			"minecraft:flower_pot"
+		]);
+		self::registerTile(Furnace::class, [
+			self::FURNACE,
+			"minecraft:furnace"
+		]);
+		self::registerTile(Hopper::class, [
+			self::HOPPER,
+			"minecraft:hopper"
+		]);
 		self::registerTile(ItemFrame::class, [self::ITEM_FRAME]); //this is an entity in PC
-		self::registerTile(Jukebox::class, [self::JUKEBOX, "minecraft:jukebox"]);
-		self::registerTile(NoteBlock::class, [self::NOTEBLOCK, "minecraft:noteblock"]);
-		self::registerTile(Sign::class, [self::SIGN, "minecraft:sign"]);
-		self::registerTile(Skull::class, [self::SKULL, "minecraft:skull"]);
-		self::registerTile(ShulkerBox::class, [self::SHULKER_BOX, "minecraft:shulker_box"]);
-		self::registerTile(MobSpawner::class, [self::MOB_SPAWNER, "minecraft:mob_spawner"]);
+		self::registerTile(Jukebox::class, [
+			self::JUKEBOX,
+			"minecraft:jukebox"
+		]);
+		self::registerTile(NoteBlock::class, [
+			self::NOTEBLOCK,
+			"minecraft:noteblock"
+		]);
+		self::registerTile(Sign::class, [
+			self::SIGN,
+			"minecraft:sign"
+		]);
+		self::registerTile(Skull::class, [
+			self::SKULL,
+			"minecraft:skull"
+		]);
+		self::registerTile(ShulkerBox::class, [
+			self::SHULKER_BOX,
+			"minecraft:shulker_box"
+		]);
+		self::registerTile(MobSpawner::class, [
+			self::MOB_SPAWNER,
+			"minecraft:mob_spawner"
+		]);
 
 	}
 
@@ -117,6 +157,7 @@ abstract class Tile extends Position{
 	public static function createTile($type, Level $level, CompoundTag $nbt, ...$args) : ?Tile{
 		if(isset(self::$knownTiles[$type])){
 			$class = self::$knownTiles[$type];
+			/** @see Tile::__construct() */
 			return new $class($level, $nbt, ...$args);
 		}
 
@@ -126,6 +167,8 @@ abstract class Tile extends Position{
 	/**
 	 * @param string   $className
 	 * @param string[] $saveNames
+	 *
+	 * @throws \ReflectionException
 	 */
 	public static function registerTile(string $className, array $saveNames = []) : void{
 		Utils::testValidInstance($className, Tile::class);
@@ -160,16 +203,11 @@ abstract class Tile extends Position{
 
 		$this->server = $level->getServer();
 		$this->name = "";
-		$this->id = Tile::$tileCount++;
 
 		parent::__construct($nbt->getInt(self::TAG_X), $nbt->getInt(self::TAG_Y), $nbt->getInt(self::TAG_Z), $level);
 		$this->readSaveData($nbt);
 
 		$this->getLevel()->addTile($this);
-	}
-
-	public function getId() : int{
-		return $this->id;
 	}
 
 	/**
@@ -213,6 +251,9 @@ abstract class Tile extends Position{
 	 * @return CompoundTag
 	 */
 	public static function createNBT(Vector3 $pos, ?int $face = null, ?Item $item = null, ?Player $player = null) : CompoundTag{
+		if(static::class === self::class){
+			throw new \BadMethodCallException(__METHOD__ . " must be called from the scope of a child class");
+		}
 		$nbt = new CompoundTag("", [
 			new StringTag(self::TAG_ID, static::getSaveId()),
 			new IntTag(self::TAG_X, (int) $pos->x),
@@ -265,7 +306,7 @@ abstract class Tile extends Position{
 		if($this->closed){
 			throw new \InvalidStateException("Cannot schedule update on garbage tile " . get_class($this));
 		}
-		$this->level->updateTiles[$this->id] = $this;
+		$this->level->updateTiles[Level::blockHash($this->x, $this->y, $this->z)] = $this;
 	}
 
 	public function isClosed() : bool{

@@ -41,7 +41,7 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 	 * Sometimes this gets changed when the MCPE-layer protocol gets broken to the point where old and new can't
 	 * communicate. It's important that we check this to avoid catastrophes.
 	 */
-	private const MCPE_RAKNET_PROTOCOL_VERSION = 8;
+	private const MCPE_RAKNET_PROTOCOL_VERSION = 9;
 
 	private const MCPE_RAKNET_PACKET_ID = "\xfe";
 
@@ -70,17 +70,17 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 		$this->server = $server;
 
 		$this->sleeper = new SleeperNotifier();
-		$server->getTickSleeper()->addNotifier($this->sleeper, function() : void{
-			//this should not throw any exception. If it does, this should crash the server since it's a fault condition.
-			while($this->interface->handlePacket()) ;
-		});
 
 		$this->rakLib = new RakLibServer($this->server->getLogger(), \pocketmine\COMPOSER_AUTOLOADER_PATH, new InternetAddress($this->server->getIp(), $this->server->getPort(), 4), (int) $this->server->getProperty("network.max-mtu-size", 1492), self::MCPE_RAKNET_PROTOCOL_VERSION, $this->sleeper);
 		$this->interface = new ServerHandler($this->rakLib, $this);
 	}
 
 	public function start() : void{
-		$this->rakLib->start(PTHREADS_INHERIT_CONSTANTS | PTHREADS_INHERIT_INI); //HACK: MainLogger needs INI and constants
+		$this->server->getTickSleeper()->addNotifier($this->sleeper, function() : void{
+			//this should not throw any exception. If it does, this should crash the server since it's a fault condition.
+			while($this->interface->handlePacket()) ;
+		});
+		$this->rakLib->start(PTHREADS_INHERIT_CONSTANTS); //HACK: MainLogger needs constants for exception logging
 	}
 
 	public function setNetwork(Network $network) : void{
@@ -129,16 +129,18 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 	public function handleEncapsulated(string $identifier, EncapsulatedPacket $packet, int $flags) : void{
 		if(isset($this->sessions[$identifier])){
 			//get this now for blocking in case the player was closed before the exception was raised
-			$address = $this->sessions[$identifier]->getIp();
+			$session = $this->sessions[$identifier];
+			$address = $session->getIp();
 			try{
 				if($packet->buffer !== "" and $packet->buffer{0} === self::MCPE_RAKNET_PACKET_ID){ //Batch
-					$this->sessions[$identifier]->handleEncoded(substr($packet->buffer, 1));
+					$session->handleEncoded(substr($packet->buffer, 1));
 				}
 			}catch(\Throwable $e){
 				$logger = $this->server->getLogger();
 				$logger->debug("EncapsulatedPacket 0x" . bin2hex($packet->buffer));
 				$logger->logException($e);
 
+				$session->disconnect("Internal server error");
 				$this->interface->blockAddress($address, 5);
 			}
 		}

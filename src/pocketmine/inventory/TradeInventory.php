@@ -25,36 +25,50 @@ declare(strict_types=1);
 namespace pocketmine\inventory;
 
 use pocketmine\entity\passive\Villager;
+use pocketmine\item\Item;
 use pocketmine\nbt\NetworkLittleEndianNBTStream;
+use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\UpdateTradePacket;
 use pocketmine\Player;
+use pocketmine\network\mcpe\protocol\types\WindowTypes;
 
-class TradeInventory extends BaseInventory{
+class TradeInventory extends ContainerInventory{
 
 	/** @var Villager */
 	protected $holder;
 	/** @var bool */
-	protected $isTraded = false;
+	protected $traded = false;
 
-	public function __construct(Villager $villager){
-		$this->holder = $villager;
-		parent::__construct();
-	}
-
+	/**
+	 * @return string
+	 */
 	public function getName() : string{
 		return "Trading";
 	}
 
+	/**
+	 * @return int
+	 */
+	public function getNetworkType() : int{
+		return WindowTypes::TRADING;
+	}
+
+	/**
+	 * @return int
+	 */
 	public function getDefaultSize() : int{
 		return 3; //1 buyA, 1 buyB, 1 sell
 	}
 
+	/**
+	 * @param Player $who
+	 */
 	public function onOpen(Player $who) : void{
-		$tag = clone $this->holder->getOffers();
-		if($tag !== null){
-			parent::onOpen($who);
+		if($this->holder->getOffers() instanceof CompoundTag){
+			BaseInventory::onOpen($who);
 
 			$this->holder->getDataPropertyManager()->setLong(Villager::DATA_TRADING_PLAYER_EID, $who->getId());
+
 			$pk = new UpdateTradePacket();
 			$pk->windowId = $who->getWindowId($this);
 			$pk->varint1 = 0;
@@ -63,33 +77,65 @@ class TradeInventory extends BaseInventory{
 			$pk->traderEid = $this->holder->getId();
 			$pk->playerEid = $who->getId();
 			$pk->displayName = $this->holder->getDisplayName();
-			$pk->offers = (new NetworkLittleEndianNBTStream())->write($tag);
+			$pk->offers = (new NetworkLittleEndianNBTStream())->write(clone $this->holder->getOffers());
+
 			$who->sendDataPacket($pk);
 		}else{
-			parent::onClose($who);
+			BaseInventory::onClose($who);
 		}
 	}
 
+	/**
+	 * @param Player $who
+	 */
 	public function onClose(Player $who) : void{
-		$this->holder->getDataPropertyManager()->removeProperty(Villager::DATA_TRADING_PLAYER_EID);
-		if($this->isTraded){
+		$this->holder->getDataPropertyManager()->setLong(Villager::DATA_TRADING_PLAYER_EID, -1);
+
+		if($this->traded){
 			$this->holder->updateTradeTier();
-			$this->isTraded = false;
+			$this->traded = false;
 		}
-		parent::onClose($who);
+
+		BaseInventory::onClose($who);
 	}
 
+	/**
+	 * @return Villager
+	 */
 	public function getHolder() : Villager{
 		return $this->holder;
 	}
 
+	public function onResult(Item $result) : bool{
+		$holder = $this->getHolder();
+		$recipes = $holder->getOffers()->getListTag("Recipes");
+		/** @var CompoundTag $tag */
+		foreach($recipes->getAllValues() as $index => $tag){
+			$sell = Item::nbtDeserialize($tag->getCompoundTag("sell"));
+			if($sell->equalsExact($result)){
+				$tag->setInt("uses", $tag->getInt("uses") + 1);
+				$recipes->set($index, $tag);
+				break;
+			}
+		}
+
+		$this->holder->setWilling(mt_rand(1, 3) <= 2);
+		$this->setTraded(true);
+
+		return true; // TODO
+	}
 
 	/**
-	 * For trade tier update
-	 *
-	 * @param bool $value
+	 * @return bool
 	 */
-	public function setTraded(bool $value) : void{
-		$this->isTraded = $value;
+	public function isTraded() : bool{
+		return $this->traded;
+	}
+
+	/**
+	 * @param bool $traded
+	 */
+	public function setTraded(bool $traded) : void{
+		$this->traded = $traded;
 	}
 }
