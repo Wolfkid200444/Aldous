@@ -29,6 +29,7 @@ use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\network\mcpe\protocol\types\CommandParameter;
 use pocketmine\Player;
+use pocketmine\event\server\BanEvent;
 
 class BanCommand extends VanillaCommand{
 
@@ -58,7 +59,8 @@ class BanCommand extends VanillaCommand{
 		$reason = implode(" ", $args);
 
 		$sender->getServer()->getNameBans()->addBan($name, $reason, null, $sender->getName());
-
+        $event = new BanEvent($name, $reason);
+        $event->call();
 		if(($player = $sender->getServer()->getPlayerExact($name)) instanceof Player){
 			$player->kick($reason !== "" ? "Banned by admin. Reason: " . $reason : "Banned by admin.");
 		}
