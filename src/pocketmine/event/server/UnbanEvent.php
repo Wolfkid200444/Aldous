@@ -1,5 +1,7 @@
 <?php
+
 namespace pocketmine\event\server;
+
 use pocketmine\event\Event;
 
 /**
@@ -8,36 +10,37 @@ use pocketmine\event\Event;
  * @package pocketmine\event\server
  */
 class UnbanEvent extends Event{
-    /**
-     * Player that gots unbanned -> String
-     * @var String
-     */
-    private $player;
-    /**
-     * Player unbanned the target player -> String / Player / ConsoleCommandSender
-     * @var
-     */
-    private $unbanner;
+	/**
+	 * Player that gots unbanned -> String
+	 * @var String
+	 */
+	private $player;
+	/**
+	 * Player unbanned the target player -> String / Player / ConsoleCommandSender
+	 * @var
+	 */
+	private $unbanner;
 
-    /**
-     * UnbanEvent constructor.
-     * @param String $player
-     * @param $unbanner
-     */
-    public function __construct(String $player, $unbanner)
-    {
-        $this->unbanner = $unbanner;
-        $this->player = $player;
-    }
+	/**
+	 * UnbanEvent constructor.
+	 *
+	 * @param String $player
+	 * @param        $unbanner
+	 */
+	public function __construct(String $player, $unbanner){
+		$this->unbanner = $unbanner;
+		$this->player = $player;
+	}
 
-    /**
-     * Returns players name // That got unbanned
-     * @return String
-     */
-    public function getPlayer(): String{
-        return $this->player;
-    }
-    public function getUnbanner(){
-        return $this->unbanner;
-    }
+	/**
+	 * Returns players name // That got unbanned
+	 * @return String
+	 */
+	public function getPlayer() : String{
+		return $this->player;
+	}
+
+	public function getUnbanner(){
+		return $this->unbanner;
+	}
 }

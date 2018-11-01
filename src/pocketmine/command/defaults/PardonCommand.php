@@ -34,10 +34,10 @@ class PardonCommand extends VanillaCommand{
 
 	public function __construct(string $name){
 		parent::__construct($name, "%pocketmine.command.unban.player.description", "%commands.unban.usage", ["unban"], [
-				[
-					new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET, false)
-				]
-			]);
+			[
+				new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET, false)
+			]
+		]);
 		$this->setPermission("pocketmine.command.unban.player");
 	}
 
@@ -49,7 +49,7 @@ class PardonCommand extends VanillaCommand{
 		if(count($args) !== 1){
 			throw new InvalidCommandSyntaxException();
 		}
-        $event = new UnbanEvent($args[0], $sender);
+		$event = new UnbanEvent($args[0], $sender);
 		$event->call();
 		$sender->getServer()->getNameBans()->remove($args[0]);
 

@@ -34,15 +34,12 @@ use pocketmine\event\server\BanEvent;
 class BanCommand extends VanillaCommand{
 
 	public function __construct(string $name){
-		parent::__construct(
-			$name,
-			"%pocketmine.command.ban.player.description",
-			"%commands.ban.usage",
-            [], [[
-                new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET, false),
-                new CommandParameter("reason", CommandParameter::ARG_TYPE_RAWTEXT, false)
-            ]]
-		);
+		parent::__construct($name, "%pocketmine.command.ban.player.description", "%commands.ban.usage", [], [
+				[
+					new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET, false),
+					new CommandParameter("reason", CommandParameter::ARG_TYPE_RAWTEXT, false)
+				]
+			]);
 		$this->setPermission("pocketmine.command.ban.player");
 	}
 
@@ -59,8 +56,8 @@ class BanCommand extends VanillaCommand{
 		$reason = implode(" ", $args);
 
 		$sender->getServer()->getNameBans()->addBan($name, $reason, null, $sender->getName());
-        $event = new BanEvent($name, $reason);
-        $event->call();
+		$event = new BanEvent($name, $reason);
+		$event->call();
 		if(($player = $sender->getServer()->getPlayerExact($name)) instanceof Player){
 			$player->kick($reason !== "" ? "Banned by admin. Reason: " . $reason : "Banned by admin.");
 		}

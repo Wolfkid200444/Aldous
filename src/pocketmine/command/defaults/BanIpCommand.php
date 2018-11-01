@@ -34,15 +34,12 @@ use pocketmine\Player;
 class BanIpCommand extends VanillaCommand{
 
 	public function __construct(string $name){
-		parent::__construct(
-			$name,
-			"%pocketmine.command.ban.ip.description",
-			"%commands.banip.usage",
-            [], [[
-                new CommandParameter("ip", CommandParameter::ARG_TYPE_VALUE, false),
-                new CommandParameter("reason", CommandParameter::ARG_TYPE_RAWTEXT, false)
-            ]]
-		);
+		parent::__construct($name, "%pocketmine.command.ban.ip.description", "%commands.banip.usage", [], [
+				[
+					new CommandParameter("ip", CommandParameter::ARG_TYPE_VALUE, false),
+					new CommandParameter("reason", CommandParameter::ARG_TYPE_RAWTEXT, false)
+				]
+			]);
 		$this->setPermission("pocketmine.command.ban.ip");
 	}
 
@@ -66,7 +63,10 @@ class BanIpCommand extends VanillaCommand{
 			if(($player = $sender->getServer()->getPlayer($value)) instanceof Player){
 				$this->processIPBan($player->getAddress(), $sender, $reason);
 
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.banip.success.players", [$player->getAddress(), $player->getName()]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.banip.success.players", [
+					$player->getAddress(),
+					$player->getName()
+				]));
 			}else{
 				$sender->sendMessage(new TranslationContainer("commands.banip.invalid"));
 
@@ -85,8 +85,8 @@ class BanIpCommand extends VanillaCommand{
 				$player->kick($reason !== "" ? $reason : "IP banned.");
 			}
 		}
-        $event = new AddressBanEvent($ip, $reason);
-        $event->call();
+		$event = new AddressBanEvent($ip, $reason);
+		$event->call();
 		$sender->getServer()->getNetwork()->blockAddress($ip, -1);
 	}
 }
