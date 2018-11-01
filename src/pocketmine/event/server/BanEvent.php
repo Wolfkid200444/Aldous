@@ -28,14 +28,9 @@ class BanEvent extends Event{
 	 * @param        $player
 	 * @param String $reason
 	 */
-	public function __construct($player, String $reason = "None"){
+	public function __construct($player, string $reason = "generic reason"){
 		$this->player = $player;
-		if($reason != ""){
-			$this->reason = $reason;
-		}else{
-			$this->reason = "None";
-		}
-
+		$this->reason = $reason;
 	}
 
 	/**
@@ -50,7 +45,7 @@ class BanEvent extends Event{
 	 * Returns Ban Reason
 	 * @return String
 	 */
-	public function getReason() : String{
+	public function getReason() : string{
 		return $this->reason;
 	}
 }

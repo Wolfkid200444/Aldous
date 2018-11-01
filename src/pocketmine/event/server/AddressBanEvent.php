@@ -10,15 +10,9 @@ use pocketmine\event\Event;
  * @package pocketmine\event\server
  */
 class AddressBanEvent extends Event{
-	/**
-	 * Reason why IP got banned / "None" if no reason given
-	 * @var String
-	 */
+	/** @var string */
 	private $reason;
-	/**
-	 * IP-Address that got banned
-	 * @var String
-	 */
+	/** @var string */
 	private $ip;
 
 	/**
@@ -27,28 +21,22 @@ class AddressBanEvent extends Event{
 	 * @param String $ip
 	 * @param String $reason
 	 */
-	public function __construct(String $ip, String $reason = "None"){
+	public function __construct(string $ip, string $reason = "generic reason"){
 		$this->ip = $ip;
-		if($reason != ""){
-			$this->reason = $reason;
-		}else{
-			$this->reason = "None";
-		}
-
-
+		$this->reason = $reason;
 	}
 
 	/**
 	 * Returns IP that got banned
 	 * @return String
 	 */
-	public function getIp() : String{
+	public function getIp() : string{
 		return $this->ip;
 	}
 
 
 	/**
-	 * Returns the reason the Player was banned for / "None" If no reason was given
+	 * Returns the reason the Player was banned
 	 * @return String
 	 */
 	public function getReason(){
