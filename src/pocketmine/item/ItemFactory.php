@@ -207,6 +207,7 @@ class ItemFactory{
 		self::registerItem(new BakedPotato());
 		self::registerItem(new PoisonousPotato());
 		self::registerItem(new EmptyMap());
+		self::registerItem(new EmptyMap(2));
 		self::registerItem(new GoldenCarrot());
 
 		self::registerItem(new ItemBlock(Block::SKULL_BLOCK, Skull::TYPE_SKELETON, Item::SKULL));

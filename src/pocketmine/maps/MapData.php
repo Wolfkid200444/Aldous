@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace pocketmine\maps;
 
+use pocketmine\item\Map;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\math\Vector2;
@@ -60,8 +61,6 @@ class MapData{
 	/** @var ClientboundMapItemDataPacket|null */
 	protected $cachedDataPacket = null;
 	/** @var bool */
-	protected $dirty = true;
-	/** @var bool */
 	protected $fullyExplored = true;
 
 	/** @var MapInfo[] */
@@ -90,7 +89,7 @@ class MapData{
 	 */
 	public function setDimension(int $dimension) : void{
 		$this->dimension = $dimension;
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE | ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE);
 	}
 
 	/**
@@ -105,7 +104,7 @@ class MapData{
 	 */
 	public function setScale(int $scale) : void{
 		$this->scale = $scale;
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE | ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE);
 	}
 
 	/**
@@ -120,7 +119,7 @@ class MapData{
 	 */
 	public function setColors(array $colors) : void{
 		$this->colors = $colors;
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
 	}
 
 	/**
@@ -130,16 +129,16 @@ class MapData{
 	 */
 	public function setColorAt(int $x, int $y, Color $color) : void{
 		$this->colors[$y][$x] = $color;
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
 	}
 
 	/**
 	 * @param int $x
 	 * @param int $y
 	 *
-	 * @return null|Color
+	 * @return Color
 	 */
-	public function getColorAt(int $x, int $y) : ?Color{
+	public function getColorAt(int $x, int $y) : Color{
 		return $this->colors[$y][$x] ?? new Color(0, 0, 0);
 	}
 
@@ -167,18 +166,13 @@ class MapData{
 		$this->setCenter($j * $i + $i / 2 - 64, $k * $i + $i / 2 - 64);
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function isDirty() : bool{
-		return $this->dirty;
-	}
-
-	/**
-	 * Marks map data as dirty to send data packet
-	 */
-	public function markDirty() : void{
-		$this->dirty = true;
+	public function updateMap(int $flags) : void{
+		foreach($this->playersMap as $info){
+			$player = $info->player;
+			if($player->isOnline() and $player->isAlive() and $player->level->getDimension() === $this->dimension){
+				$player->sendDataPacket($this->createDataPacket($flags));
+			}
+		}
 	}
 
 	public function readSaveData(CompoundTag $nbt) : void{
@@ -189,15 +183,12 @@ class MapData{
 		$this->fullyExplored = boolval($nbt->getByte("fullyExplored", 1));
 		if($this->scale > 4) $this->scale = 0;
 
-		$height = $nbt->getShort("height", 128);
-		$width = $nbt->getShort("width", 128);
+		if($nbt->hasTag("colors", IntArrayTag::class)){
+			$colors = $nbt->getIntArray("colors");
 
-		if($nbt->hasTag("colors", ByteArrayTag::class)){
-			$byteColors = $nbt->getByteArray("colors");
-
-			for($y = 0; $y < $height; $y++){
-				for($x = 0; $x < $width; $x++){
-					$this->colors[$y][$x] = Color::fromABGR($byteColors[$x + $y * $width] ?? 0);
+			for($y = 0; $y < 128; $y++){
+				for($x = 0; $x < 128; $x++){
+					$this->colors[$y][$x] = Color::fromABGR($colors[$x + $y * 128] ?? 0);
 				}
 			}
 		}
@@ -208,20 +199,18 @@ class MapData{
 		$nbt->setInt("xCenter", $this->xCenter);
 		$nbt->setInt("zCenter", $this->zCenter);
 		$nbt->setByte("scale", $this->scale);
-		$nbt->setShort("width", $w = 128 * (1 << $this->scale));
-		$nbt->setShort("height", $h = 128 * (1 << $this->scale));
 		$nbt->setByte("fullyExplored", intval($this->fullyExplored));
 
 		if(count($this->colors) > 0){
-			$byteColors = "";
-			for($y = 0; $y < $h; $y++){
-				for($x = 0; $x < $w; $x++){
+			$colors = [];
+			for($y = 0; $y < 128; $y++){
+				for($x = 0; $x < 128; $x++){
 					$color = $this->colors[$y][$x] ?? new Color(0, 0, 0);
-					$byteColors[$x + $y * $w] = $color->toABGR();
+					$colors[$x + $y * 128] = $color->toABGR();
 				}
 			}
 
-			$nbt->setByteArray("colors", $byteColors, true);
+			$nbt->setIntArray("colors", $colors, true);
 		}
 	}
 
@@ -237,7 +226,7 @@ class MapData{
 	 */
 	public function setDecorations(array $decorations) : void{
 		$this->decorations = array_keys($decorations);
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE);
 	}
 
 	/**
@@ -252,41 +241,27 @@ class MapData{
 	 */
 	public function setTrackedObjects(array $trackedObjects) : void{
 		$this->trackedObjects = $trackedObjects;
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE);
 	}
 
-	/**
-	 * @param MapInfo $info
-	 *
-	 * @return ClientboundMapItemDataPacket
-	 */
-	public function createDataPacket(MapInfo $info) : ClientboundMapItemDataPacket{
+	public function createDataPacket(int $flags) : ClientboundMapItemDataPacket{
 		$pk = new ClientboundMapItemDataPacket();
 		$pk->mapId = $this->mapId;
 		$pk->dimensionId = $this->dimension;
 		$pk->scale = $this->scale;
 		$pk->width = 128;
 		$pk->height = 128;
-		$pk->colors = $this->colors;
-		$pk->decorations = $this->decorations;
-		//$pk->trackedEntities = $this->trackedObjects;
-		/*$pk->xOffset = max($info->minX, $info->maxX);
-		$pk->yOffset = max($info->minY, $info->maxY);*/
-		//$pk->eids = [$info->player->getId()];
+
+		if(($flags & ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE) !== 0){
+			$pk->decorations = $this->decorations;
+			$pk->trackedEntities = $this->trackedObjects;
+		}
+
+		if(($flags & ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE) !== 0){
+			$pk->colors = $this->colors;
+		}
 
 		return $pk;
-	}
-
-	public function getMapDataPacket(Player $player) : ?ClientboundMapItemDataPacket{
-		$info = $this->getMapInfo($player);
-
-		//if($info->forceUpdate or $info->packetSendTimer++ % 5 === 0){
-			$info->forceUpdate = false;
-			$this->dirty = false;
-			return $this->createDataPacket($info);
-		//}
-
-		//return null;
 	}
 
 	/**
@@ -314,11 +289,15 @@ class MapData{
 		return $this->playersMap[spl_object_hash($player)];
 	}
 
-	public function updateInfo(int $x, int $y) : void{
-		$this->markDirty();
+	/**
+	 * @param int $x
+	 * @param int $y
+	 */
+	public function updateTextureAt(int $x, int $y) : void{
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
 
 		foreach($this->playersMap as $info){
-			$info->update($x, $y);
+			$info->updateTextureAt($x, $y);
 		}
 	}
 
@@ -326,9 +305,9 @@ class MapData{
 	 * Adds the player passed to the list of visible players and checks to see which players are visible
 	 *
 	 * @param Player $player
-	 * @param Item   $mapStack
+	 * @param Map   $mapStack
 	 */
-	public function updateVisiblePlayers(Player $player, Item $mapStack){
+	public function updateVisiblePlayers(Player $player, Map $mapStack){
 		if(!isset($this->playersMap[$hash = spl_object_hash($player)])){
 			$this->playersMap[$hash] = new MapInfo($player);
 
@@ -342,20 +321,22 @@ class MapData{
 			unset($this->decorations[$player->getName()]);
 		}
 
-		foreach($this->playersMap as $info){
-			$pi = $info->player;
-			if($pi->isAlive() and $pi->level->getDimension() === $this->dimension){
-				if(!$mapStack->isOnItemFrame() and $pi->getInventory()->contains($mapStack)){
-					$this->updateDecorations(0, $pi->level, $pi->getName(), $pi->getFloorX(), $pi->getFloorZ(), floor($pi->getYaw()));
+		if($mapStack->isMapDisplayPlayers()){
+			foreach($this->playersMap as $info){
+				$pi = $info->player;
+				if($pi->isOnline() and $pi->isAlive() and $pi->level->getDimension() === $this->dimension and $info->packetSendTimer++ % 5 === 0){
+					if(!$mapStack->isOnItemFrame() and $pi->getInventory()->contains($mapStack)){
+						$this->updateDecorations(MapDecoration::TYPE_PLAYER, $pi->level, $pi->getName(), $pi->getFloorX(), $pi->getFloorZ(), $pi->getYaw());
+					}
+				}else{
+					unset($this->playersMap[spl_object_hash($pi)]);
 				}
-			}else{
-				unset($this->playersMap[spl_object_hash($pi)]);
 			}
 		}
 
 		if($mapStack->isOnItemFrame()){
 			$frame = $mapStack->getItemFrame();
-			$this->updateDecorations(1, $player->level, "frame-" . $frame->getId(), $frame->getFloorX(), $frame->getFloorZ(), $frame->getBlock()->getDamage() * 90);
+			$this->updateDecorations(MapDecoration::TYPE_FRAME, $player->level, "frame-" . spl_object_hash($frame), $frame->getFloorX(), $frame->getFloorZ(), $frame->getBlock()->getDamage() * 90);
 		}
 
 		$mapNbt = $mapStack->getNamedTag();
@@ -371,15 +352,23 @@ class MapData{
 		}
 	}
 
+	/**
+	 * @param int    $type
+	 * @param Level  $worldIn
+	 * @param String $entityIdentifier
+	 * @param int    $worldX
+	 * @param int    $worldZ
+	 * @param float  $rotation
+	 */
 	public function updateDecorations(int $type, Level $worldIn, String $entityIdentifier, int $worldX, int $worldZ, float $rotation){
 		$i = 1 << $this->scale;
-		$f = (float) ($worldX - (double) $this->xCenter) / (float) $i;
-		$f1 = (float) ($worldZ - (double) $this->zCenter) / (float) $i;
-		$b0 = ((int) ((double) ($f * 2.0) + 0.5));
-		$b1 = ((int) ((double) ($f1 * 2.0) + 0.5));
+		$f = ($worldX - $this->xCenter) / $i;
+		$f1 = ($worldZ - $this->zCenter) / $i;
+		$b0 = (int) (($f * 2.0) + 0.5);
+		$b1 = (int) (($f1 * 2.0) + 0.5);
 		$j = 63;
 
-		if($f >= (float) (-$j) && $f1 >= (float) (-$j) && $f <= (float) $j && $f1 <= (float) $j){
+		if($f >= (-$j) and $f1 >= (-$j) and $f <= $j and $f1 <= $j){
 			$rotation = $rotation + ($rotation < 0.0 ? -8.0 : 8.0);
 			$b2 = ((int) ($rotation * 16.0 / 360.0));
 
@@ -388,27 +377,28 @@ class MapData{
 				$b2 = (int) ($k * $k * 34187121 + $k * 121 >> 15 & 15);
 			}
 		}else{
-			if(abs($f) >= 320.0 || abs($f1) >= 320.0){
+			if(abs($f) >= 320.0 or abs($f1) >= 320.0){
 				unset($this->decorations[$entityIdentifier]);
 				return;
 			}
-
-			$type = 6;
+			if($type === MapDecoration::TYPE_PLAYER){
+				$type = MapDecoration::TYPE_PLAYER_OFF_MAP;
+			}
 			$b2 = 0;
 
-			if($f <= (float) (-$j)){
-				$b0 = (int) ((int) ((double) ($j * 2) + 2.5));
+			if($f <= -$j){
+				$b0 = (int) (($j * 2) + 2.5);
 			}
 
-			if($f1 <= (float) (-$j)){
-				$b1 = (int) ((int) ((double) ($j * 2) + 2.5));
+			if($f1 <= -$j){
+				$b1 = (int) (($j * 2) + 2.5);
 			}
 
-			if($f >= (float) $j){
+			if($f >= $j){
 				$b0 = (int) ($j * 2 + 1);
 			}
 
-			if($f1 >= (float) $j){
+			if($f1 >= $j){
 				$b1 = (int) ($j * 2 + 1);
 			}
 		}
@@ -423,6 +413,6 @@ class MapData{
 
 		$this->decorations[$entityIdentifier] = $deco;
 
-		$this->markDirty();
+		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE);
 	}
 }

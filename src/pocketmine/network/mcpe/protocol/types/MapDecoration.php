@@ -28,6 +28,18 @@ use pocketmine\utils\Color;
 
 class MapDecoration{
 
+	public const TYPE_PLAYER = 0;
+	public const TYPE_FRAME = 1;
+	public const TYPE_RED_MARKER = 2;
+	public const TYPE_BLUE_MARKER = 3;
+	public const TYPE_TARGET_X = 4;
+	public const TYPE_TARGET_POINT = 5;
+	public const TYPE_PLAYER_OFF_MAP = 6;
+	public const TYPE_PLAYER_OFF_LIMITS = 7;
+	public const TYPE_MANSION = 8;
+	public const TYPE_MONUMENT = 9;
+	// where is the red_x? it is not working
+
 	/** @var int */
 	public $icon;
 	/** @var int */

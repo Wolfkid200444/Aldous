@@ -64,17 +64,9 @@ class Map extends Item{
 
 	public function onUpdate(Player $player) : void{
 		if($data = $this->getMapData()){
-			if($data->isDirty()){
-				$pk = $data->getMapDataPacket($player);
+			$data->updateVisiblePlayers($player, $this);
 
-				$data->updateVisiblePlayers($player, $this);
-
-				if($pk != null){
-					$player->sendDataPacket($pk);
-				}
-			}
-
-			$this->updateMapData($player, $data);
+			//$this->updateMapData($player, $data);
 		}
 	}
 
@@ -185,17 +177,15 @@ class Map extends Item{
 		$this->setMapId($id = MapManager::getNextId());
 		$this->setMapInit(true);
 		$this->setMapNameIndex($id + 1);
-		$this->setMapDisplayPlayers(true);
 
 		$data = new MapData($id);
 		$data->setScale($scale);
 		$data->setDimension($player->level->getDimension());
 		$data->calculateMapCenter($player->getFloorX(), $player->getFloorZ(), $scale);
 
-		$sc = (1 << $scale) * 128;
-		for($x = 0; $x < $sc; $x++){
-			for($y = 0; $y < $sc; $y++){
-				$data->setColorAt($x, $y, new Color(0, 0, 0, 255));
+		for($x = 0; $x < 128; $x++){
+			for($y = 0; $y < 128; $y++){
+				$data->setColorAt($x, $y, new Color(127, 178, 56));
 			}
 		}
 

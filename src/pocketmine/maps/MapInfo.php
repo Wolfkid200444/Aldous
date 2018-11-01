@@ -43,7 +43,7 @@ class MapInfo{
 		$this->player = $player;
 	}
 
-	public function update(int $x, int $y) : void{
+	public function updateTextureAt(int $x, int $y) : void{
 		if($this->forceUpdate){
 			$this->minX = min($this->minX, $x);
 			$this->minY = min($this->minY, $y);

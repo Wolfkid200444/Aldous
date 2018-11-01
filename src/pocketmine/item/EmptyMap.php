@@ -28,12 +28,13 @@ use pocketmine\math\Vector3;
 use pocketmine\nbt\NBT;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\ListTag;
+use pocketmine\network\mcpe\protocol\types\MapDecoration;
 use pocketmine\Player;
 
 class EmptyMap extends Item{
 
-	public function __construct(int $meta = 0){
-		parent::__construct(self::EMPTY_MAP, $meta, "Empty Map");
+	public function __construct(int $variant = 0){
+		parent::__construct(self::EMPTY_MAP, $variant, "Empty Map");
 	}
 
 	/**
@@ -46,16 +47,8 @@ class EmptyMap extends Item{
 		$map = new Map();
 		$map->onCreateMap($player, 0);
 
-		if($this->meta === 2){ // explorer map
-			$nbt = $map->getNamedTag();
-			$deco = new CompoundTag();
-			$deco->setString("id", $player->getName());
-			$deco->setDouble("rot", 0);
-			$deco->setByte("type", 26);
-			$deco->setDouble("x", $player->getFloorX());
-			$deco->setDouble("z", $player->getFloorZ());
-			$nbt->setTag(new ListTag("Decorations", [$deco], NBT::TAG_Compound));
-			$map->setNamedTag($nbt);
+		if($this->getDamage() === 2){ // explorer map
+			$map->setMapDisplayPlayers(true);
 		}
 
 		if($player->getInventory()->canAddItem($map)){

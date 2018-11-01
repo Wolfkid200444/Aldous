@@ -38,6 +38,7 @@ use pocketmine\network\mcpe\protocol\BlockEntityDataPacket;
 use pocketmine\network\mcpe\protocol\BlockPickRequestPacket;
 use pocketmine\network\mcpe\protocol\BookEditPacket;
 use pocketmine\network\mcpe\protocol\BossEventPacket;
+use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\network\mcpe\protocol\CommandBlockUpdatePacket;
 use pocketmine\network\mcpe\protocol\CommandRequestPacket;
 use pocketmine\network\mcpe\protocol\ContainerClosePacket;
@@ -372,11 +373,7 @@ class SimpleSessionHandler extends SessionHandler{
 	public function handleMapInfoRequest(MapInfoRequestPacket $packet) : bool{
 		$data = MapManager::getMapDataById($packet->mapId);
 		if($data instanceof MapData){
-			$pk = $data->getMapDataPacket($this->player);
-
-			if($pk !== null){
-				$this->player->sendDataPacket($pk);
-			}
+			$this->player->sendDataPacket($data->createDataPacket(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE | ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE));
 			return true;
 		}
 		return false;
