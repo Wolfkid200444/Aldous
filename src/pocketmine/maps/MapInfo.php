@@ -30,7 +30,7 @@ class MapInfo{
 
 	/** @var Player */
 	public $player;
-	public $mapIndex = 0;
+	public $textureCheckCounter = 0;
 	public $packetSendTimer = 0;
 	public $forceUpdate = true;
 
@@ -43,6 +43,14 @@ class MapInfo{
 		$this->player = $player;
 	}
 
+
+
+	/**
+	 * Calculates map canvas
+	 *
+	 * @param int $x
+	 * @param int $y
+	 */
 	public function updateTextureAt(int $x, int $y) : void{
 		if($this->forceUpdate){
 			$this->minX = min($this->minX, $x);

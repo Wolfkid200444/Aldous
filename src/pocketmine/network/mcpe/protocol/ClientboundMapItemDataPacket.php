@@ -68,6 +68,30 @@ class ClientboundMapItemDataPacket extends DataPacket{
 	/** @var Color[][] */
 	public $colors = [];
 
+	/**
+	 * Crops the texture by wanted size
+	 *
+	 * @param int $minX
+	 * @param int $minY
+	 * @param int $maxX
+	 * @param int $maxY
+	 */
+	public function cropTexture(int $minX, int $minY, int $maxX, int $maxY) : void{
+		$this->height = $maxY;
+		$this->width = $maxX;
+		$this->xOffset = $minX;
+		$this->yOffset = $minY;
+		$newColors = [];
+
+		for($x = 0; $x < $maxX; $x++){
+			for($y = 0; $y < $maxY; $y++){
+				$newColors[$y][$x] = $this->colors[$minX + $x][$minY + $y];
+			}
+		}
+
+		$this->colors = $newColors;
+	}
+
 	protected function decodePayload() : void{
 		$this->mapId = $this->getEntityUniqueId();
 		$this->type = $this->getUnsignedVarInt();

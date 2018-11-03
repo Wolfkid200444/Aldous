@@ -129,7 +129,7 @@ class MapData{
 	 */
 	public function setColorAt(int $x, int $y, Color $color) : void{
 		$this->colors[$y][$x] = $color;
-		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
+		//$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
 	}
 
 	/**
@@ -170,7 +170,12 @@ class MapData{
 		foreach($this->playersMap as $info){
 			$player = $info->player;
 			if($player->isOnline() and $player->isAlive() and $player->level->getDimension() === $this->dimension){
-				$player->sendDataPacket($this->createDataPacket($flags));
+				$pk = $this->createDataPacket($flags);
+				if($info->forceUpdate and !empty($pk->colors)){
+					$info->forceUpdate = false;
+					//$pk->cropTexture($info->minX, $info->minY, $info->maxX + 1 - $info->minX, $info->maxY + 1 - $info->minY);
+				}
+				$player->sendDataPacket($pk);
 			}
 		}
 	}
@@ -294,8 +299,6 @@ class MapData{
 	 * @param int $y
 	 */
 	public function updateTextureAt(int $x, int $y) : void{
-		$this->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
-
 		foreach($this->playersMap as $info){
 			$info->updateTextureAt($x, $y);
 		}

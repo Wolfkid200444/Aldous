@@ -31,6 +31,7 @@ use pocketmine\block\Planks;
 use pocketmine\block\Prismarine;
 use pocketmine\block\Stone;
 use pocketmine\block\StoneSlab;
+use pocketmine\block\utils\WoodType;
 use pocketmine\maps\MapData;
 use pocketmine\maps\MapManager;
 use pocketmine\math\Facing;
@@ -39,6 +40,7 @@ use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\LongTag;
 use pocketmine\nbt\tag\IntTag;
+use pocketmine\network\mcpe\protocol\ClientboundMapItemDataPacket;
 use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\utils\Color;
@@ -66,7 +68,7 @@ class Map extends Item{
 		if($data = $this->getMapData()){
 			$data->updateVisiblePlayers($player, $this);
 
-			//$this->updateMapData($player, $data);
+			$this->updateMapData($player, $data);
 		}
 	}
 
@@ -81,19 +83,20 @@ class Map extends Item{
 			$j1 = 128 / $i;
 
 			$info = $data->getMapInfo($player);
-			$info->mapIndex++;
+			$info->textureCheckCounter++;
 
 			$flag = false;
 			$world = $player->level;
 
 			$tempVector = new Vector3();
+			$changed = false;
 
-			for($k1 = $l - $j1 + 1; $k1 < $l + $j1; ++$k1){
-				if(($k1 & 15) == ($info->mapIndex & 15) || $flag){
+			for($k1 = max(0, $l - $j1 + 1); $k1 < min($l + $j1, 128); ++$k1){
+				if(($k1 & 15) === ($info->textureCheckCounter & 15)){
 					$flag = false;
 					$d0 = 0.0;
 
-					for($l1 = $i1 - $j1 - 1; $l1 < $i1 + $j1; ++$l1){
+					for($l1 = max($i1 - $j1 - 1, 0); $l1 < min($i1 + $j1, 128); ++$l1){
 						if($k1 >= 0 and $l1 >= -1 and $k1 < 128 and $l1 < 128){
 							$i2 = $k1 - $l;
 							$j2 = $l1 - $i1;
@@ -117,12 +120,13 @@ class Map extends Item{
 										$h--;
 									}
 
-									if($block instanceof Liquid){
+									/*if($block instanceof Liquid){
 										while($block->getSide(Facing::DOWN) instanceof Liquid and $h > 0){
 											$block = $block->getSide(Facing::DOWN);
 											$h--;
 										}
-									}
+									}*/
+
 									$d1 += (int) $h / (int) ($i * $i);
 									$color = self::getMapColorByBlock($block);
 									$mapcolor = $color->toABGR();
@@ -161,8 +165,9 @@ class Map extends Item{
 
 									if($b0 !== $b1){
 										$data->setColorAt($k1, $l1, Color::fromABGR($b1));
-										$data->updateInfo($k1, $l1);
+										//$data->updateTextureAt($k1, $l1);
 										$flag = true;
+										$changed = true;
 									}
 								}
 							}
@@ -170,6 +175,7 @@ class Map extends Item{
 					}
 				}
 			}
+			if($changed) $data->updateMap(ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE);
 		}
 	}
 
@@ -185,7 +191,7 @@ class Map extends Item{
 
 		for($x = 0; $x < 128; $x++){
 			for($y = 0; $y < 128; $y++){
-				$data->setColorAt($x, $y, new Color(127, 178, 56));
+				$data->setColorAt($x, $y, new Color(0, 0, 0, 255));
 			}
 		}
 
@@ -231,7 +237,6 @@ class Map extends Item{
 		return boolval($this->getNamedTag()->getByte(self::TAG_MAP_IS_INIT, 0, true));
 	}
 
-
 	/**
 	 * TODO: Separate map colors to blocks
 	 *
@@ -240,11 +245,9 @@ class Map extends Item{
 	 * @return Color
 	 */
 	public static function getMapColorByBlock(Block $block) : Color{
-		$meta = $block->getDamage();
+		$meta = $block->getVariant();
 		$id = $block->getId();
-		return new Color(127, 178, 56);
-		// TODO
-		/*switch($id){
+		switch($id){
 			case ($id === Block::AIR):
 				return new Color(0, 0, 0);
 			case ($id === Block::GRASS):
@@ -257,12 +260,12 @@ class Map extends Item{
 			case ($id === Block::DOUBLE_STONE_SLAB and $meta == StoneSlab::SANDSTONE):
 			case ($id === Block::GLOWSTONE):
 			case ($id === Block::END_STONE):
-			case ($id === Block::PLANKS and $meta == Planks::BIRCH):
-			case ($id === Block::LOG and $meta == Planks::BIRCH):
+			case ($id === Block::PLANKS and $meta == WoodType::BIRCH):
+			case ($id === Block::LOG and $meta == WoodType::BIRCH):
 			case ($id === Block::BIRCH_FENCE_GATE):
-			case ($id === Block::FENCE and $meta = Planks::BIRCH):
+			case ($id === Block::FENCE and $meta = WoodType::BIRCH):
 			case ($id === Block::BIRCH_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::BIRCH):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::BIRCH):
 			case ($id === Block::BONE_BLOCK):
 			case ($id === Block::END_BRICKS):
 				return new Color(247, 233, 163);
@@ -325,12 +328,12 @@ class Map extends Item{
 			case ($id === Block::RED_SANDSTONE):
 			case ($id === Block::RED_SANDSTONE_STAIRS):
 			case ($id === Block::STONE_SLAB2 and ($meta & 0x07) == StoneSlab::RED_SANDSTONE):
-			case ($id === Block::LOG and $meta == Planks::JUNGLE):
-			case ($id === Block::PLANKS and $meta == Planks::JUNGLE):
+			case ($id === Block::LOG and $meta == WoodType::JUNGLE):
+			case ($id === Block::PLANKS and $meta == WoodType::JUNGLE):
 			case ($id === Block::JUNGLE_FENCE_GATE):
-			case ($id === Block::FENCE and $meta == Planks::JUNGLE):
+			case ($id === Block::FENCE and $meta == WoodType::JUNGLE):
 			case ($id === Block::JUNGLE_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::JUNGLE):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::JUNGLE):
 				return new Color(151, 109, 77);
 			case ($id === Block::STONE):
 			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::STONE):
@@ -369,12 +372,12 @@ class Map extends Item{
 			case ($id === Block::STILL_WATER):
 			case ($id === Block::FLOWING_WATER):
 				return new Color(64, 64, 255);
-			case ($id === Block::WOOD and $meta == Planks::OAK):
-			case ($id === Block::PLANKS and $meta == Planks::OAK):
-			case ($id === Block::FENCE and $meta == Planks::OAK):
+			case ($id === Block::WOOD and $meta == WoodType::OAK):
+			case ($id === Block::PLANKS and $meta == WoodType::OAK):
+			case ($id === Block::FENCE and $meta == WoodType::OAK):
 			case ($id === Block::OAK_FENCE_GATE):
 			case ($id === Block::OAK_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::OAK):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::OAK):
 			case ($id === Block::NOTEBLOCK):
 			case ($id === Block::BOOKSHELF):
 			case ($id === Block::CHEST):
@@ -398,7 +401,7 @@ class Map extends Item{
 			case ($id === Block::DAYLIGHT_SENSOR_INVERTED):
 				return new Color(143, 119, 72);
 			case ($id === Block::QUARTZ_BLOCK):
-			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::QUARTZ):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == 6):
 			case ($id === Block::QUARTZ_STAIRS):
 			case ($id === Block::STONE and $meta == Stone::DIORITE):
 			case ($id === Block::STONE and $meta == Stone::POLISHED_DIORITE):
@@ -410,12 +413,12 @@ class Map extends Item{
 			case ($id === Block::PUMPKIN):
 			case ($id === Block::JACK_O_LANTERN):
 			case ($id === Block::HARDENED_CLAY):
-			case ($id === Block::WOOD and $meta == Planks::ACACIA):
-			case ($id === Block::PLANKS and $meta == Planks::ACACIA):
-			case ($id === Block::FENCE and $meta == Planks::ACACIA):
+			case ($id === Block::WOOD and $meta == WoodType::ACACIA):
+			case ($id === Block::PLANKS and $meta == WoodType::ACACIA):
+			case ($id === Block::FENCE and $meta == WoodType::ACACIA):
 			case ($id === Block::ACACIA_FENCE_GATE):
 			case ($id === Block::ACACIA_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::ACACIA):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::ACACIA):
 				return new Color(216, 127, 51);
 			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_MAGENTA):
 			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_MAGENTA):
@@ -474,12 +477,12 @@ class Map extends Item{
 			case ($id === Block::CARPET and $meta == Color::COLOR_DYE_BROWN):
 			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_BROWN):
 			case ($id === Block::SOUL_SAND):
-			case ($id === Block::WOOD and $meta == Planks::DARK_OAK):
-			case ($id === Block::PLANKS and $meta == Planks::DARK_OAK):
-			case ($id === Block::FENCE and $meta == Planks::DARK_OAK):
+			case ($id === Block::WOOD and $meta == WoodType::DARK_OAK):
+			case ($id === Block::PLANKS and $meta == WoodType::DARK_OAK):
+			case ($id === Block::FENCE and $meta == WoodType::DARK_OAK):
 			case ($id === Block::DARK_OAK_FENCE_GATE):
 			case ($id === Block::DARK_OAK_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::DARK_OAK):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::DARK_OAK):
 			case ($id === Block::COMMAND_BLOCK):
 				return new Color(102, 76, 51);
 			case ($id === Block::WOOL and $meta == Color::COLOR_DYE_GREEN):
@@ -493,7 +496,7 @@ class Map extends Item{
 			case ($id === Block::STAINED_HARDENED_CLAY and $meta == Color::COLOR_DYE_RED):
 			case ($id === Block::RED_MUSHROOM_BLOCK):
 			case ($id === Block::BRICK_BLOCK):
-			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::BRICK):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == 4):
 			case ($id === Block::BRICK_STAIRS):
 			case ($id === Block::ENCHANTING_TABLE):
 			case ($id === Block::NETHER_WART_BLOCK):
@@ -520,12 +523,12 @@ class Map extends Item{
 			case ($id === Block::EMERALD_BLOCK):
 				return new Color(0, 217, 58);
 			case ($id === Block::PODZOL):
-			case ($id === Block::WOOD and $meta == Planks::SPRUCE):
-			case ($id === Block::PLANKS and $meta == Planks::SPRUCE):
-			case ($id === Block::FENCE and $meta == Planks::SPRUCE):
+			case ($id === Block::WOOD and $meta == WoodType::SPRUCE):
+			case ($id === Block::PLANKS and $meta == WoodType::SPRUCE):
+			case ($id === Block::FENCE and $meta == WoodType::SPRUCE):
 			case ($id === Block::SPRUCE_FENCE_GATE):
 			case ($id === Block::SPRUCE_STAIRS):
-			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == Planks::SPRUCE):
+			case ($id === Block::WOODEN_SLAB and ($meta & 0x07) == WoodType::SPRUCE):
 				return new Color(129, 86, 49);
 			case ($id === Block::NETHERRACK):
 			case ($id === Block::NETHER_QUARTZ_ORE):
@@ -533,11 +536,11 @@ class Map extends Item{
 			case ($id === Block::NETHER_BRICK_BLOCK):
 			case ($id === Block::MAGMA):
 			case ($id === Block::NETHER_BRICK_STAIRS):
-			case ($id === Block::STONE_SLAB and ($meta & 0x07) == StoneSlab::NETHER_BRICK):
+			case ($id === Block::STONE_SLAB and ($meta & 0x07) == 7):
 				return new Color(112, 2, 0);
 			default:
 				return new Color(0, 0, 0, 0);
-		}*/
+		}
 	}
 
 	/**

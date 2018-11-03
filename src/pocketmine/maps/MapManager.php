@@ -62,6 +62,15 @@ class MapManager{
 		}
 	}
 
+	public static function loadMaps() : void{
+		@mkdir($path = Server::getInstance()->getDataPath() . "maps/", 0777);
+
+		foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file => $obj){
+			$id = intval(str_replace("map_", "", basename($file)));
+			self::loadMapData($id);
+		}
+	}
+
 	public static function loadMapData(int $id) : void{
 		@mkdir($path = Server::getInstance()->getDataPath() . "maps/");
 

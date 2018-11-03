@@ -1741,6 +1741,7 @@ class Server{
 			Item::initCreativeItems();
 			Biome::init();
 			MapManager::loadIdCounts();
+			MapManager::loadMaps();
 
 			$this->craftingManager = new CraftingManager();
 
