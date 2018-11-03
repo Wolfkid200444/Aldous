@@ -61,7 +61,7 @@ class PreSpawnSessionHandler extends SessionHandler{
 		$pk->pitch = $this->player->pitch;
 		$pk->yaw = $this->player->yaw;
 		$pk->seed = -1;
-		$pk->dimension = DimensionIds::OVERWORLD; //TODO: implement this properly
+		$pk->dimension = $this->player->getLevel()->getDimension();
 		$pk->worldGamemode = Player::getClientFriendlyGamemode($this->server->getGamemode());
 		$pk->difficulty = $this->player->getLevel()->getDifficulty();
 		$pk->spawnX = $spawnPosition->getFloorX();
