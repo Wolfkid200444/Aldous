@@ -55,8 +55,6 @@ class WeightedRandomItem{
 	 * @return null|WeightedRandomItem
 	 */
 	public static function getRandomItem(Random $random, array $items, int $totalWeight) : ?WeightedRandomItem{
-		Utils::validateObjectArray($items, WeightedRandomItem::class);
-
 		return self::getRandomItemFromCollection($items, $random->nextBoundedInt($totalWeight));
 	}
 
@@ -67,8 +65,6 @@ class WeightedRandomItem{
 	 * @return null|WeightedRandomItem
 	 */
 	public static function getRandomItemFromCollection(array $collection, int $weight) : ?WeightedRandomItem{
-		Utils::validateObjectArray($collection, WeightedRandomItem::class);
-
 		foreach($collection as $item){
 			$weight -= $item->itemWeight;
 
