@@ -41,7 +41,7 @@ class CompressBatchTask extends AsyncTask{
 	}
 
 	public function onRun() : void{
-		$this->setResult(NetworkCompression::compress($this->data, $this->level), false);
+		$this->setResult(NetworkCompression::compress($this->data, $this->level));
 	}
 
 	public function onCompletion() : void{
