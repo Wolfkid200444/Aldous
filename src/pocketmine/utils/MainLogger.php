@@ -43,7 +43,7 @@ class MainLogger extends \AttachableThreadedLogger{
 	private $syncFlush = false;
 
 	/** @var string */
-	private $format = TextFormat::DARK_GRAY . "%s " . TextFormat::RESET . "%s<%s/%s> %s" . TextFormat::RESET;
+	private $format = TextFormat::AQUA . "%s " . TextFormat::RESET . "%s<%s/%s> %s" . TextFormat::RESET;
 
 	/** @var bool */
 	private $mainThreadHasFormattingCodes = false;
@@ -144,7 +144,7 @@ class MainLogger extends \AttachableThreadedLogger{
 	}
 
 	public function warning($message){
-		$this->send($message, \LogLevel::WARNING, "Warning", TextFormat::LIGHT_PURPLE);
+		$this->send($message, \LogLevel::WARNING, "Warning", TextFormat::YELLOW);
 	}
 
 	public function notice($message){
