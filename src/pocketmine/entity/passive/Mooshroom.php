@@ -75,9 +75,8 @@ class Mooshroom extends Cow{
 				$cow->spawnToAll();
 
 				return true;
-			}else{
-				return parent::onInteract($player, $item, $clickPos, $slot);
 			}
 		}
+        return parent::onInteract($player, $item, $clickPos, $slot);
 	}
 }
