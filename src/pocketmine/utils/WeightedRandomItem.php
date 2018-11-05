@@ -25,12 +25,15 @@ declare(strict_types=1);
 namespace pocketmine\utils;
 
 class WeightedRandomItem{
+	/** @var mixed */
+	public $item = null;
 
 	/** @var int */
 	public $itemWeight = 0;
 
-	public function __construct(int $itemWeight){
+	public function __construct(int $itemWeight, $item = null){
 		$this->itemWeight = $itemWeight;
+		$this->item = $item;
 	}
 
 	/**
