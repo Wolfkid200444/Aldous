@@ -806,7 +806,7 @@ class Server{
 	 * @return bool
 	 */
 	public function hasOfflinePlayerData(string $name) : bool{
-		return file_exists($this->getDataPath() . "players/$name.dat");
+		return file_exists($this->getDataPath()."players/".strtolower($name).".dat");
 	}
 
 	/**
@@ -816,12 +816,12 @@ class Server{
 	 */
 	public function getOfflinePlayerData(string $name) : CompoundTag{
 		$name = strtolower($name);
-		$path = $this->getDataPath() . "players/";
+		$path = $this->getDataPath()."players/";
 		if($this->shouldSavePlayerData()){
 			if(file_exists($path . "$name.dat")){
 				try{
 					$nbt = new BigEndianNBTStream();
-					return $nbt->readCompressed(file_get_contents($path . "$name.dat"));
+					return $nbt->readCompressed(file_get_contents($path.$name.".dat"));
 				}catch(\Throwable $e){ //zlib decode error / corrupt data
 					rename($path . "$name.dat", $path . "$name.dat.bak");
 					$this->logger->notice($this->getLanguage()->translateString("pocketmine.data.playerCorrupted", [$name]));
@@ -872,11 +872,12 @@ class Server{
 
 	}
 
-	/**
-	 * @param string      $name
-	 * @param CompoundTag $nbtTag
-	 * @param bool        $async
-	 */
+    /**
+     * @param string $name
+     * @param CompoundTag $nbtTag
+     * @param bool $async
+     * @throws \ReflectionException
+     */
 	public function saveOfflinePlayerData(string $name, CompoundTag $nbtTag, bool $async = false){
 		$ev = new PlayerDataSaveEvent($nbtTag, $name);
 		$ev->setCancelled(!$this->shouldSavePlayerData());
