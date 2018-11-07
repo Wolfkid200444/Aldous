@@ -2635,6 +2635,22 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$this->level->dropItem($this->add(0, 1.3, 0), $item, $this->getDirectionVector()->multiply(0.4), 40);
 	}
 
+	public function pauseGame() : void{
+		$pk = new LevelEventPacket();
+		$pk->evid = LevelEventPacket::EVENT_PAUSE_GAME;
+		$pk->data = 1;
+
+		$this->sendDataPacket($pk);
+	}
+
+	public function resumeGame() : void{
+		$pk = new LevelEventPacket();
+		$pk->evid = LevelEventPacket::EVENT_PAUSE_GAME;
+		$pk->data = 0;
+
+		$this->sendDataPacket($pk);
+	}
+
 	public function handleAdventureSettings(AdventureSettingsPacket $packet) : bool{
 		if($packet->entityUniqueId !== $this->getId()){
 			return false; //TODO
