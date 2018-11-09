@@ -963,6 +963,23 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	}
 
 	/**
+	 * Returns whether the entity is able to fly
+	 * @return bool
+	 */
+	public function canFly() : bool{
+		return $this->getGenericFlag(self::DATA_FLAG_CAN_FLY);
+	}
+
+	/**
+	 * Sets whether the entity is able to fly
+	 *
+	 * @param bool $value
+	 */
+	public function setCanFly(bool $value = true) : void{
+		$this->setGenericFlag(self::DATA_FLAG_CAN_FLY, $value);
+	}
+
+	/**
 	 * Returns whether this entity is climbing a block. By default this is only true if the entity is climbing a ladder or vine or similar block.
 	 *
 	 * @return bool

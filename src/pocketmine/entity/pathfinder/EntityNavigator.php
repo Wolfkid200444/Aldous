@@ -39,6 +39,7 @@ class EntityNavigator{
 
 	public const PROCESSOR_TYPE_SWIM = 0;
 	public const PROCESSOR_TYPE_WALK = 1;
+	public const PROCESSOR_TYPE_FLY = 2;
 
 	/** @var Mob */
 	protected $mob;
