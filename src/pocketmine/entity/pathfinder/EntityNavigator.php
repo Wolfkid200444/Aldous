@@ -292,7 +292,7 @@ class EntityNavigator{
 					continue; // can't jump because top block is solid
 				}
 
-				if($this->mob->canClimb() or $this->mob->isSwimmer()){
+				if($this->mob->canClimb() or $this->mob->isSwimmer() or $this->mob->canFly()){
 					$blockUp = $this->mob->level->getBlock($coord->getSide(Facing::UP));
 					$canMove = false;
 					for($i = 0; $i < 10; $i++){
@@ -323,7 +323,7 @@ class EntityNavigator{
 				}
 			}else{
 				$blockDown = $this->mob->level->getBlock($coord->add(0, -1, 0));
-				if(!$blockDown->isSolid() and !$this->mob->isSwimmer() and !($blockDown instanceof Liquid)){ // TODO: bug?
+				if(!$blockDown->isSolid() and !$this->mob->isSwimmer() and !($blockDown instanceof Liquid) and !$this->mob->canFly()){ // TODO: bug?
 					if($this->mob->canClimb()){
 						$canClimb = false;
 						$blockDown = $this->mob->level->getBlock($blockDown->getSide(Facing::DOWN));
@@ -356,7 +356,6 @@ class EntityNavigator{
 					}
 				}else{
 					if($this->isObstructed($coord) or (!$this->mob->isSwimmer() and $this->avoidsWater and $this->mob->level->getBlock($coord->getSide(Facing::DOWN)) instanceof Liquid)) continue;
-
 
 					$cache[$item->getHashCode()] = $this->mob->level->getBlock($coord);
 				}
@@ -519,7 +518,7 @@ class EntityNavigator{
 			return false;
 		}elseif(!$onlySee){
 			$block = $this->mob->level->getBlockAt($pos->x, $pos->y - 1, $pos->z);
-			if(($block instanceof Water and !$this->mob->isSwimmer() and $this->avoidsWater) or $block instanceof Lava){ // TODO: Implement this for ZombiePigman and LavaSlime
+			if(($block instanceof Water and !$this->mob->isSwimmer() and !$this->mob->canFly() and $this->avoidsWater) or $block instanceof Lava){ // TODO: Implement this for ZombiePigman and LavaSlime
 				return false;
 			}else{
 				return true;
