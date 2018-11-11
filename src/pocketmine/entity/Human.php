@@ -902,13 +902,10 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 		$this->setDataFlag(self::DATA_PLAYER_FLAGS, $flagId, $value, self::DATA_TYPE_BYTE);
 	}
 
-	/**
-	 * @param Entity $entity
-	 *
-	 * @return bool
-	 */
-	public function canCollideWith(Entity $entity) : bool{
-		return !($entity instanceof Human);
+	public function applyEntityCollision(Entity $entity) : void{
+		if(!($entity instanceof Human)){
+			parent::applyEntityCollision($entity);
+		}
 	}
 
 	/**
