@@ -286,14 +286,10 @@ class SimpleCommandMap implements CommandMap{
 		}catch(InvalidCommandSyntaxException $e){
 			$sender->sendMessage($this->server->getLanguage()->translateString("commands.generic.usage", [$target->getUsage()]));
 		}catch(NoSelectorMatchException $e){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%".$e->getMessage()));
-		}catch(\Throwable $e){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.generic.exception"));
-			$this->server->getLogger()->critical($this->server->getLanguage()->translateString("pocketmine.command.exception", [$commandLine, (string) $target, $e->getMessage()]));
-			$sender->getServer()->getLogger()->logException($e);
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . $e->getMessage()));
+		}finally{
+			$target->timings->stopTiming();
 		}
-
-		$target->timings->stopTiming();
 
 		return true;
 	}
@@ -349,12 +345,18 @@ class SimpleCommandMap implements CommandMap{
 			}
 
 			if(!empty($recursive)){
-				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.recursive", [$alias, implode(", ", $recursive)]));
+				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.recursive", [
+					$alias,
+					implode(", ", $recursive)
+				]));
 				continue;
 			}
 
 			if(!empty($bad)){
-				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.notFound", [$alias, implode(", ", $bad)]));
+				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.notFound", [
+					$alias,
+					implode(", ", $bad)
+				]));
 				continue;
 			}
 

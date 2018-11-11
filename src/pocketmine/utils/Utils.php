@@ -53,7 +53,20 @@ class Utils{
 	}
 
 	/**
-	 * Returns a readable identifier for the class of the given object. Sanitizes class names for closures.
+	 * Returns a readable identifier for the given Closure, including file and line.
+	 *
+	 * @param \Closure $closure
+	 *
+	 * @return string
+	 * @throws \ReflectionException
+	 */
+	public static function getNiceClosureName(\Closure $closure) : string{
+		$func = new \ReflectionFunction($closure);
+		return "closure@" . self::cleanPath($func->getFileName()) . "#L" . $func->getStartLine();
+	}
+
+	/**
+	 * Returns a readable identifier for the class of the given object. Sanitizes class names for anonymous classes.
 	 *
 	 * @param object $obj
 	 *
@@ -394,8 +407,9 @@ class Utils{
 	}
 
 	public static function kill($pid) : void{
-		if(MainLogger::isRegisteredStatic()){
-			MainLogger::getLogger()->syncFlushBuffer();
+		$logger = \GlobalLogger::get();
+		if($logger instanceof MainLogger){
+			$logger->syncFlushBuffer();
 		}
 		switch(Utils::getOS()){
 			case "win":

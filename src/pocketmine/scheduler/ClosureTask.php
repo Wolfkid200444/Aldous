@@ -21,17 +21,38 @@
 
 declare(strict_types=1);
 
-namespace pocketmine;
+namespace pocketmine\scheduler;
 
-abstract class Collectable extends \Threaded{
+use pocketmine\utils\Utils;
 
-    private $isGarbage = false;
+/**
+ * Task implementation which allows closures to be called by a scheduler.
+ *
+ * Example usage:
+ *
+ * ```
+ * TaskScheduler->scheduleTask(new ClosureTask(function(int $currentTick) : void{
+ *     echo "HI on $currentTick\n";
+ * });
+ * ```
+ */
+class ClosureTask extends Task{
 
-    public function isGarbage() : bool{
-        return $this->isGarbage;
-    }
+	/** @var \Closure */
+	private $closure;
 
-    public function setGarbage(){
-        $this->isGarbage = true;
-    }
+	/**
+	 * @param \Closure $closure Must accept only ONE parameter, $currentTick
+	 */
+	public function __construct(\Closure $closure){
+		$this->closure = $closure;
+	}
+
+	public function getName() : string{
+		return Utils::getNiceClosureName($this->closure);
+	}
+
+	public function onRun(int $currentTick){
+		($this->closure)($currentTick);
+	}
 }
