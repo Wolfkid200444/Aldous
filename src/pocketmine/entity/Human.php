@@ -40,6 +40,7 @@ use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\FoodSource;
 use pocketmine\item\Totem;
 use pocketmine\item\Item;
+use pocketmine\level\GameRules;
 use pocketmine\level\Level;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\NBT;
@@ -692,7 +693,7 @@ class Human extends Creature implements ProjectileSource, InventoryHolder{
 
 			if($this->foodTickTimer === 0){
 				if($food >= 18){
-					if($health < $this->getMaxHealth()){
+					if($health < $this->getMaxHealth() and $this->level->getGameRules()->getBool(GameRules::RULE_NATURAL_REGENERATION)){
 						$this->heal(new EntityRegainHealthEvent($this, 1, EntityRegainHealthEvent::CAUSE_SATURATION));
 						$this->exhaust(3.0, PlayerExhaustEvent::CAUSE_HEALTH_REGEN);
 					}

@@ -48,6 +48,7 @@ class GameRules{
 	public const RULE_SEND_COMMAND_FEEDBACK = "sendCommandFeedback";
 	public const RULE_SHOW_COORDINATES = "showcoordinates";
 	public const RULE_TNT_EXPLODES = "tntexplodes";
+	public const RULE_NATURAL_REGENERATION = "naturalRegeneration";
 
 	public const RULE_TYPE_UNKNOWN = 0;
 	public const RULE_TYPE_BOOL = 1;
