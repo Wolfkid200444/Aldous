@@ -264,7 +264,7 @@ abstract class Mob extends Living{
 		$collide = $block->isSolid() or ($this->height >= 1 and $blockUp->isSolid());
 
 		if($collide){
-			if($bb->maxY <= $this->y){
+			if($bb !== null and $bb->maxY <= $this->y){
 				$collide = false;
 			}
 		}
