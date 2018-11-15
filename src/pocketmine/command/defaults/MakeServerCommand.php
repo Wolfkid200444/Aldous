@@ -88,7 +88,7 @@ class MakeServerCommand extends VanillaCommand{
 					"/",
 					""
 				], $file), "/");
-				if($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 7) !== "resources/"){
+				if($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 10) !== "resources/"){
 					continue;
 				}
 				$phar->addFile($file->getPathname(), $path);
