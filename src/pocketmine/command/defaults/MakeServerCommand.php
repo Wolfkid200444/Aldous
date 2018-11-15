@@ -30,72 +30,95 @@ use pocketmine\Server;
 
 class MakeServerCommand extends VanillaCommand{
 
-    public function __construct(string $name){
-        parent::__construct(
-            $name,
-            "Creates a Altay Phar",
-            "/makeserver",
-            ["ms"]
-        );
-        $this->setPermission("altay.command.makeserver");
-    }
+	public function __construct(string $name){
+		parent::__construct($name, "Creates a Altay Phar", "/makeserver", ["ms"]);
+		$this->setPermission("altay.command.makeserver");
+	}
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
-        if (!$this->testPermission($sender)) {
-            return false;
-        }
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
+		if(!$this->testPermission($sender)){
+			return false;
+		}
 
-        $server = $sender->getServer();
-        $pharPath = Server::getInstance()->getPluginPath() . "Altay" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
-        if (file_exists($pharPath)) {
-            $sender->sendMessage("Phar file already exists, overwriting...");
-            @unlink($pharPath);
-        }
-        $sender->sendMessage($server->getName() . " Phar has begun to be created. This will take 2 minutes (may vary depending on your system).");
-        $phar = new \Phar($pharPath);
-        $phar->setMetadata([
-            "name" => $server->getName(),
-            "version" => $server->getPocketMineVersion(),
-            "api" => $server->getApiVersion(),
-            "minecraft" => $server->getVersion(),
-            "protocol" => ProtocolInfo::CURRENT_PROTOCOL,
-            "creationDate" => time()
-        ]);
-        $phar->setStub('<?php require_once("phar://". __FILE__ ."/src/pocketmine/PocketMine.php");  __HALT_COMPILER();');
-        $phar->setSignatureAlgorithm(\Phar::SHA1);
-        $phar->startBuffering();
+		$server = $sender->getServer();
+		$pharPath = Server::getInstance()->getPluginPath() . "Altay" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
+		if(file_exists($pharPath)){
+			$sender->sendMessage("Phar file already exists, overwriting...");
+			@unlink($pharPath);
+		}
+		$sender->sendMessage($server->getName() . " Phar has begun to be created. This will take 2 minutes (may vary depending on your system).");
+		$phar = new \Phar($pharPath);
+		$phar->setMetadata([
+			"name" => $server->getName(),
+			"version" => $server->getPocketMineVersion(),
+			"api" => $server->getApiVersion(),
+			"minecraft" => $server->getVersion(),
+			"protocol" => ProtocolInfo::CURRENT_PROTOCOL,
+			"creationDate" => time()
+		]);
+		$phar->setStub('<?php require_once("phar://". __FILE__ ."/src/pocketmine/PocketMine.php");  __HALT_COMPILER();');
+		$phar->setSignatureAlgorithm(\Phar::SHA1);
+		$phar->startBuffering();
 
-        $filePath = substr(\pocketmine\PATH, 0, 7) === "phar://" ? \pocketmine\PATH : realpath(\pocketmine\PATH) . "/";
-        $filePath = rtrim(str_replace("\\", "/", $filePath), "/") . "/";
+		$filePath = substr(\pocketmine\PATH, 0, 7) === "phar://" ? \pocketmine\PATH : realpath(\pocketmine\PATH) . "/";
+		$filePath = rtrim(str_replace("\\", "/", $filePath), "/") . "/";
 
-        if(file_exists($filePath."vendor")){
-            foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filePath . "vendor")) as $file){
-                $path = ltrim(str_replace(["\\", $filePath], ["/", ""], $file), "/");
-                if ($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 7) !== "vendor/") {
-                    continue;
-                }
-                $phar->addFile($file->getPathname(), $path);
-            }
-        }
+		if(file_exists($filePath . "vendor")){
+			foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filePath . "vendor")) as $file){
+				$path = ltrim(str_replace([
+					"\\",
+					$filePath
+				], [
+					"/",
+					""
+				], $file), "/");
+				if($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 7) !== "vendor/"){
+					continue;
+				}
+				$phar->addFile($file->getPathname(), $path);
+			}
+		}
 
-        /** @var \SplFileInfo $file */
-        foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filePath . "src")) as $file){
-            $path = ltrim(str_replace(["\\", $filePath], ["/", ""], $file), "/");
-            if ($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 4) !== "src/") {
-                continue;
-            }
-            $phar->addFile($file->getPathname(), $path);
-        }
+		if(file_exists($filePath . "resources")){
+			foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filePath . "resources")) as $file){
+				$path = ltrim(str_replace([
+					"\\",
+					$filePath
+				], [
+					"/",
+					""
+				], $file), "/");
+				if($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 7) !== "resources/"){
+					continue;
+				}
+				$phar->addFile($file->getPathname(), $path);
+			}
+		}
 
-        foreach($phar as $file => $finfo){
-            /** @var \PharFileInfo $finfo */
-            if ($finfo->getSize() > (1024 * 512)) {
-                $finfo->compress(\Phar::GZ);
-            }
-        }
-        $phar->stopBuffering();
-        $sender->sendMessage($server->getName() . " " . $server->getPocketMineVersion() . " Phar file has been created on " . $pharPath);
+		/** @var \SplFileInfo $file */
+		foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($filePath . "src")) as $file){
+			$path = ltrim(str_replace([
+				"\\",
+				$filePath
+			], [
+				"/",
+				""
+			], $file), "/");
+			if($path{0} === "." or strpos($path, "/.") !== false or substr($path, 0, 4) !== "src/"){
+				continue;
+			}
+			$phar->addFile($file->getPathname(), $path);
+		}
 
-        return true;
-    }
+		foreach($phar as $file => $finfo){
+			/** @var \PharFileInfo $finfo */
+			if($finfo->getSize() > (1024 * 512)){
+				$finfo->compress(\Phar::GZ);
+			}
+		}
+		$phar->stopBuffering();
+		$sender->sendMessage($server->getName() . " " . $server->getPocketMineVersion() . " Phar file has been created on " . $pharPath);
+
+		return true;
+	}
 }
