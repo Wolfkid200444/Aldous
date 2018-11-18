@@ -1343,6 +1343,14 @@ class Level implements ChunkManager, Metadatable{
 	public function getSkyLightReduction() : int{
 		return $this->skyLightReduction;
 	}
+	
+	/**
+	 * Returns if $level equals this level
+	 * @return bool
+	 */
+	public function equals(Level $level) : bool{
+		return $this === $level;
+	}
 
 	/**
 	 * Returns the sky light level at the specified coordinates, offset by the current time and weather.
