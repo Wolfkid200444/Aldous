@@ -72,6 +72,7 @@ use pocketmine\nbt\tag\DoubleTag;
 use pocketmine\nbt\tag\FloatTag;
 use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\LongTag;
+use pocketmine\nbt\tag\NamedTag;
 use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\nbt\tag\IntTag;
@@ -814,7 +815,7 @@ class Server{
 	 *
 	 * @return CompoundTag
 	 */
-	public function getOfflinePlayerData(string $name) : CompoundTag{
+	public function getOfflinePlayerData(string $name) : NamedTag{
 		$name = strtolower($name);
 		$path = $this->getDataPath()."players/";
 		if($this->shouldSavePlayerData()){
@@ -869,7 +870,6 @@ class Server{
 		]);
 
 		return $nbt;
-
 	}
 
     /**
