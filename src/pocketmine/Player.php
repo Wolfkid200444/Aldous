@@ -2843,7 +2843,6 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	 * @param int    $port
 	 *
 	 * @return bool
-	 * @throws \ReflectionException
 	 */
 	public function transfer(string $address, int $port = 19132) : bool{
 		$ev = new PlayerTransferEvent($this, $address, $port);
