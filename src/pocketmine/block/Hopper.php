@@ -54,7 +54,7 @@ class Hopper extends Transparent{
     }
 
 	public function getStateBitmask() : int{
-		return 14;
+		return 15;
 	}
 
 	public function getHardness() : float{
