@@ -37,7 +37,8 @@ if [ "$POCKETMINE_FILE" == "" ]; then
 	elif [ -f ./src/pocketmine/PocketMine.php ]; then
 		POCKETMINE_FILE="./src/pocketmine/PocketMine.php"
 	else
-		echo "Couldn't find a valid Altay installation"
+		echo "Altay.phar not found"
+		echo "Downloads can be found at https://github.com/TuranicTeam/Altay/releases"
 		exit 1
 	fi
 fi
