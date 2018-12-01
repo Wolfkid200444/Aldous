@@ -24,13 +24,15 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
+use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
+
 class RecordChirp extends Record{
 
 	public function __construct(){
 		parent::__construct(self::RECORD_CHIRP);
 	}
 
-	public function getSoundId() : string{
-		return "record.chirp";
+	public function getSoundId() : int{
+		return LevelSoundEventPacket::SOUND_RECORD_CHIRP;
 	}
 }

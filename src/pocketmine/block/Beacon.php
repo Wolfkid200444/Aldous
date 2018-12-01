@@ -57,7 +57,7 @@ class Beacon extends Transparent{
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
-			Tile::createTile(Tile::BEACON, $this->getLevel(), TileBeacon::createNBT($this, $face, $item, $player));
+			Tile::createTile(Tile::BEACON, $this->getLevel(), TileBeacon::createNBT($this, $item));
 
 			return true;
 		}
@@ -66,12 +66,15 @@ class Beacon extends Transparent{
 
 	public function onActivate(Item $item, Player $player = null) : bool{
 		if($player instanceof Player){
-			$top = $this->getSide(Facing::UP);
-			if($top->isTransparent() !== true){
-				return true;
-			}
+			$tile = $this->level->getTile($this);
+			if($tile instanceof TileBeacon){
+				$top = $this->getSide(Facing::UP);
+				if($top->isTransparent() !== true){
+					return true;
+				}
 
-			$player->addWindow($this->getTile()->getInventory());
+				$player->addWindow($tile->getInventory());
+			}
 		}
 
 		return true;
@@ -89,13 +92,5 @@ class Beacon extends Transparent{
 				}
 			}
 		}
-	}
-
-	/**
-	 * @return TileBeacon
-	 */
-	public function getTile() : TileBeacon{
-		$t = $this->getLevel()->getTileAt($this->x, $this->y, $this->z);
-		return $t instanceof TileBeacon ? $t : new TileBeacon($this->getLevel(), TileBeacon::createNBT($this));
 	}
 }

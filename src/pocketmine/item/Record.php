@@ -34,5 +34,5 @@ abstract class Record extends Item{
 		return 1;
 	}
 
-	abstract public function getSoundId() : string;
+	abstract public function getSoundId() : int;
 }

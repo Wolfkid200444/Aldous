@@ -24,13 +24,15 @@ declare(strict_types=1);
 
 namespace pocketmine\item;
 
+use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
+
 class RecordStrad extends Record{
 
 	public function __construct(){
 		parent::__construct(self::RECORD_STRAD);
 	}
 
-	public function getSoundId() : string{
-		return "record.strad";
+	public function getSoundId() : int{
+		return LevelSoundEventPacket::SOUND_RECORD_STRAD;
 	}
 }

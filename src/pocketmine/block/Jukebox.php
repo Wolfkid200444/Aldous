@@ -64,7 +64,7 @@ class Jukebox extends Solid{
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
-			Tile::createTile(Tile::JUKEBOX, $this->getLevel(), TileJukebox::createNBT($this, $face, $item, $player));
+			Tile::createTile(Tile::JUKEBOX, $this->getLevel(), TileJukebox::createNBT($this, $item));
 
 			return true;
 		}
@@ -74,20 +74,23 @@ class Jukebox extends Solid{
 
 	public function onActivate(Item $item, Player $player = null) : bool{
 		if($player instanceof Player){
-			$jb = $this->getTile();
+			$jb = $this->getLevel()->getTile($this);
+			if($jb instanceof TileJukebox){
+				if($jb->getRecordItem() == null){
+					if($item instanceof Record){
+						$this->has_record = true;
+						$this->level->setBlock($this, $this);
 
-			if($jb->getRecordItem() == null){
-				if($item instanceof Record){
-					$this->has_record = true;
+						$jb->setRecordItem($item);
+						$jb->playDisc($player);
+						$player->getInventory()->removeItem($item);
+					}
+				}else{
+					$jb->dropDisc();
 
-					$jb->setRecordItem($item);
-					$jb->playDisc($player);
-					$player->getInventory()->removeItem($item);
+					$this->has_record = false;
+					$this->level->setBlock($this, $this);
 				}
-			}else{
-				$jb->dropDisc();
-
-				$this->has_record = false;
 			}
 		}
 
@@ -95,17 +98,11 @@ class Jukebox extends Solid{
 	}
 
 	public function onBreak(Item $item, Player $player = null) : bool{
-		$this->getTile()->dropDisc();
-
-		return parent::onBreak($item, $player);
-	}
-
-	public function getTile() : TileJukebox{
-		$t = $this->getLevel()->getTileAt($this->x, $this->y, $this->z);
-		if(!($t instanceof TileJukebox)){
-			$t = Tile::createTile(Tile::JUKEBOX, $this->getLevel(), TileJukebox::createNBT($this));
+		$tile = $this->getLevel()->getTile($this);
+		if($tile instanceof TileJukebox){
+			$tile->dropDisc();
 		}
 
-		return $t;
+		return parent::onBreak($item, $player);
 	}
 }

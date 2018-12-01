@@ -123,7 +123,7 @@ class ShulkerBox extends Spawnable implements InventoryHolder, Container, Nameab
 		$this->addNameSpawnData($nbt);
 	}
 
-	protected static function createAdditionalNBT(CompoundTag $nbt, Vector3 $pos, ?int $face = null, ?Item $item = null, ?Player $player = null) : void{
+	protected static function createAdditionalNBT(CompoundTag $nbt, ?Item $item = null) : void{
 		$nbt->setByte(self::TAG_FACING, $face ?? Facing::UP);
 		if($item !== null){
 			$nbt->setByte(self::TAG_UNDYED, $item->getId() == Block::UNDYED_SHULKER_BOX ? 1 : 0);

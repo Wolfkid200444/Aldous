@@ -105,7 +105,9 @@ class Hopper extends Transparent{
 		$this->facing = $faces[$face];
 
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
-			Tile::createTile(Tile::HOPPER, $this->getLevel(), TileHopper::createNBT($this, $face, $item, $player));
+			/** @var TileHopper $tile */
+			$tile = Tile::createTile(Tile::HOPPER, $this->getLevel(), TileHopper::createNBT($this, $item));
+			$tile->setPowered($this->enabled);
 
 			return true;
 		}

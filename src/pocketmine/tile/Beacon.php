@@ -57,12 +57,6 @@ class Beacon extends Spawnable implements Nameable, InventoryHolder{
 		Block::DIAMOND_BLOCK
 	];
 
-	public function __construct(Level $level, CompoundTag $nbt){
-		parent::__construct($level, $nbt);
-
-		$this->scheduleUpdate();
-	}
-
 	protected function readSaveData(CompoundTag $nbt) : void{
 		$this->primary = $nbt->getInt(self::TAG_PRIMARY, 0);
 		$this->secondary = $nbt->getInt(self::TAG_SECONDARY, 0);

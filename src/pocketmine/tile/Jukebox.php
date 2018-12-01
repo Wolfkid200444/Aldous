@@ -30,10 +30,9 @@ use pocketmine\level\particle\{
     GenericParticle, Particle
 };
 use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\protocol\{
-    PlaySoundPacket, StopSoundPacket, TextPacket
-};
+use pocketmine\network\mcpe\protocol\{LevelSoundEventPacket, PlaySoundPacket, StopSoundPacket, TextPacket};
 use pocketmine\Player;
+use pocketmine\Server;
 
 class Jukebox extends Spawnable{
 	
@@ -44,28 +43,33 @@ class Jukebox extends Spawnable{
 
 	public function setRecordItem(?Record $item) : void{
 		$this->recordItem = $item;
+		$this->onChanged();
 	}
 
 	public function getRecordItem() : ?Record{
 		return $this->recordItem;
 	}
 
-	public function playDisc(Player $player) : void{
+	public function playDisc(?Player $player = null) : void{
 		if($this->getRecordItem() instanceof Record){
-			$pk = new PlaySoundPacket();
-			$pk->soundName = $this->getRecordItem()->getSoundId();
-			$pk->pitch = $pk->volume = 1.0;
-			$pk->x = $this->x;
-			$pk->y = $this->y;
-			$pk->z = $this->z;
-			$this->level->addChunkPacket($this->getFloorX() >> 4, $this->getFloorZ() >> 4, $pk);
+			$this->level->broadcastLevelSoundEvent($this, $this->getRecordItem()->getSoundId());
 
-			$pk = new TextPacket();
-			$pk->type = TextPacket::TYPE_JUKEBOX_POPUP;
-			$pk->needsTranslation = true;
-			$pk->message = "record.nowPlaying";
-			$pk->parameters = [ucwords(str_ireplace(["record", "."], ["", ""], $this->getRecordItem()->getSoundId()))];
-			$player->sendDataPacket($pk);
+			if($player instanceof Player){
+				$pk = new TextPacket();
+				$pk->type = TextPacket::TYPE_JUKEBOX_POPUP;
+				$pk->needsTranslation = true;
+				$pk->message = "record.nowPlaying";
+				$pk->parameters = [
+					ucwords(str_ireplace([
+						"record",
+						"."
+					], [
+						"",
+						""
+					], $this->getRecordItem()->getSoundId()))
+				];
+				$player->sendDataPacket($pk);
+			}
 			
 			$this->scheduleUpdate();
 		}
@@ -73,10 +77,7 @@ class Jukebox extends Spawnable{
 
 	public function stopDisc() : void{
 		if($this->getRecordItem() instanceof Record){
-			$pk = new StopSoundPacket();
-			$pk->soundName = $this->getRecordItem()->getSoundId();
-			$pk->stopAll = false;
-			$this->level->addChunkPacket($this->getFloorX() >> 4, $this->getFloorZ() >> 4, $pk);
+			$this->level->broadcastLevelSoundEvent($this, LevelSoundEventPacket::SOUND_STOP_RECORD);
 		}
 	}
 
@@ -118,7 +119,7 @@ class Jukebox extends Spawnable{
 	
 	public function onUpdate() : bool{
 		if($this->hasRecordItem()){
-			if($this->server->getTick() % 30 === 0){
+			if(Server::getInstance()->getTick() % 30 === 0){
 				$this->level->addParticle(new GenericParticle($this->add(0.5,1.5,0.5), Particle::TYPE_NOTE, mt_rand(0, 24)));
 			}
 			return true;

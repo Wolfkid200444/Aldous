@@ -29,6 +29,7 @@ use pocketmine\entity\Mob;
 use pocketmine\level\Level;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\Player;
+use pocketmine\Server;
 
 class MobSpawner extends Spawnable{
 
@@ -65,12 +66,6 @@ class MobSpawner extends Spawnable{
 	protected $spawnCount = 1;
 	/** @var bool */
 	protected $isMovable = true;
-
-	public function __construct(Level $level, CompoundTag $nbt){
-		parent::__construct($level, $nbt);
-
-		$this->scheduleUpdate();
-	}
 
 	/**
 	 * @return int
@@ -259,7 +254,7 @@ class MobSpawner extends Spawnable{
 						$mob = Entity::createEntity($this->entityId, $this->level, Entity::createBaseNBT($this->add(rand(-$this->spawnRange, $this->spawnRange), rand(0, 1), rand(-$this->spawnRange, $this->spawnRange))));
 						if($mob instanceof Entity){
 							if($mob instanceof Mob){
-								if($this->server->mobAiEnabled){
+								if(Server::getInstance()->mobAiEnabled){
 									$mob->setImmobile(false);
 								}
 							}
