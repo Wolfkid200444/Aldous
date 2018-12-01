@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
+use pocketmine\block\utils\Color;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\lang\TranslationContainer;
@@ -51,6 +52,8 @@ class Bed extends Transparent{
 	protected $occupied = false;
 	/** @var bool */
 	protected $head = false;
+	/** @var int */
+	protected $color = Color::RED;
 
 	public function __construct(){
 
@@ -72,6 +75,24 @@ class Bed extends Transparent{
 		return 0b1111;
 	}
 
+	public function readStateFromWorld() : void{
+		parent::readStateFromWorld();
+		//read extra state information from the tile - this is an ugly hack
+		$tile = $this->level->getTile($this);
+		if($tile instanceof TileBed){
+			$this->color = $tile->getColor();
+		}
+	}
+
+	public function writeStateToWorld() : void{
+		parent::writeStateToWorld();
+		//extra block properties storage hack
+		$tile = Tile::createTile(Tile::BED, $this->getLevel(), TileBed::createNBT($this));
+		if($tile instanceof TileBed){
+			$tile->setColor($this->color);
+		}
+	}
+
 	public function getHardness() : float{
 		return 0.2;
 	}
@@ -81,7 +102,7 @@ class Bed extends Transparent{
 	}
 
 	protected function recalculateBoundingBox() : ?AxisAlignedBB{
-		return new AxisAlignedBB(0, 0, 0, 1, 0.5625, 1);
+		return AxisAlignedBB::one()->trim(Facing::UP, 7 / 16);
 	}
 
 	public function isHeadPart() : bool{
@@ -168,6 +189,7 @@ class Bed extends Transparent{
 	}
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
+		$this->color = $item->getDamage(); //TODO: replace this with a proper colour getter
 		$down = $this->getSide(Facing::DOWN);
 		if(!$down->isTransparent()){
 			$this->facing = $player !== null ? Bearing::toFacing($player->getDirection()) : Facing::NORTH;
@@ -178,9 +200,6 @@ class Bed extends Transparent{
 				$nextState = clone $this;
 				$nextState->head = true;
 				$this->getLevel()->setBlock($next, $nextState);
-
-				Tile::createTile(Tile::BED, $this->getLevel(), TileBed::createNBT($this, $face, $item, $player));
-				Tile::createTile(Tile::BED, $this->getLevel(), TileBed::createNBT($next, $face, $item, $player));
 
 				return true;
 			}
@@ -198,12 +217,7 @@ class Bed extends Transparent{
 	}
 
 	public function getItem() : Item{
-		$tile = $this->getLevel()->getTile($this);
-		if($tile instanceof TileBed){
-			return ItemFactory::get($this->getItemId(), $tile->getColor());
-		}
-
-		return ItemFactory::get($this->getItemId(), 14); //Red
+		return ItemFactory::get($this->getItemId(), $this->color);
 	}
 
 	public function isAffectedBySilkTouch() : bool{

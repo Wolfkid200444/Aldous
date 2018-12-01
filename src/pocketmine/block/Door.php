@@ -70,11 +70,10 @@ abstract class Door extends Transparent{
 		return 0b1111;
 	}
 
-	/**
-	 * Copies door properties from the other half of the door, since metadata is split between the two halves.
-	 * TODO: the blockstate should be updated directly on creation so these properties can be detected in advance.
-	 */
-	private function updateStateFromOtherHalf() : void{
+	public function readStateFromWorld() : void{
+		parent::readStateFromWorld();
+
+		//copy door properties from other half
 		$other = $this->getSide($this->top ? Facing::DOWN : Facing::UP);
 		if($other instanceof Door and $other->isSameType($this)){
 			if($this->top){
@@ -92,54 +91,9 @@ abstract class Door extends Transparent{
 	}
 
 	protected function recalculateBoundingBox() : ?AxisAlignedBB{
-		$f = 0.1875;
-		$this->updateStateFromOtherHalf();
-
-		$bb = new AxisAlignedBB(0, 0, 0, 1, 2, 1);
-
-		if($this->facing === Facing::EAST){
-			if($this->open){
-				if(!$this->hingeRight){
-					$bb->setBounds(0, 0, 0, 1, 1, $f);
-				}else{
-					$bb->setBounds(0, 0, 1 - $f, 1, 1, 1);
-				}
-			}else{
-				$bb->setBounds(0, 0, 0, $f, 1, 1);
-			}
-		}elseif($this->facing === Facing::SOUTH){
-			if($this->open){
-				if(!$this->hingeRight){
-					$bb->setBounds(1 - $f, 0, 0, 1, 1, 1);
-				}else{
-					$bb->setBounds(0, 0, 0, $f, 1, 1);
-				}
-			}else{
-				$bb->setBounds(0, 0, 0, 1, 1, $f);
-			}
-		}elseif($this->facing === Facing::WEST){
-			if($this->open){
-				if(!$this->hingeRight){
-					$bb->setBounds(0, 0, 1 - $f, 1, 1, 1);
-				}else{
-					$bb->setBounds(0, 0, 0, 1, 1, $f);
-				}
-			}else{
-				$bb->setBounds(1 - $f, 0, 0, 1, 1, 1);
-			}
-		}elseif($this->facing === Facing::NORTH){
-			if($this->open){
-				if(!$this->hingeRight){
-					$bb->setBounds(0, 0, 0, $f, 1, 1);
-				}else{
-					$bb->setBounds(1 - $f, 0, 0, 1, 1, 1);
-				}
-			}else{
-				$bb->setBounds(0, 0, 1 - $f, 1, 1, 1);
-			}
-		}
-
-		return $bb;
+		return AxisAlignedBB::one()
+			->extend(Facing::UP, 1)
+			->trim($this->open ? Facing::rotate($this->facing, Facing::AXIS_Y, !$this->hingeRight) : $this->facing, 13 / 16);
 	}
 
 	public function onNearbyBlockChange() : void{
@@ -179,7 +133,6 @@ abstract class Door extends Transparent{
 	}
 
 	public function onActivate(Item $item, Player $player = null) : bool{
-		$this->updateStateFromOtherHalf();
 		$this->open = !$this->open;
 
 		$other = $this->getSide($this->top ? Facing::DOWN : Facing::UP);

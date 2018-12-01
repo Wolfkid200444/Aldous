@@ -25,6 +25,7 @@ namespace pocketmine\inventory;
 
 use pocketmine\level\Position;
 use pocketmine\network\mcpe\protocol\types\WindowTypes;
+use pocketmine\Player;
 
 class EnchantInventory extends ContainerInventory{
 
@@ -62,5 +63,14 @@ class EnchantInventory extends ContainerInventory{
 	 */
 	public function getHolder(){
 		return $this->holder;
+	}
+
+	public function onClose(Player $who) : void{
+		parent::onClose($who);
+
+		foreach($this->getContents() as $item){
+			$who->dropItem($item);
+		}
+		$this->clearAll();
 	}
 }

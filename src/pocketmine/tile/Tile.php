@@ -35,9 +35,6 @@ use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\nbt\tag\IntTag;
-use pocketmine\Player;
-use pocketmine\Server;
 use pocketmine\timings\Timings;
 use pocketmine\timings\TimingsHandler;
 use pocketmine\utils\Utils;
@@ -73,11 +70,9 @@ abstract class Tile extends Position{
 	private static $saveNames = [];
 
 	/** @var string */
-	public $name;
+	public $name = "";
 	/** @var bool */
 	public $closed = false;
-	/** @var Server */
-	protected $server;
 	/** @var TimingsHandler */
 	protected $timings;
 
@@ -156,9 +151,16 @@ abstract class Tile extends Position{
 	 */
 	public static function createTile($type, Level $level, CompoundTag $nbt, ...$args) : ?Tile{
 		if(isset(self::$knownTiles[$type])){
+			$pos = new Vector3($nbt->getInt(self::TAG_X), $nbt->getInt(self::TAG_Y), $nbt->getInt(self::TAG_Z));
 			$class = self::$knownTiles[$type];
-			/** @see Tile::__construct() */
-			return new $class($level, $nbt, ...$args);
+			/**
+			 * @var Tile $tile
+			 * @see Tile::__construct()
+			 */
+			$tile = new $class($level, $pos);
+			$tile->readSaveData($nbt);
+			$level->addTile($tile);
+			return $tile;
 		}
 
 		return null;
@@ -198,16 +200,9 @@ abstract class Tile extends Position{
 		return current(self::$saveNames[static::class]);
 	}
 
-	public function __construct(Level $level, CompoundTag $nbt){
+	public function __construct(Level $level, Vector3 $pos){
 		$this->timings = Timings::getTileEntityTimings($this);
-
-		$this->server = $level->getServer();
-		$this->name = "";
-
-		parent::__construct($nbt->getInt(self::TAG_X), $nbt->getInt(self::TAG_Y), $nbt->getInt(self::TAG_Z), $level);
-		$this->readSaveData($nbt);
-
-		$this->getLevel()->addTile($this);
+		parent::__construct($pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $level);
 	}
 
 	/**
@@ -243,14 +238,15 @@ abstract class Tile extends Position{
 	/**
 	 * Creates and returns a CompoundTag containing the necessary information to spawn a tile of this type.
 	 *
-	 * @param Vector3     $pos
-	 * @param int|null    $face
-	 * @param Item|null   $item
-	 * @param Player|null $player
+	 * @param Vector3   $pos
+	 * @param Item|null $item
 	 *
 	 * @return CompoundTag
+	 * @throws \BadMethodCallException
+	 * @throws \InvalidArgumentException
+	 * @throws \InvalidStateException
 	 */
-	public static function createNBT(Vector3 $pos, ?int $face = null, ?Item $item = null, ?Player $player = null) : CompoundTag{
+	public static function createNBT(Vector3 $pos, ?Item $item = null) : CompoundTag{
 		if(static::class === self::class){
 			throw new \BadMethodCallException(__METHOD__ . " must be called from the scope of a child class");
 		}
@@ -261,7 +257,7 @@ abstract class Tile extends Position{
 			new IntTag(self::TAG_Z, (int) $pos->z)
 		]);
 
-		static::createAdditionalNBT($nbt, $pos, $face, $item, $player);
+		static::createAdditionalNBT($nbt, $item);
 
 		if($item !== null){
 			$customBlockData = $item->getCustomBlockData();
@@ -277,14 +273,12 @@ abstract class Tile extends Position{
 
 	/**
 	 * Called by createNBT() to allow descendent classes to add their own base NBT using the parameters provided.
+	 * TODO: remove this and add a hook for setting data from items post-place
 	 *
 	 * @param CompoundTag $nbt
-	 * @param Vector3     $pos
-	 * @param int|null    $face
 	 * @param Item|null   $item
-	 * @param Player|null $player
 	 */
-	protected static function createAdditionalNBT(CompoundTag $nbt, Vector3 $pos, ?int $face = null, ?Item $item = null, ?Player $player = null) : void{
+	protected static function createAdditionalNBT(CompoundTag $nbt, ?Item $item = null) : void{
 
 	}
 

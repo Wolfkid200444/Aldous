@@ -23,11 +23,8 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-class StillWater extends Water{
+use pocketmine\block\utils\PillarRotationTrait;
 
-	protected $id = self::STILL_WATER;
-
-	public function getName() : string{
-		return "Still Water";
-	}
+class Log extends Wood{
+	use PillarRotationTrait;
 }

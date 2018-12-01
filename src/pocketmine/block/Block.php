@@ -151,6 +151,22 @@ class Block extends Position implements BlockIds, Metadatable{
 	}
 
 	/**
+	 * Called when this block is created, set, or has a neighbouring block update, to re-detect dynamic properties which
+	 * are not saved on the world.
+	 *
+	 * Clears any cached precomputed objects, such as bounding boxes. Remove any outdated precomputed things such as
+	 * AABBs and force recalculation.
+	 */
+	public function readStateFromWorld() : void{
+		$this->boundingBox = null;
+		$this->collisionBoxes = null;
+	}
+
+	public function writeStateToWorld() : void{
+		$this->level->getChunkAtPosition($this)->setBlock($this->x & 0xf, $this->y, $this->z & 0xf, $this->getId(), $this->getDamage());
+	}
+
+	/**
 	 * Returns a bitmask used to extract state bits from block metadata.
 	 *
 	 * @return int
@@ -176,6 +192,17 @@ class Block extends Position implements BlockIds, Metadatable{
 	 */
 	public function isSameType(Block $other) : bool{
 		return $this->getId() === $other->getId() and $this->getVariant() === $other->getVariant();
+	}
+
+	/**
+	 * Returns whether the given block has the same type and properties as this block.
+	 *
+	 * @param Block $other
+	 *
+	 * @return bool
+	 */
+	public function isSameState(Block $other) : bool{
+		return $this->isSameType($other) and $this->writeStateToMeta() === $other->writeStateToMeta();
 	}
 
 	/**
@@ -461,7 +488,7 @@ class Block extends Position implements BlockIds, Metadatable{
 		$this->y = (int) $v->y;
 		$this->z = (int) $v->z;
 		$this->level = $v->level;
-		$this->boundingBox = null;
+		$this->readStateFromWorld();
 	}
 
 	/**
@@ -742,16 +769,7 @@ class Block extends Position implements BlockIds, Metadatable{
 	 * @return AxisAlignedBB|null
 	 */
 	protected function recalculateBoundingBox() : ?AxisAlignedBB{
-		return new AxisAlignedBB(0, 0, 0, 1, 1, 1);
-	}
-
-	/**
-	 * Clears any cached precomputed objects, such as bounding boxes. This is called on block neighbour update and when
-	 * the block is set into the world to remove any outdated precomputed things such as AABBs and force recalculation.
-	 */
-	public function clearCaches() : void{
-		$this->boundingBox = null;
-		$this->collisionBoxes = null;
+		return AxisAlignedBB::one();
 	}
 
 	/**

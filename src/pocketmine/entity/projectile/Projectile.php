@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\entity\projectile;
 
 use pocketmine\block\Block;
+use pocketmine\block\BlockFactory;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Living;
 use pocketmine\event\entity\EntityCombustByEntityEvent;
@@ -35,6 +36,7 @@ use pocketmine\event\entity\ProjectileHitBlockEvent;
 use pocketmine\event\entity\ProjectileHitEntityEvent;
 use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\level\Level;
+use pocketmine\level\Position;
 use pocketmine\math\RayTraceResult;
 use pocketmine\math\Vector3;
 use pocketmine\math\VoxelRayTrace;
@@ -50,12 +52,8 @@ abstract class Projectile extends Entity{
 	/** @var float */
 	protected $damage = 0.0;
 
-	/** @var Vector3|null */
+	/** @var Block|null */
 	protected $blockHit;
-	/** @var int|null */
-	protected $blockHitId;
-	/** @var int|null */
-	protected $blockHitData;
 
 	public function __construct(Level $level, CompoundTag $nbt, ?Entity $shootingEntity = null){
 		parent::__construct($level, $nbt);
@@ -78,12 +76,12 @@ abstract class Projectile extends Entity{
 		$this->damage = $nbt->getDouble("damage", $this->damage);
 
 		do{
-			$blockHit = null;
+			$blockPos = null;
 			$blockId = null;
 			$blockData = null;
 
 			if($nbt->hasTag("tileX", IntTag::class) and $nbt->hasTag("tileY", IntTag::class) and $nbt->hasTag("tileZ", IntTag::class)){
-				$blockHit = new Vector3($nbt->getInt("tileX"), $nbt->getInt("tileY"), $nbt->getInt("tileZ"));
+				$blockPos = new Position($nbt->getInt("tileX"), $nbt->getInt("tileY"), $nbt->getInt("tileZ"), $this->level);
 			}else{
 				break;
 			}
@@ -100,9 +98,7 @@ abstract class Projectile extends Entity{
 				break;
 			}
 
-			$this->blockHit = $blockHit;
-			$this->blockHitId = $blockId;
-			$this->blockHitData = $blockData;
+			$this->blockHit = BlockFactory::get($blockId, $blockData, $blockPos);
 		}while(false);
 	}
 
@@ -152,8 +148,8 @@ abstract class Projectile extends Entity{
 			$nbt->setInt("tileZ", $this->blockHit->z);
 
 			//we intentionally use different ones to PC because we don't have stringy IDs
-			$nbt->setInt("blockId", $this->blockHitId);
-			$nbt->setByte("blockData", $this->blockHitData);
+			$nbt->setInt("blockId", $this->blockHit->getId());
+			$nbt->setByte("blockData", $this->blockHit->getDamage());
 		}
 
 		return $nbt;
@@ -164,11 +160,8 @@ abstract class Projectile extends Entity{
 	}
 
 	public function onNearbyBlockChange() : void{
-		if($this->blockHit !== null){
-			$blockIn = $this->level->getBlockAt($this->blockHit->x, $this->blockHit->y, $this->blockHit->z);
-			if($blockIn->getId() !== $this->blockHitId or $blockIn->getDamage() !== $this->blockHitData){
-				$this->blockHit = $this->blockHitId = $this->blockHitData = null;
-			}
+		if($this->blockHit !== null and !$this->blockHit->isSameState($this->level->getBlock($this->blockHit))){
+			$this->blockHit = null;
 		}
 
 		parent::onNearbyBlockChange();
@@ -258,7 +251,7 @@ abstract class Projectile extends Entity{
 			$this->resetMotion();
 		}else{
 			$this->isCollided = $this->onGround = false;
-			$this->blockHit = $this->blockHitId = $this->blockHitData = null;
+			$this->blockHit = null;
 
 			//recompute angles...
 			$f = sqrt(($this->motion->x ** 2) + ($this->motion->z ** 2));
@@ -335,8 +328,6 @@ abstract class Projectile extends Entity{
 	 * @param RayTraceResult $hitResult
 	 */
 	protected function onHitBlock(Block $blockHit, RayTraceResult $hitResult) : void{
-		$this->blockHit = $blockHit->asVector3();
-		$this->blockHitId = $blockHit->getId();
-		$this->blockHitData = $blockHit->getDamage();
+		$this->blockHit = clone $blockHit;
 	}
 }

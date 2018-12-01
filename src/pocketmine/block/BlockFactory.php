@@ -94,15 +94,20 @@ class BlockFactory{
 
 		foreach(WoodType::ALL as $type){
 			//TODO: find a better way to deal with this split
-			self::registerBlock(new Wood($type >= 4 ? Block::WOOD2 : Block::WOOD, $type & 0x03, WoodType::NAMES[$type] . " Wood"));
+			self::registerBlock(new Log($type >= 4 ? Block::WOOD2 : Block::WOOD, $type & 0x03, WoodType::NAMES[$type] . " Log"));
+			self::registerBlock(new Wood($type >= 4 ? Block::WOOD2 : Block::WOOD, ($type & 0x03) | 0b1100, WoodType::NAMES[$type] . " Wood"));
 			self::registerBlock(new Leaves($type >= 4 ? Block::LEAVES2 : Block::LEAVES, $type & 0x03, $type, WoodType::NAMES[$type] . " Leaves"));
 		}
 
 		self::registerBlock(new Bedrock());
 		self::registerBlock(new Water());
-		self::registerBlock(new StillWater());
+		$b = new Water();
+		$b->setStill();
+		self::registerBlock($b); //flattening hack
 		self::registerBlock(new Lava());
-		self::registerBlock(new StillLava());
+		$b = new Lava();
+		$b->setStill();
+		self::registerBlock($b); //flattening hack
 
 		self::registerBlock(new Sand(Block::SAND, 0, "Sand"));
 		self::registerBlock(new Sand(Block::SAND, 1, "Red Sand"));

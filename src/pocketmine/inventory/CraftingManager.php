@@ -1,24 +1,23 @@
 <?php
 
 /*
- *               _ _
- *         /\   | | |
- *        /  \  | | |_ __ _ _   _
- *       / /\ \ | | __/ _` | | | |
- *      / ____ \| | || (_| | |_| |
- *     /_/    \_|_|\__\__,_|\__, |
- *                           __/ |
- *                          |___/
+ *
+ *  ____            _        _   __  __ _                  __  __ ____
+ * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
+ * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
+ * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
+ * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author TuranicTeam
- * @link https://github.com/TuranicTeam/Altay
+ * @author PocketMine Team
+ * @link http://www.pocketmine.net/
  *
- */
+ *
+*/
 
 declare(strict_types=1);
 
@@ -53,24 +52,23 @@ class CraftingManager{
 		foreach($recipes as $recipe){
 			switch($recipe["type"]){
 				case 0:
-					$this->registerRecipe(new ShapelessRecipe(array_map(function(array $data) : Item{
-						return Item::jsonDeserialize($data);
-					}, $recipe["input"]), array_map(function(array $data) : Item{
-							return Item::jsonDeserialize($data);
-						}, $recipe["output"])));
+					$this->registerShapelessRecipe(new ShapelessRecipe(
+						array_map(function(array $data) : Item{ return Item::jsonDeserialize($data); }, $recipe["input"]),
+						array_map(function(array $data) : Item{ return Item::jsonDeserialize($data); }, $recipe["output"])
+					));
 					break;
 				case 1:
-					$this->registerRecipe(new ShapedRecipe($recipe["shape"], array_map(function(array $data) : Item{
-							return Item::jsonDeserialize($data);
-						}, $recipe["input"]), array_map(function(array $data) : Item{
-							return Item::jsonDeserialize($data);
-						}, $recipe["output"])));
+					$this->registerShapedRecipe(new ShapedRecipe(
+						$recipe["shape"],
+						array_map(function(array $data) : Item{ return Item::jsonDeserialize($data); }, $recipe["input"]),
+						array_map(function(array $data) : Item{ return Item::jsonDeserialize($data); }, $recipe["output"])
+					));
 					break;
 				case 2:
 				case 3:
 					$result = $recipe["output"];
 					$resultItem = Item::jsonDeserialize($result);
-					$this->registerRecipe(new FurnaceRecipe($resultItem, ItemFactory::get($recipe["inputId"], $recipe["inputDamage"] ?? -1, 1)));
+					$this->registerFurnaceRecipe(new FurnaceRecipe($resultItem, ItemFactory::get($recipe["inputId"], $recipe["inputDamage"] ?? -1, 1)));
 					break;
 				default:
 					break;
@@ -166,10 +164,7 @@ class CraftingManager{
 
 	private static function hashOutputs(array $outputs) : string{
 		$outputs = self::pack($outputs);
-		usort($outputs, [
-			self::class,
-			"sort"
-		]);
+		usort($outputs, [self::class, "sort"]);
 		foreach($outputs as $o){
 			//this reduces accuracy of hash, but it's necessary to deal with recipe book shift-clicking stupidity
 			$o->setCount(1);
@@ -286,12 +281,5 @@ class CraftingManager{
 	 */
 	public function matchFurnaceRecipe(Item $input) : ?FurnaceRecipe{
 		return $this->furnaceRecipes[$input->getId() . ":" . $input->getDamage()] ?? $this->furnaceRecipes[$input->getId() . ":?"] ?? null;
-	}
-
-	/**
-	 * @param Recipe $recipe
-	 */
-	public function registerRecipe(Recipe $recipe) : void{
-		$recipe->registerToCraftingManager($this);
 	}
 }

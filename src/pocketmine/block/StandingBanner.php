@@ -84,7 +84,7 @@ class StandingBanner extends Transparent{
 			}
 
 			if($ret){
-				Tile::createTile(Tile::BANNER, $this->getLevel(), TileBanner::createNBT($this, $face, $item, $player));
+				Tile::createTile(Tile::BANNER, $this->getLevel(), TileBanner::createNBT($this, $item));
 				return true;
 			}
 		}
