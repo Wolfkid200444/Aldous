@@ -58,4 +58,15 @@ class GeneratorRegisterTask extends AsyncTask{
 		$generator = new $this->generatorClass($manager, $this->seed, unserialize($this->settings));
 		$this->saveToThreadStore("generation.level{$this->levelId}.generator", $generator);
 	}
+
+    /**
+     * (PECL pthreads &lt; 3.0.0)<br/>
+     * Should be called once per object when the object is finished being
+     * executed or referenced
+     * @link https://secure.php.net/manual/en/collectable.setgarbage.php
+     * @return void
+     */
+    public function setGarbage(){
+
+    }
 }

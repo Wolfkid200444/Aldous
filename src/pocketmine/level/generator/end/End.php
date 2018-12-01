@@ -32,7 +32,6 @@ use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\noise\Simplex;
 use pocketmine\level\generator\populator\Populator;
 use pocketmine\math\Vector3 as Vector3;
-use pocketmine\utils\Random;
 
 class End extends Generator{
 
@@ -116,8 +115,6 @@ class End extends Generator{
 				$color[1] += ((($bColor >> 8) & 0xff) ** 2);
 				$color[2] += (($bColor & 0xff) ** 2);
 
-				//$chunk->setBiomeColor($x, $z, $color[0], $color[1], $color[2]);
-
 				for ($y = 0; $y < 128; ++$y) {
 
 					$noiseValue = (abs($this->emptyHeight - $y) / $this->emptyHeight) * $this->emptyAmplitude - $noise[$x][$z][$y];
@@ -152,5 +149,4 @@ class End extends Generator{
 	public function getSpawn() : Vector3{
 		return new Vector3(48, 128, 48);
 	}
-
 }

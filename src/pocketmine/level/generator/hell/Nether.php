@@ -27,7 +27,6 @@ use pocketmine\block\Block;
 use pocketmine\block\Gravel;
 use pocketmine\block\Lava;
 use pocketmine\block\NetherQuartzOre;
-use pocketmine\block\Quartz;
 use pocketmine\block\SoulSand;
 use pocketmine\level\biome\Biome;
 use pocketmine\level\ChunkManager;

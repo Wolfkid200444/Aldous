@@ -25,7 +25,6 @@ namespace pocketmine\level\generator;
 
 use pocketmine\block\Block;
 use pocketmine\block\BlockFactory;
-use pocketmine\entity\CreatureType;
 use pocketmine\item\ItemFactory;
 use pocketmine\level\ChunkManager;
 use pocketmine\level\format\Chunk;
@@ -47,7 +46,6 @@ class Flat extends Generator{
 	private $biome;
 	/** @var  string */
 	private $preset;
-
 
 	public function getName() : string{
 		return "flat";
@@ -149,7 +147,6 @@ class Flat extends Generator{
 			}
 		}
 	}
-
 
 	public function generateChunk(int $chunkX, int $chunkZ) : void{
 		$chunk = clone $this->chunk;
