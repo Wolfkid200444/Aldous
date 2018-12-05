@@ -73,7 +73,7 @@ class SmallFireball extends Projectile{
 			if($this->level->getGameRules()->getBool(GameRules::RULE_MOB_GRIEFING)){
 				$block = $this->level->getBlock($this);
 				if($block instanceof Air){
-					$this->level->setBlock($this,BlockFactory::get(Block::FIRE));
+					$this->level->setBlock($this, BlockFactory::get(Block::FIRE));
 				}
 			}
 		}
