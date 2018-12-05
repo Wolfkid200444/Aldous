@@ -55,7 +55,7 @@ class VoidGenerator extends Generator{
 			for($X = 0; $X < 16; ++$X){
 				$chunk->setBiomeId($X, $Z, 1);
 				for($y = 0; $y < 256; ++$y){
-					$chunk->setBlockId($X, $y, $Z, Block::AIR);
+					$chunk->setBlock($X, $y, $Z, Block::AIR, 0);
 				}
 			}
 		}

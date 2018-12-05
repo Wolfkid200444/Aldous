@@ -124,7 +124,7 @@ class End extends Generator{
 					$distance = $distance->distance(new Vector3($chunkX * 16 + $x, ($y / 1.3), $chunkZ * 16 + $z));
 
 					if ($noiseValue < 0 && $distance < 100 or $noiseValue < -0.2 && $distance > 400) {
-						$chunk->setBlockId($x, $y, $z, Block::END_STONE);
+						$chunk->setBlock($x, $y, $z, Block::END_STONE, 0);
 					}
 				}
 			}
