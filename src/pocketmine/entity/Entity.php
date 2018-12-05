@@ -30,6 +30,7 @@ namespace pocketmine\entity;
 
 use pocketmine\block\Block;
 use pocketmine\block\Water;
+use pocketmine\entity\hostile\Blaze;
 use pocketmine\entity\hostile\CaveSpider;
 use pocketmine\entity\hostile\Creeper;
 use pocketmine\entity\hostile\Husk;
@@ -59,6 +60,7 @@ use pocketmine\entity\projectile\Egg;
 use pocketmine\entity\projectile\EnderPearl;
 use pocketmine\entity\projectile\ExperienceBottle;
 use pocketmine\entity\projectile\FishingHook;
+use pocketmine\entity\projectile\SmallFireball;
 use pocketmine\entity\projectile\Snowball;
 use pocketmine\entity\projectile\SplashPotion;
 use pocketmine\entity\object\PaintingMotive;
@@ -420,6 +422,14 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		Entity::registerEntity(Horse::class, false, [
 			'Horse',
 			'minecraft:horse'
+		]);
+		Entity::registerEntity(Blaze::class, false, [
+			'Blaze',
+			'minecraft:blaze'
+		]);
+		Entity::registerEntity(SmallFireball::class, false, [
+			'SmallFireball',
+			'minecraft:small_fireball'
 		]);
 
 		Entity::registerEntity(Human::class, true);
@@ -1977,6 +1987,11 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		}
 
 		return false;
+	}
+
+	public function isWet() : bool{
+		// TODO: check weather
+		return $this->level->getBlock($this) instanceof Water;
 	}
 
 	public function isInsideOfSolid() : bool{
