@@ -39,6 +39,10 @@ class FishingRod extends Tool{
 		return 1;
 	}
 
+	public function getMaxStackSize() : int{
+		return 1;
+	}
+
 	public function getMaxDurability() : int{
 		return 64;
 	}
