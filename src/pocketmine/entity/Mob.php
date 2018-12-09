@@ -126,8 +126,6 @@ abstract class Mob extends Living{
 				$this->livingSoundTime -= $this->getTalkInterval();
 				$this->playLivingSound();
 			}
-
-			return $this->hasMovementUpdate() or $hasUpdate;
 		}
 
 		return $hasUpdate;
@@ -236,16 +234,24 @@ abstract class Mob extends Living{
 		return $this->targetBehaviorPool;
 	}
 
+	public function moveForward(float $spm) : bool{
+		return $this->moveTo($this->getDirectionVector(), $spm);
+	}
+
+	public function moveBack(float $spm) : bool{
+		return $this->moveTo($this->getDirectionVector()->multiply(-1), $spm);
+	}
+
 	/**
-	 * @param float $spm
+	 * @param Vector3 $dir
+	 * @param float   $spm
 	 *
 	 * @return bool
 	 */
-	public function moveForward(float $spm) : bool{
+	public function moveTo(Vector3 $dir, float $spm) : bool{
 		if($this->jumpCooldown > 0) $this->jumpCooldown--;
 
 		$sf = $this->getMovementSpeed() * $spm * 0.7;
-		$dir = $this->getDirectionVector();
 		$dir->y = 0;
 
 		$coord = $this->add($dir->multiply($sf)->add($dir->multiply($this->width * 0.5)));

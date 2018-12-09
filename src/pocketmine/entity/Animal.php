@@ -112,4 +112,20 @@ abstract class Animal extends Mob implements Ageable{
 
 		return $nbt;
 	}
+
+	public function getVariant() : int{
+		return $this->propertyManager->getInt(self::DATA_VARIANT);
+	}
+
+	public function setVariant(int $variant) : void{
+		$this->propertyManager->setInt(self::DATA_VARIANT, $variant);
+	}
+
+	public function getMarkVariant() : int{
+		return $this->propertyManager->getInt(self::DATA_MARK_VARIANT);
+	}
+
+	public function setMarkVariant(int $markVariant) : void{
+		$this->propertyManager->setInt(self::DATA_MARK_VARIANT, $markVariant);
+	}
 }

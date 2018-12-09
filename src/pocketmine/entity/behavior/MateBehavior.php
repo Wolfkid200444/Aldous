@@ -75,6 +75,7 @@ class MateBehavior extends Behavior{
 		$this->mob->setInLove(false);
 		$this->targetMate = null;
 		$this->spawnBabyDelay = 0;
+		$this->mob->getNavigator()->clearPath(true);
 	}
 
 	public function getNearbyMate() : ?Animal{

@@ -47,9 +47,9 @@ class RandomLookAroundBehavior extends Behavior{
 
 	public function onStart() : void{
 		$d0 = (pi() * 2) * $this->random->nextFloat();
-        $this->lookX = cos($d0);
-        $this->lookZ = sin($d0);
-        $this->idleTime = 20 + $this->random->nextBoundedInt(20);
+		$this->lookX = cos($d0);
+		$this->lookZ = sin($d0);
+		$this->idleTime = 20 + $this->random->nextBoundedInt(20);
 	}
 
 	public function canContinue() : bool{

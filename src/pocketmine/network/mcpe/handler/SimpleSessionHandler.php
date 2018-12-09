@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace pocketmine\network\mcpe\handler;
 
+use pocketmine\entity\Entity;
+use pocketmine\entity\passive\Horse;
 use pocketmine\inventory\transaction\action\InventoryAction;
 use pocketmine\inventory\transaction\AnvilTransaction;
 use pocketmine\inventory\transaction\CraftingTransaction;
@@ -57,6 +59,7 @@ use pocketmine\network\mcpe\protocol\PlayerHotbarPacket;
 use pocketmine\network\mcpe\protocol\PlayerSkinPacket;
 use pocketmine\network\mcpe\protocol\PlayerInputPacket;
 use pocketmine\network\mcpe\protocol\RequestChunkRadiusPacket;
+use pocketmine\network\mcpe\protocol\RiderJumpPacket;
 use pocketmine\network\mcpe\protocol\ServerSettingsRequestPacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
 use pocketmine\network\mcpe\protocol\ShowCreditsPacket;
@@ -354,6 +357,18 @@ class SimpleSessionHandler extends SessionHandler{
 			}
 		}
 		return true;
+	}
+
+	public function handleRiderJump(RiderJumpPacket $packet) : bool{
+		if($this->player->isRiding()){
+			$horse = $this->player->getRidingEntity();
+			if($horse instanceof Horse){
+				$horse->setRearing(true);
+				$horse->setMotion($horse->getMotion()->add(0, 4 * ($packet->jumpStrength / 100), 0));
+				$horse->getDataPropertyManager()->setInt(Entity::DATA_STRENGTH, 0);
+			}
+		}
+		return false;
 	}
 
 	public function handleSetPlayerGameType(SetPlayerGameTypePacket $packet) : bool{
