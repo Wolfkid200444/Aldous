@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\maps;
+namespace pocketmine\map;
 
 use pocketmine\nbt\BigEndianNBTStream;
 use pocketmine\nbt\LittleEndianNBTStream;

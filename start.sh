@@ -31,14 +31,14 @@ if [ "$PHP_BINARY" == "" ]; then
 	fi
 fi
 
-if [ "$POCKETMINE_FILE" == "" ]; then
-	if [ -f ./Altay.phar ]; then
-		POCKETMINE_FILE="./Altay.phar"
+if [ "$ALDOUS_FILE" == "" ]; then
+	if [ -f ./Aldous.phar ]; then
+        ALDOUS_FILE="./Aldous.phar"
 	elif [ -f ./src/pocketmine/PocketMine.php ]; then
-		POCKETMINE_FILE="./src/pocketmine/PocketMine.php"
+		ALDOUS_FILE="./src/pocketmine/PocketMine.php"
 	else
-		echo "Altay.phar not found"
-		echo "Downloads can be found at https://github.com/TuranicTeam/Altay/releases"
+		echo "Aldous.phar not found."
+		echo "Downloads can be found at https://github.com/Implasher/Aldous/releases"
 		exit 1
 	fi
 fi
@@ -50,13 +50,13 @@ set +e
 if [ "$DO_LOOP" == "yes" ]; then
 	while true; do
 		if [ ${LOOPS} -gt 0 ]; then
-			echo "Restarted $LOOPS times"
+			echo "Restarted for $LOOPS times."
 		fi
-		"$PHP_BINARY" "$POCKETMINE_FILE" $@
-		echo "To escape the loop, press CTRL+C now. Otherwise, wait 3 seconds for the server to restart."
-		sleep 3
+		"$PHP_BINARY" "$ALDOUS_FILE" $@
+		echo "To escape the loop, press CTRL+C now. Otherwise, please wait 5 seconds for the server to restart."
+		sleep 5
 		((LOOPS++))
 	done
 else
-	exec "$PHP_BINARY" "$POCKETMINE_FILE" $@
+	exec "$PHP_BINARY" "$ALDOUS_FILE" $@
 fi

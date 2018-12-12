@@ -23,8 +23,8 @@
 declare(strict_types=1);
 
 /**
- * Altay is the Minecraft: BE multiplayer server software
- * Homepage: https://github.com/TuranicTeam/Altay
+ * Aldous is the Minecraft: BE multiplayer server software
+ * Homepage: https://github.com/TuranicTeam/Aldous
  */
 
 namespace pocketmine;
@@ -60,7 +60,7 @@ use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\GeneratorManager;
 use pocketmine\level\Level;
 use pocketmine\level\LevelException;
-use pocketmine\maps\MapManager;
+use pocketmine\map\MapManager;
 use pocketmine\metadata\EntityMetadataStore;
 use pocketmine\metadata\LevelMetadataStore;
 use pocketmine\metadata\PlayerMetadataStore;
@@ -311,13 +311,13 @@ class Server{
 	private $propertyCache = [];
 
 	/** @var mixed[] */
-	private $altayPropertyCache = [];
+	private $AldousPropertyCache = [];
 
 	/** @var Config */
 	private $config;
 
 	/** @var Config */
-	private $altayConfig;
+	private $AldousConfig;
 
 	/** @var Player[] */
 	private $players = [];
@@ -338,7 +338,7 @@ class Server{
 	/** @var Level */
 	private $endLevel = null;
 
-	/** ALTAY CONFIG */
+	/** Aldous CONFIG */
 
 	/** @var bool */
 	public $loadIncompatibleApi = true;
@@ -355,14 +355,14 @@ class Server{
 	/** @var bool */
 	public $mobAiEnabled = true;
 
-	public function loadAltayConfig(){
-		$this->loadIncompatibleApi = $this->getAltayProperty("developer.load-incompatible-api", true);
-		$this->keepInventory = $this->getAltayProperty("player.keep-inventory", false);
-		$this->keepExperience = $this->getAltayProperty("player.keep-experience", false);
-		$this->allowNether = $this->getAltayProperty("dimensions.nether.active", true);
-		$this->allowEnd = $this->getAltayProperty("dimensions.end.active", true);
-		$this->folderPluginLoader = $this->getAltayProperty("developer.folder-plugin-loader", true);
-		$this->mobAiEnabled = $this->getAltayProperty("level.enable-mob-ai", false);
+	public function loadAldousConfig(){
+		$this->loadIncompatibleApi = $this->getAldousProperty("developer.load-incompatible-api", true);
+		$this->keepInventory = $this->getAldousProperty("player.keep-inventory", false);
+		$this->keepExperience = $this->getAldousProperty("player.keep-experience", false);
+		$this->allowNether = $this->getAldousProperty("dimensions.nether.active", true);
+		$this->allowEnd = $this->getAldousProperty("dimensions.end.active", true);
+		$this->folderPluginLoader = $this->getAldousProperty("developer.folder-plugin-loader", true);
+		$this->mobAiEnabled = $this->getAldousProperty("level.enable-mob-ai", false);
 	}
 
 	/**
@@ -457,7 +457,7 @@ class Server{
 	 * @return int
 	 */
 	public function getPort() : int{
-		return $this->getConfigInt("server-port", 19132);
+		return $this->getConfigInt("port", 19132);
 	}
 
 	/**
@@ -482,7 +482,7 @@ class Server{
 	 * @return string
 	 */
 	public function getIp() : string{
-		$str = $this->getConfigString("server-ip");
+		$str = $this->getConfigString("ip");
 		return $str !== "" ? $str : "0.0.0.0";
 	}
 
@@ -620,7 +620,7 @@ class Server{
 	 * @return bool
 	 */
 	public function hasWhitelist() : bool{
-		return $this->getConfigBool("white-list", false);
+		return $this->getConfigBool("whitelist", false);
 	}
 
 	/**
@@ -1250,12 +1250,12 @@ class Server{
 		return $this->propertyCache[$variable] ?? $defaultValue;
 	}
 
-	public function getAltayProperty(string $variable, $defaultValue = null){
-		if(!array_key_exists($variable, $this->altayPropertyCache)){
-			$this->altayPropertyCache[$variable] = $this->altayConfig->getNested($variable);
+	public function getAldousProperty(string $variable, $defaultValue = null){
+		if(!array_key_exists($variable, $this->AldousPropertyCache)){
+			$this->AldousPropertyCache[$variable] = $this->AldousConfig->getNested($variable);
 		}
 
-		return $this->altayPropertyCache[$variable] ?? $defaultValue;
+		return $this->AldousPropertyCache[$variable] ?? $defaultValue;
 	}
 
 	/**
@@ -1501,31 +1501,31 @@ class Server{
 				mkdir($pluginPath, 0777);
 			}
 
-			if(!file_exists($pluginPath . "Altay/")){
-				mkdir($pluginPath . "Altay/", 0777);
+			if(!file_exists($pluginPath . "Aldous/")){
+				mkdir($pluginPath . "Aldous/", 0777);
 			}
 
 			$this->dataPath = realpath($dataPath) . DIRECTORY_SEPARATOR;
 			$this->pluginPath = realpath($pluginPath) . DIRECTORY_SEPARATOR;
 
-			$this->logger->info("Loading pocketmine.yml...");
-			if(!file_exists($this->dataPath . "pocketmine.yml")){
-				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "pocketmine.yml");
+			$this->logger->info("Loading aldous.yml...");
+			if(!file_exists($this->dataPath . "aldous.yml")){
+				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "aldous.yml");
 				if(\pocketmine\IS_DEVELOPMENT_BUILD){
 					$content = str_replace("preferred-channel: stable", "preferred-channel: beta", $content);
 				}
-				@file_put_contents($this->dataPath . "pocketmine.yml", $content);
+				@file_put_contents($this->dataPath . "aldous.yml", $content);
 			}
-			$this->config = new Config($this->dataPath . "pocketmine.yml", Config::YAML, []);
+			$this->config = new Config($this->dataPath . "aldous.yml", Config::YAML, []);
 
-			$this->logger->info("Loading server properties...");
-			$this->properties = new Config($this->dataPath . "server.properties", Config::PROPERTIES, [
+			$this->logger->info("Loading Aldous server properties...");
+			$this->properties = new Config($this->dataPath . "aldous.properties", Config::PROPERTIES, [
 				"motd" => \pocketmine\NAME . " Server",
-				"server-port" => 19132,
-				"white-list" => false,
+				"port" => 19132,
+				"whitelist" => false,
 				"announce-player-achievements" => true,
 				"spawn-protection" => 16,
-				"max-players" => 20,
+				"maximum-players" => 50,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
 				"gamemode" => 0,
@@ -1537,8 +1537,8 @@ class Server{
 				"level-name" => "world",
 				"level-seed" => "",
 				"level-type" => "DEFAULT",
-				"enable-query" => true,
-				"enable-rcon" => false,
+				"query" => true,
+				"rcon" => false,
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
 				"auto-save" => true,
 				"view-distance" => 8,
@@ -1567,16 +1567,16 @@ class Server{
 				$lang = $this->getLanguage()->getLang()
 			]));
 
-			if(file_exists(\pocketmine\RESOURCE_PATH . "altay_$lang.yml")){
-				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "altay_$lang.yml");
+			if(file_exists(\pocketmine\RESOURCE_PATH . "game_settings.yml")){
+				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "game_settings.yml");
 			}else{
-				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "altay_eng.yml");
+				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "game_settings.yml");
 			}
-			if(!file_exists($this->dataPath . "altay.yml")){
-				@file_put_contents($this->dataPath . "altay.yml", $content);
+			if(!file_exists($this->dataPath . "aldous.yml")){
+				@file_put_contents($this->dataPath . "aldous.yml", $content);
 			}
-			$this->altayConfig = new Config($this->dataPath . "altay.yml", Config::YAML, []);
-			$this->loadAltayConfig();
+			$this->AldousConfig = new Config($this->dataPath . "aldous.yml", Config::YAML, []);
+			$this->loadAldousConfig();
 
 			if(\pocketmine\IS_DEVELOPMENT_BUILD){
 				if(!((bool) $this->getProperty("settings.enable-dev-builds", false))){
@@ -1661,9 +1661,9 @@ class Server{
 			});
 			$this->console->start(PTHREADS_INHERIT_NONE);
 
-			if($this->getConfigBool("enable-rcon", false)){
+			if($this->getConfigBool("rcon", false)){
 				try{
-					$this->rcon = new RCON($this, $this->getConfigString("rcon.password", ""), $this->getConfigInt("rcon.port", $this->getPort()), $this->getIp(), $this->getConfigInt("rcon.max-clients", 50));
+					$this->rcon = new RCON($this, $this->getConfigString("rcon.password", ""), $this->getConfigInt("rcon.port", $this->getPort()), $this->getIp(), $this->getConfigInt("rcon.maximum-clients", 50));
 				}catch(\Exception $e){
 					$this->getLogger()->critical("RCON can't be started: " . $e->getMessage());
 				}
@@ -1674,7 +1674,7 @@ class Server{
 			$this->levelMetadata = new LevelMetadataStore();
 
 			$this->operators = new Config($this->dataPath . "ops.txt", Config::ENUM);
-			$this->whitelist = new Config($this->dataPath . "white-list.txt", Config::ENUM);
+			$this->whitelist = new Config($this->dataPath . "whitelist.txt", Config::ENUM);
 			if(file_exists($this->dataPath . "banned.txt") and !file_exists($this->dataPath . "banned-players.txt")){
 				@rename($this->dataPath . "banned.txt", $this->dataPath . "banned-players.txt");
 			}
@@ -1685,7 +1685,7 @@ class Server{
 			$this->banByIP = new BanList($this->dataPath . "banned-ips.txt");
 			$this->banByIP->load();
 
-			$this->maxPlayers = $this->getConfigInt("max-players", 20);
+			$this->maxPlayers = $this->getConfigInt("maximum-players", 20);
 			$this->setAutoSave($this->getConfigBool("auto-save", true));
 
 			$this->onlineMode = $this->getConfigBool("xbox-auth", true);
@@ -1811,13 +1811,13 @@ class Server{
 				$this->setDefaultLevel($this->getLevelByName($default));
 			}
 
-			if($this->getAltayProperty("level.doMobSpawning", false)){
+			if($this->getAldousProperty("level.doMobSpawning", false)){
 				$this->getDefaultLevel()->getGameRules()->setBool("doMobSpawning", true);
 			}
 
 			if($this->allowNether and $this->getNetherLevel() === null){
 				/** @var string $netherLevelName */
-				$netherLevelName = $this->getAltayProperty("dimensions.nether.level-name", "nether");
+				$netherLevelName = $this->getAldousProperty("dimensions.nether.level-name", "nether");
 				if(trim($netherLevelName) == ""){
 					$netherLevelName = "nether";
 				}
@@ -1829,7 +1829,7 @@ class Server{
 			}
 
 			if($this->allowEnd and $this->endLevel === null){
-				$endLevel = $this->getAltayProperty("dimensions.end.level-name", "end");
+				$endLevel = $this->getAldousProperty("dimensions.end.level-name", "end");
 				if(trim($endLevel) == ""){
 					$endLevel = "end";
 				}
@@ -2179,10 +2179,10 @@ class Server{
 		PermissionManager::getInstance()->clearPermissions();
 		$this->commandMap->clearCommands();
 
-		$this->logger->info("Reloading properties...");
-		$this->loadAltayConfig();
+		$this->logger->info("Reloading Aldous server properties...");
+		$this->loadAldousConfig();
 		$this->properties->reload();
-		$this->maxPlayers = $this->getConfigInt("max-players", 20);
+		$this->maxPlayers = $this->getConfigInt("maximum-players", 20);
 
 		if($this->getConfigBool("hardcore", false) and $this->getDifficulty() < Level::DIFFICULTY_HARD){
 			$this->setConfigInt("difficulty", Level::DIFFICULTY_HARD);
@@ -2301,7 +2301,7 @@ class Server{
 	 * Starts the PocketMine-MP server and starts processing ticks and packets
 	 */
 	private function start(){
-		if($this->getConfigBool("enable-query", true)){
+		if($this->getConfigBool("query", true)){
 			$this->queryHandler = new QueryHandler();
 		}
 

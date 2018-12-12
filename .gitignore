@@ -1,44 +1,40 @@
 players/*
 worlds/*
-plugin_data/*
+plugin_configs/*
 plugins/*
 bin*/*
 timings/*
-crashdumps/*
+crash_dumps/*
 *.log
 *.txt
 *.phar
-server.properties
-/pocketmine.yml
-/altay.yml
+aldous.properties
+/aldous.yml
+/game_settings.yml
 memory_dumps/*
 resource_packs/
 maps/*
 
-# Common IDEs
+# [Ignore] Common IDEs.
 .idea/
 nbproject/*
 
-# Windows image file caches
+# [Ignore] Windows Image Caches.
 Thumbs.db
 
-# Folder config file
+# [Ignore] Folder Configuration.
 Desktop.ini
 
-# Mac crap
+# [Ignore] Mac.
 .DS_Store
 /nbproject/private/
 
-# Sphinx-doc
+# [Ignore] Sphinx (Documents).
 /docs/build/
 !/docs/requirements.txt
 
-# Composer
+# [Ignore] Composer.
 vendor/*
 
-# Travis files
+# [Ignore] Travis.
 test_data/*
-
-# Doxygen
-Documentation/*
-tests/plugins/PocketMine-TesterPlugin/

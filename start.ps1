@@ -3,31 +3,31 @@ param (
 	[string]$php = "",
 	[switch]$Loop = $false,
 	[string]$file = "",
-	[string][Parameter(ValueFromRemainingArguments)]$extraPocketMineArgs
+	[string][Parameter(ValueFromRemainingArguments)]$Aldous
 )
 
-if($php -ne ""){
+if ($php -ne ""){
 	$binary = $php
-}elseif(Test-Path "bin\php\php.exe"){
+} else if (Test-Path "bin\php\php.exe"){
 	$env:PHPRC = ""
 	$binary = "bin\php\php.exe"
-}else{
+} else {
 	$binary = "php"
 }
 
-if($file -eq ""){
-	if(Test-Path "PocketMine-MP.phar"){
-	    $file = "PocketMine-MP.phar"
-	}else{
-	    echo "PocketMine-MP.phar not found"
-	    echo "Downloads can be found at https://github.com/pmmp/PocketMine-MP/releases"
+if ($file -eq ""){
+	if (Test-Path "Aldous.phar"){
+	    $file = "Aldous.phar"
+	} else {
+	    echo "Aldous.phar not found."
+	    echo "Downloads can be found at https://github.com/Implasher/Aldous/releases"
 	    pause
 	    exit 1
 	}
 }
 
 function StartServer{
-	$command = "powershell -NoProfile " + $binary + " " + $file + " " + $extraPocketMineArgs
+	$command = "powershell -NoProfile " + $binary + " " + $file + " " + $Aldous
 	iex $command
 }
 
@@ -35,12 +35,12 @@ $loops = 0
 
 StartServer
 
-while($Loop){
-	if($loops -ne 0){
-		echo ("Restarted " + $loops + " times")
+while ($Loop){
+	if ($loops -ne 0){
+		echo ("Restarted for " + $loops + " times.")
 	}
 	$loops++
-	echo "To escape the loop, press CTRL+C now. Otherwise, wait 5 seconds for the server to restart."
+	echo "To escape the loop, press CTRL+C now. Otherwise, please wait 5 seconds for the server to restart."
 	echo ""
 	Start-Sleep 5
 	StartServer

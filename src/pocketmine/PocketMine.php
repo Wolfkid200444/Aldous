@@ -35,11 +35,11 @@ namespace pocketmine {
 	use pocketmine\utils\Timezone;
 	use pocketmine\utils\Utils;
 	use pocketmine\utils\VersionString;
-	use pocketmine\wizard\SetupWizard;
+	use pocketmine\Installer;
 
-	const NAME = "Altay";
-	const BASE_VERSION = "4.0.0";
-	const IS_DEVELOPMENT_BUILD = true;
+	const NAME = "Aldous";
+	const BASE_VERSION = "4.1.0";
+	const IS_DEVELOPMENT_BUILD = false;
 	const BUILD_NUMBER = 0;
 
 	const MIN_PHP_VERSION = "7.2.0";
@@ -120,10 +120,6 @@ namespace pocketmine {
 			}
 		}
 
-		if(extension_loaded("pocketmine")){
-			$messages[] = "The native PocketMine extension is no longer supported.";
-		}
-
 		return $messages;
 	}
 
@@ -175,7 +171,7 @@ namespace pocketmine {
 	$autoloader = new \BaseClassLoader();
 	$autoloader->register(false);
 
-	set_time_limit(0); //Who set it to 30 seconds?!?!
+	set_time_limit(0);
 
 	ini_set("allow_url_fopen", '1');
 	ini_set("display_errors", '1');
@@ -190,7 +186,7 @@ namespace pocketmine {
 	$opts = getopt("", [
 		"data:",
 		"plugins:",
-		"no-wizard"
+		"no-installer"
 	]);
 
 	define('pocketmine\DATA', isset($opts["data"]) ? $opts["data"] . DIRECTORY_SEPARATOR : realpath(getcwd()) . DIRECTORY_SEPARATOR);
@@ -243,8 +239,8 @@ namespace pocketmine {
 
 	$exitCode = 0;
 	do{
-		if(!file_exists(\pocketmine\DATA . "server.properties") and !isset($opts["no-wizard"])){
-			$installer = new SetupWizard();
+		if(!file_exists(\pocketmine\DATA . "aldous.properties") and !isset($opts["no-installer"])){
+			$installer = new Installer();
 			if(!$installer->run()){
 				$exitCode = -1;
 				break;

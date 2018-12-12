@@ -41,12 +41,12 @@ class MakeServerCommand extends VanillaCommand{
 		}
 
 		$server = $sender->getServer();
-		$pharPath = Server::getInstance()->getPluginPath() . "Altay" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
+		$pharPath = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
 		if(file_exists($pharPath)){
 			$sender->sendMessage("Phar file already exists, overwriting...");
 			@unlink($pharPath);
 		}
-		$sender->sendMessage($server->getName() . " Phar has begun to be created. This will take 2 minutes (may vary depending on your system).");
+		$sender->sendMessage($server->getName() . ".phar is started to creating. This will take 2 minutes, may depending on your system.");
 		$phar = new \Phar($pharPath);
 		$phar->setMetadata([
 			"name" => $server->getName(),
@@ -117,7 +117,7 @@ class MakeServerCommand extends VanillaCommand{
 			}
 		}
 		$phar->stopBuffering();
-		$sender->sendMessage($server->getName() . " " . $server->getPocketMineVersion() . " Phar file has been created on " . $pharPath);
+		$sender->sendMessage($server->getName() . " " . $server->getPocketMineVersion() . " file has been successfully created on " . $pharPath);
 
 		return true;
 	}

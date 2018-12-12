@@ -25,17 +25,17 @@ declare(strict_types=1);
  * Set-up wizard used on the first run
  * Can be disabled with --no-wizard
  */
-namespace pocketmine\wizard;
+namespace pocketmine;
 
 use pocketmine\lang\Language;
 use pocketmine\lang\LanguageNotFoundException;
 use pocketmine\utils\Config;
 use pocketmine\utils\Internet;
 
-class SetupWizard{
-	public const DEFAULT_NAME = \pocketmine\NAME . " Server";
+class Installer{
+	public const DEFAULT_NAME = "My " . \pocketmine\NAME . " server.";
 	public const DEFAULT_PORT = 19132;
-	public const DEFAULT_PLAYERS = 20;
+	public const DEFAULT_PLAYERS = 50;
 	public const DEFAULT_GAMEMODE = 0;
 
 	/** @var Language */
@@ -46,7 +46,7 @@ class SetupWizard{
 	}
 
 	public function run() : bool{
-		$this->message(\pocketmine\NAME . " set-up wizard");
+		$this->message(\pocketmine\NAME . " installer.");
 
 		try{
 			$langs = Language::getLanguageList();
@@ -68,7 +68,7 @@ class SetupWizard{
 			}
 		}while($lang === null);
 
-		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
+		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
 		$config->set("language", $lang);
 		$config->save();
 
@@ -124,10 +124,10 @@ LICENSE;
 	}
 
 	private function generateBaseConfig(){
-		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
+		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
 
 		$config->set("motd", ($name = $this->getInput($this->lang->get("name_your_server"), self::DEFAULT_NAME)));
-		$config->set("server-name", $name);
+		$config->set("name", $name);
 
 		$this->message($this->lang->get("port_warning"));
 
@@ -140,7 +140,7 @@ LICENSE;
 
 			break;
 		}while(true);
-		$config->set("server-port", $port);
+		$config->set("port", $port);
 
 		$this->message($this->lang->get("gamemode_info"));
 
@@ -149,7 +149,7 @@ LICENSE;
 		}while($gamemode < 0 or $gamemode > 3);
 		$config->set("gamemode", $gamemode);
 
-		$config->set("max-players", (int) $this->getInput($this->lang->get("max_players"), (string) self::DEFAULT_PLAYERS));
+		$config->set("maximum-players", (int) $this->getInput($this->lang->get("max_players"), (string) self::DEFAULT_PLAYERS));
 
 		$this->message($this->lang->get("spawn_protection_info"));
 
@@ -176,34 +176,34 @@ LICENSE;
 
 		$this->message($this->lang->get("whitelist_info"));
 
-		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
+		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
 		if(strtolower($this->getInput($this->lang->get("whitelist_enable"), "n", "y/N")) === "y"){
 			$this->error($this->lang->get("whitelist_warning"));
-			$config->set("white-list", true);
+			$config->set("whitelist", true);
 		}else{
-			$config->set("white-list", false);
+			$config->set("whitelist", false);
 		}
 		$config->save();
 	}
 
 	private function networkFunctions(){
-		$config = new Config(\pocketmine\DATA . "server.properties", Config::PROPERTIES);
+		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
 		$this->error($this->lang->get("query_warning1"));
 		$this->error($this->lang->get("query_warning2"));
 		if(strtolower($this->getInput($this->lang->get("query_disable"), "n", "y/N")) === "y"){
-			$config->set("enable-query", false);
+			$config->set("query", false);
 		}else{
-			$config->set("enable-query", true);
+			$config->set("query", true);
 		}
 
 		$this->message($this->lang->get("rcon_info"));
 		if(strtolower($this->getInput($this->lang->get("rcon_enable"), "n", "y/N")) === "y"){
-			$config->set("enable-rcon", true);
+			$config->set("rcon", true);
 			$password = substr(base64_encode(random_bytes(20)), 3, 10);
 			$config->set("rcon.password", $password);
 			$this->message($this->lang->get("rcon_password") . ": " . $password);
 		}else{
-			$config->set("enable-rcon", false);
+			$config->set("rcon", false);
 		}
 
 		$config->save();

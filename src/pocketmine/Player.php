@@ -372,7 +372,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	public function setBanned(bool $value){
 		if($value){
 			$this->server->getNameBans()->addBan($this->getName(), null, null, null);
-			$this->kick("You have been banned");
+			$this->kick("Sorry, you have been banned by operator.");
 		}else{
 			$this->server->getNameBans()->remove($this->getName());
 		}
@@ -2795,7 +2795,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		return true;
 	}
-
+ 
 	/**
 	 * @param DataPacket $packet
 	 * @param bool       $immediate

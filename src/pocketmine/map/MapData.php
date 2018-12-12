@@ -22,7 +22,7 @@
 declare(strict_types=1);
 
 
-namespace pocketmine\maps;
+namespace pocketmine\map;
 
 use pocketmine\math\Vector2;
 use pocketmine\nbt\tag\CompoundTag;

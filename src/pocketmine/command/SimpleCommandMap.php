@@ -144,7 +144,7 @@ class SimpleCommandMap implements CommandMap{
 			new GameRuleCommand("gamerule")
 		]);
 
-		if($this->server->getAltayProperty("developer.commands", true)){
+		if($this->server->getAldousProperty("developer.commands", true)){
 			$this->registerAll("altay", [
 				new ExtractPluginCommand("extractplugin"),
 				new MakePluginCommand("makeplugin"),

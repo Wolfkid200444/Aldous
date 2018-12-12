@@ -1,0 +1,37 @@
+# Here you can edit game settings for your server.
+# This is originally made for Altay.
+
+# Change features for players.
+player:
+  # After player respawned from death, their inventory will keep from drops.
+  keep-inventory: false
+  # After player respawned from death, their experience will keep from drops.
+  keep-experience: false
+
+# The world dimensions features.
+# It will generate the dimension world which it set to 'true'.
+dimensions:
+  nether:
+    active: true
+    level-name: "nether"
+  end:
+    active: true
+    level-name: "end"
+
+# Developer mode features.
+developer:
+  # Allows your server to load the folder plugin.
+  folder-plugin-loader: true
+  # Thanks to TuranicTeam who made Altay, you can use added commands like similar on DevTools.
+  # Example: "/makeserver", "/makeplugin", etc.
+  commands: true
+  # Allows your server to load incompatible API plugin like similar to AllAPILoader.
+  load-incompatible-api: true
+
+# Level features.
+level:
+  # If you set to 'true', the mobs can move around like on original world game.
+  # Please be noticed that your server may be laggy if mobs keep spawning.
+  enable-mob-ai: false
+  # Set to 'true' to spawn mobs in your world.
+  generic-auto-mob-spawning: false
