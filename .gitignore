@@ -1,6 +1,7 @@
+# [Ignore] Aldous.
 players/*
 worlds/*
-plugin_configs/*
+plugin_data/*
 plugins/*
 bin*/*
 timings/*
