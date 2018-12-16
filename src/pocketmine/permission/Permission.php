@@ -41,6 +41,8 @@ class Permission{
 	 * @param bool|string $value
 	 *
 	 * @return string
+	 *
+	 * @throws \InvalidArgumentException
 	 */
 	public static function getByName($value) : string{
 		if(is_bool($value)){
@@ -69,10 +71,11 @@ class Permission{
 
 			case "true":
 				return self::DEFAULT_TRUE;
-
-			default:
+			case "false":
 				return self::DEFAULT_FALSE;
 		}
+
+		throw new \InvalidArgumentException("Unknown permission default name \"$value\"");
 	}
 
 	/**

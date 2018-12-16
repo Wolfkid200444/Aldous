@@ -41,7 +41,7 @@ class NetworkStackLatencyPacket extends DataPacket{
 		$this->putLLong($this->timestamp);
 	}
 
-	public function handle(SessionHandler $session) : bool{
-		return $session->handleNetworkStackLatency($this);
+	public function handle(SessionHandler $handler) : bool{
+		return $handler->handleNetworkStackLatency($this);
 	}
 }

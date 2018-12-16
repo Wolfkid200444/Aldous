@@ -74,6 +74,7 @@ use pocketmine\nbt\tag\ListTag;
 use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\ChunkRequestTask;
 use pocketmine\network\mcpe\CompressBatchPromise;
+use pocketmine\network\mcpe\protocol\AddEntityPacket;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
@@ -545,16 +546,16 @@ class Level implements ChunkManager, Metadatable{
 	 *
 	 * @param Vector3 $pos
 	 * @param int     $soundId
-	 * @param int     $pitch
 	 * @param int     $extraData
+	 * @param int     $entityTypeId
 	 * @param bool    $isBabyMob
 	 * @param bool    $disableRelativeVolume If true, all players receiving this sound-event will hear the sound at full volume regardless of distance
 	 */
-	public function broadcastLevelSoundEvent(Vector3 $pos, int $soundId, int $pitch = 1, int $extraData = -1, bool $isBabyMob = false, bool $disableRelativeVolume = false){
+	public function broadcastLevelSoundEvent(Vector3 $pos, int $soundId, int $extraData = -1, int $entityTypeId = -1, bool $isBabyMob = false, bool $disableRelativeVolume = false){
 		$pk = new LevelSoundEventPacket();
 		$pk->sound = $soundId;
-		$pk->pitch = $pitch;
 		$pk->extraData = $extraData;
+		$pk->entityType = AddEntityPacket::LEGACY_ID_MAP_BC[$entityTypeId] ?? ":";
 		$pk->isBabyMob = $isBabyMob;
 		$pk->disableRelativeVolume = $disableRelativeVolume;
 		$pk->position = $pos->asVector3();
@@ -868,10 +869,22 @@ class Level implements ChunkManager, Metadatable{
 		if($this->server->getAldousProperty("level.generic-auto-mob-spawning", false) and $this->gameRules->getBool(GameRules::RULE_DO_MOB_SPAWNING) and $currentTick % 400 === 0){
 			$eligibleChunks = [];
 			foreach($this->players as $player){
-				$eligibleChunks = array_replace($eligibleChunks, array_keys($player->usedChunks));
+				if($player->chunk !== null){
+					$cX = $player->chunk->getX();
+					$cZ = $player->chunk->getZ();
+					foreach($player->usedChunks as $chunkHash => $v){
+						Level::getXZ($chunkHash, $x, $z);
+
+						if(abs($cX - $x) <= 8 and abs($cZ - $z) <= 8 and $x !== $cX and $z !== $cZ){
+							if(!isset($eligibleChunks[$chunkHash])){
+								$eligibleChunks[$chunkHash] = $chunkHash;
+							}
+						}
+					}
+				}
 			}
 
-			$this->mobSpawner->findChunksForSpawning($this, $this->spawnHostileMobs, $this->spawnPeacefulMobs, array_slice($eligibleChunks, 0, AnimalSpawner::MAX_MOBS, true));
+			$this->mobSpawner->findChunksForSpawning($this, $this->spawnHostileMobs, $this->spawnPeacefulMobs, $eligibleChunks);
 		}
 
 		$this->mobSpawner->despawnMobs($this, $currentTick);
@@ -1414,8 +1427,7 @@ class Level implements ChunkManager, Metadatable{
 	 * @return Block
 	 */
 	public function getBlockAt(int $x, int $y, int $z, bool $cached = true, bool $addToCache = true) : Block{
-		$id = 0;
-		$meta = 0;
+		$fullState = 0;
 		$blockHash = null;
 		$chunkHash = Level::chunkHash($x >> 4, $z >> 4);
 
@@ -1429,19 +1441,13 @@ class Level implements ChunkManager, Metadatable{
 			$chunk = $this->chunks[$chunkHash] ?? null;
 			if($chunk !== null){
 				$fullState = $chunk->getFullBlock($x & 0x0f, $y, $z & 0x0f);
-				$id = $fullState >> 4;
-				$meta = $fullState & 0xf;
 			}else{
 				$addToCache = false;
 			}
 		}
 
-		$block = BlockFactory::get($id, $meta);
-
-		$block->x = $x;
-		$block->y = $y;
-		$block->z = $z;
-		$block->level = $this;
+		$block = BlockFactory::fromFullBlock($fullState);
+		$block->position($this, $x, $y, $z);
 
 		static $dynamicStateRead = false;
 
@@ -1579,37 +1585,51 @@ class Level implements ChunkManager, Metadatable{
 	}
 
 	/**
-	 * Sets on Vector3 the data from a Block object,
-	 * does block updates and puts the changes to the send queue.
-	 *
-	 * If $update is true, it'll get the neighbour blocks (6 sides) and update them.
-	 * If you are doing big changes, you might want to set this to false, then update manually.
+	 * Sets the block at the given Vector3 coordinates.
+	 * @see Level::setBlockAt()
 	 *
 	 * @param Vector3 $pos
 	 * @param Block   $block
 	 * @param bool    $update
 	 *
 	 * @return bool Whether the block has been updated or not
+	 *
+	 * @throws \InvalidArgumentException if the position is out of the world bounds
 	 */
 	public function setBlock(Vector3 $pos, Block $block, bool $update = true) : bool{
-		$pos = $pos->floor();
-		if(!$this->isInWorld($pos->x, $pos->y, $pos->z)){
-			throw new \InvalidArgumentException("Pos x=$pos->x,y=$pos->y,z=$pos->z is outside of the world bounds");
+		return $this->setBlockAt((int) floor($pos->x), (int) floor($pos->y), (int) floor($pos->z), $block, $update);
+	}
+
+	/**
+	 * Sets the block at the given coordinates.
+	 *
+	 * If $update is true, it'll get the neighbour blocks (6 sides) and update them, and also update local lighting.
+	 * If you are doing big changes, you might want to set this to false, then update manually.
+	 *
+	 * @param int   $x
+	 * @param int   $y
+	 * @param int   $z
+	 * @param Block $block
+	 * @param bool  $update
+	 *
+	 * @return bool Whether the block has been updated or not
+	 *
+	 * @throws \InvalidArgumentException if the position is out of the world bounds
+	 */
+	public function setBlockAt(int $x, int $y, int $z, Block $block, bool $update = true) : bool{
+		if(!$this->isInWorld($x, $y, $z)){
+			throw new \InvalidArgumentException("Pos x=$x,y=$y,z=$z is outside of the world bounds");
 		}
 
 		$this->timings->setBlock->startTiming();
 
-		if(!($pos instanceof Position)){
-			$pos = $this->temporalPosition->setComponents($pos->x, $pos->y, $pos->z);
-		}
-
 		$block = clone $block;
 
-		$block->position($pos);
+		$block->position($this, $x, $y, $z);
 		$block->writeStateToWorld();
 
-		$chunkHash = Level::chunkHash($pos->x >> 4, $pos->z >> 4);
-		$blockHash = Level::blockHash($pos->x, $pos->y, $pos->z);
+		$chunkHash = Level::chunkHash($x >> 4, $z >> 4);
+		$blockHash = Level::blockHash($x, $y, $z);
 
 		unset($this->blockCache[$chunkHash][$blockHash]);
 
@@ -1618,7 +1638,7 @@ class Level implements ChunkManager, Metadatable{
 		}
 		$this->changedBlocks[$chunkHash][$blockHash] = $block;
 
-		foreach($this->getChunkLoaders($pos->x >> 4, $pos->z >> 4) as $loader){
+		foreach($this->getChunkLoaders($x >> 4, $z >> 4) as $loader){
 			$loader->onBlockChanged($block);
 		}
 
@@ -1632,7 +1652,7 @@ class Level implements ChunkManager, Metadatable{
 					$entity->onNearbyBlockChange();
 				}
 				$ev->getBlock()->onNearbyBlockChange();
-				$this->scheduleNeighbourBlockUpdates($pos);
+				$this->scheduleNeighbourBlockUpdates($block);
 			}
 		}
 
@@ -1891,14 +1911,14 @@ class Level implements ChunkManager, Metadatable{
 
 		if($item->canBePlaced()){
 			$hand = $item->getBlock();
-			$hand->position($blockReplace);
+			$hand->position($this, $blockReplace->x, $blockReplace->y, $blockReplace->z);
 		}else{
 			return false;
 		}
 
 		if($hand->canBePlacedAt($blockClicked, $clickVector, $face, true)){
 			$blockReplace = $blockClicked;
-			$hand->position($blockReplace);
+			$hand->position($this, $blockReplace->x, $blockReplace->y, $blockReplace->z);
 		}elseif(!$hand->canBePlacedAt($blockReplace, $clickVector, $face, false)){
 			return false;
 		}
@@ -1956,7 +1976,7 @@ class Level implements ChunkManager, Metadatable{
 		}
 
 		if($playSound){
-			$this->broadcastLevelSoundEvent($hand, LevelSoundEventPacket::SOUND_PLACE, 1, $hand->getRuntimeId());
+			$this->broadcastLevelSoundEvent($hand, LevelSoundEventPacket::SOUND_PLACE, $hand->getRuntimeId());
 		}
 
 		$item->pop();
@@ -2163,46 +2183,6 @@ class Level implements ChunkManager, Metadatable{
 	 */
 	public function getChunkTiles(int $X, int $Z) : array{
 		return ($chunk = $this->getChunk($X, $Z)) !== null ? $chunk->getTiles() : [];
-	}
-
-	/**
-	 * Gets the raw block id.
-	 *
-	 * @param int $x
-	 * @param int $y
-	 * @param int $z
-	 *
-	 * @return int 0-255
-	 */
-	public function getBlockIdAt(int $x, int $y, int $z) : int{
-		return $this->getChunk($x >> 4, $z >> 4, true)->getBlockId($x & 0x0f, $y, $z & 0x0f);
-	}
-
-	/**
-	 * Gets the raw block metadata
-	 *
-	 * @param int $x
-	 * @param int $y
-	 * @param int $z
-	 *
-	 * @return int 0-15
-	 */
-	public function getBlockDataAt(int $x, int $y, int $z) : int{
-		return $this->getChunk($x >> 4, $z >> 4, true)->getBlockData($x & 0x0f, $y, $z & 0x0f);
-	}
-
-	public function setBlockIdAndDataAt(int $x, int $y, int $z, int $id, int $data) : void{
-		unset($this->blockCache[$chunkHash = Level::chunkHash($x >> 4, $z >> 4)][$blockHash = Level::blockHash($x, $y, $z)]);
-
-		$this->getChunk($x >> 4, $z >> 4, true)->setBlock($x & 0x0f, $y, $z & 0x0f, $id, $data);
-
-		if(!isset($this->changedBlocks[$chunkHash])){
-			$this->changedBlocks[$chunkHash] = [];
-		}
-		$this->changedBlocks[$chunkHash][$blockHash] = $v = new Vector3($x, $y, $z);
-		foreach($this->getChunkLoaders($x >> 4, $z >> 4) as $loader){
-			$loader->onBlockChanged($v);
-		}
 	}
 
 	/**

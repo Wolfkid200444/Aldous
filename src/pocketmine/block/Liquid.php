@@ -25,11 +25,13 @@ declare(strict_types=1);
 namespace pocketmine\block;
 
 use pocketmine\entity\Entity;
+use pocketmine\event\block\BlockFormEvent;
+use pocketmine\event\block\BlockSpreadEvent;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
+use pocketmine\level\sound\FizzSound;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 
 abstract class Liquid extends Transparent{
 	/** @var int */
@@ -136,8 +138,14 @@ abstract class Liquid extends Transparent{
 		return $this->still;
 	}
 
-	public function setStill(bool $still = true) : void{
+	/**
+	 * @param bool $still
+	 *
+	 * @return $this
+	 */
+	public function setStill(bool $still = true) : self{
 		$this->still = $still;
+		return $this;
 	}
 
 	protected function getEffectiveFlowDecay(Block $block) : int{
@@ -325,14 +333,19 @@ abstract class Liquid extends Transparent{
 
 	protected function flowIntoBlock(Block $block, int $newFlowDecay, bool $falling) : void{
 		if($this->canFlowInto($block) and !($block instanceof Liquid)){
-			if($block->getId() > 0){
-				$this->level->useBreakOn($block);
-			}
-
 			$new = clone $this;
 			$new->falling = $falling;
 			$new->decay = $falling ? 0 : $newFlowDecay;
-			$this->level->setBlock($block, $new);
+
+			$ev = new BlockSpreadEvent($block, $this, $new);
+			$ev->call();
+			if(!$ev->isCancelled()){
+				if($block->getId() > 0){
+					$this->level->useBreakOn($block);
+				}
+
+				$this->level->setBlock($block, $ev->getNewState());
+			}
 		}
 	}
 
@@ -460,10 +473,12 @@ abstract class Liquid extends Transparent{
 	}
 
 	protected function liquidCollide(Block $cause, Block $result) : bool{
-		//TODO: add events
-
-		$this->level->setBlock($this, $result);
-		$this->level->broadcastLevelSoundEvent($this->add(0.5, 0.5, 0.5), LevelSoundEventPacket::SOUND_FIZZ, (int) ((2.6 + (lcg_value() - lcg_value()) * 0.8) * 1000));
+		$ev = new BlockFormEvent($this, $result);
+		$ev->call();
+		if(!$ev->isCancelled()){
+			$this->level->setBlock($this, $ev->getNewState());
+			$this->level->addSound(new FizzSound($this->add(0.5, 0.5, 0.5), 2.6 + (lcg_value() - lcg_value()) * 0.8));
+		}
 		return true;
 	}
 

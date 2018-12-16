@@ -49,10 +49,12 @@ use pocketmine\network\mcpe\protocol\EntityFallPacket;
 use pocketmine\network\mcpe\protocol\EntityPickRequestPacket;
 use pocketmine\network\mcpe\protocol\LabTablePacket;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
+use pocketmine\network\mcpe\protocol\LevelSoundEventPacketV1;
 use pocketmine\network\mcpe\protocol\MapInfoRequestPacket;
 use pocketmine\network\mcpe\protocol\MobArmorEquipmentPacket;
 use pocketmine\network\mcpe\protocol\MobEquipmentPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
+use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\PlayerHotbarPacket;
@@ -95,12 +97,16 @@ class SimpleSessionHandler extends SessionHandler{
 		return false;
 	}
 
+	public function handleMoveEntityAbsolute(MoveEntityAbsolutePacket $packet) : bool{
+		return $this->player->handleMoveEntityAbsolute($packet);
+	}
+
 	public function handleMovePlayer(MovePlayerPacket $packet) : bool{
 		return $this->player->handleMovePlayer($packet);
 	}
 
-	public function handleLevelSoundEvent(LevelSoundEventPacket $packet) : bool{
-		return $this->player->handleLevelSoundEvent($packet);
+	public function handleLevelSoundEventPacketV1(LevelSoundEventPacketV1 $packet) : bool{
+		return true; //useless leftover from 1.8
 	}
 
 	public function handleEntityEvent(EntityEventPacket $packet) : bool{
@@ -244,6 +250,13 @@ class SimpleSessionHandler extends SessionHandler{
 	}
 
 	public function handleInteract(InteractPacket $packet) : bool{
+		if($packet->action === InteractPacket::ACTION_MOUSEOVER and $packet->target === 0){
+			//TODO HACK: silence useless spam (MCPE 1.8)
+			//this packet is EXPECTED to only be sent when interacting with an entity, but due to some messy Mojang
+			//hacks, it also sends it when changing the held item now, which causes us to think the inventory was closed
+			//when it wasn't.
+			return true;
+		}
 		return $this->player->handleInteract($packet);
 	}
 
@@ -353,6 +366,7 @@ class SimpleSessionHandler extends SessionHandler{
 		if($this->player->isRiding()){
 			$entity = $this->player->getRidingEntity();
 			if($entity !== null and $entity->isAlive()){
+				// TODO: Remove this, this is not right
 				$entity->onRidingUpdate($this->player, $packet->motionX, $packet->motionY, $packet->jumping, $packet->sneaking);
 			}
 		}
@@ -363,9 +377,8 @@ class SimpleSessionHandler extends SessionHandler{
 		if($this->player->isRiding()){
 			$horse = $this->player->getRidingEntity();
 			if($horse instanceof Horse){
-				$horse->setRearing(true);
-				$horse->setMotion($horse->getMotion()->add(0, 4 * ($packet->jumpStrength / 100), 0));
-				$horse->getDataPropertyManager()->setInt(Entity::DATA_STRENGTH, 0);
+				// This is useless for now, only may usable for plugins
+				$horse->setJumpPower($packet->jumpStrength);
 			}
 		}
 		return false;
@@ -476,5 +489,9 @@ class SimpleSessionHandler extends SessionHandler{
 
 	public function handleLabTable(LabTablePacket $packet) : bool{
 		return false; //TODO
+	}
+
+	public function handleLevelSoundEvent(LevelSoundEventPacket $packet) : bool{
+		return $this->player->handleLevelSoundEvent($packet);
 	}
 }

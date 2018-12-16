@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\tile;
 
-use pocketmine\item\Item;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
 
@@ -32,7 +31,7 @@ use pocketmine\nbt\tag\StringTag;
  */
 trait NameableTrait{
 	/** @var string|null */
-	private $customName;
+	private $customName = null;
 
 	/**
 	 * @return string
@@ -62,12 +61,6 @@ trait NameableTrait{
 	 */
 	public function hasName() : bool{
 		return $this->customName !== null;
-	}
-
-	protected static function createAdditionalNBT(CompoundTag $nbt, ?Item $item = null) : void{
-		if($item !== null and $item->hasCustomName()){
-			$nbt->setString(Nameable::TAG_CUSTOM_NAME, $item->getCustomName());
-		}
 	}
 
 	public function addAdditionalSpawnData(CompoundTag $nbt) : void{

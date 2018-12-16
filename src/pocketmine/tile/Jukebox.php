@@ -106,24 +106,31 @@ class Jukebox extends Spawnable{
 	protected function writeSaveData(CompoundTag $nbt) : void{
 		if($this->recordItem !== null){
 			$nbt->setTag($this->recordItem->nbtSerialize(-1, self::TAG_RECORD_ITEM));
-		}else{
-			$nbt->removeTag(self::TAG_RECORD_ITEM);
 		}
 	}
 
 	protected  function addAdditionalSpawnData(CompoundTag $nbt) : void{
-		if($this->recordItem != null){
-			$nbt->setTag($this->recordItem->nbtSerialize(-1, self::TAG_RECORD_ITEM));
-		}
+
 	}
 	
 	public function onUpdate() : bool{
 		if($this->hasRecordItem()){
 			if(Server::getInstance()->getTick() % 30 === 0){
-				$this->level->addParticle(new GenericParticle($this->add(0.5,1.5,0.5), Particle::TYPE_NOTE, mt_rand(0, 24)));
+				$this->level->addParticle(new GenericParticle($this->add(0.5,1.5,0.5), Particle::TYPE_NOTE, mt_rand(0, 4) | mt_rand(0, 24)));
 			}
 			return true;
 		}
 		return false;
+	}
+
+	public function spawnTo(Player $player) : bool{
+		if($this->hasRecordItem()){
+			$pk = new LevelSoundEventPacket();
+			$pk->sound = $this->getRecordItem()->getSoundId();
+			$pk->position = $this;
+
+			$player->sendDataPacket($pk);
+		}
+		return parent::spawnTo($player);
 	}
 }

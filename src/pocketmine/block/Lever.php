@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace pocketmine\block;
 
 use pocketmine\item\Item;
-use pocketmine\math\Bearing;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
@@ -95,7 +94,7 @@ class Lever extends Flowable{
 
 		if(Facing::axis($face) === Facing::AXIS_Y){
 			if($player !== null){
-				$this->facing = Bearing::toFacing(Bearing::opposite($player->getDirection()));
+				$this->facing = Facing::opposite($player->getHorizontalFacing());
 			}
 			$this->position = $face === Facing::DOWN ? self::BOTTOM : self::TOP;
 		}else{

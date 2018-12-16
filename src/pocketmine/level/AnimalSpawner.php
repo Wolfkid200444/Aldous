@@ -87,68 +87,70 @@ class AnimalSpawner{
 			$spawn = $level->getSpawnLocation();
 
 			foreach(self::$creatureTypes as $creatureType){
-				if((!$creatureType->isPeacefulCreature() or $spawnPeacefulMobs) and ($creatureType->isPeacefulCreature() or $spawnHostileMobs)){
+				if((!$creatureType->isPeacefulCreature() or $spawnPeacefulMobs) and ($creatureType->isPeacefulCreature() or $spawnHostileMobs) and ($creatureType->getCreatureClass() !== Animal::class or ($level->getTime() % 400) === 0)){
 					$a = $creatureType->getCreatureClass();
 					$j4 = count(array_filter($level->getEntities(), function(Entity $entity) use ($a){
-						return get_class($entity) == $a;
+						return is_a($entity, $a);
 					}));
 					$k4 = $creatureType->getMaxSpawn() * count($eligibleChunks) / self::MAX_MOBS;
 
 					if($j4 <= $k4){
 						foreach($eligibleChunks as $chunkHash){
 							Level::getXZ($chunkHash, $cx, $cz);
+							if(count($level->getChunkEntities($cx, $cz)) === 0){
 
-							$pos = self::getRandomChunkPosition($level, $cx, $cz);
-							$block = $level->getBlock($pos);
+								$pos = self::getRandomChunkPosition($level, $cx, $cz);
+								$block = $level->getBlock($pos);
 
-							if(!$block->isSolid() and $level->getNearestEntity($pos, 24, Player::class) === null){
-								$j2 = 0;
+								if(!$block->isSolid() and $level->getNearestEntity($pos, 24, Player::class) === null){
+									$j2 = 0;
 
-								for($k2 = 0; $k2 < 3; ++$k2){
-									$l2 = $pos->x;
-									$i3 = $pos->y;
-									$j3 = $pos->z;
-									$entry = null;
-									$s1 = $level->random->nextBoundedInt(4);
+									for($k2 = 0; $k2 < 3; ++$k2){
+										$l2 = $pos->x;
+										$i3 = $pos->y;
+										$j3 = $pos->z;
+										$entry = null;
+										$s1 = $level->random->nextBoundedInt(4);
 
-									for($l3 = 0; $l3 < $s1; ++$l3){
-										$l2 += $level->random->nextBoundedInt(6) - $level->random->nextBoundedInt(6);
-										$i3 += $level->random->nextBoundedInt(1) - $level->random->nextBoundedInt(1);
-										$j3 += $level->random->nextBoundedInt(6) - $level->random->nextBoundedInt(6);
-										$pos1 = new Vector3($l2, $i3, $j3);
+										for($l3 = 0; $l3 < $s1; ++$l3){
+											$l2 += $level->random->nextBoundedInt(6) - $level->random->nextBoundedInt(6);
+											$i3 += $level->random->nextBoundedInt(1) - $level->random->nextBoundedInt(1);
+											$j3 += $level->random->nextBoundedInt(6) - $level->random->nextBoundedInt(6);
+											$pos1 = new Vector3($l2, $i3, $j3);
 
-										if($pos1->distanceSquared($spawn) >= 576){
-											if($entry === null){
-												$entry = $level->getSpawnListEntryForTypeAt($creatureType, $pos1);
-
+											if($pos1->distanceSquared($spawn) >= 576){
 												if($entry === null){
-													break;
-												}
-											}
+													$entry = $level->getSpawnListEntryForTypeAt($creatureType, $pos1);
 
-											if($level->canCreatureTypeSpawnHere($creatureType, $entry, $pos1) and self::canCreatureTypeSpawnAtLocation(Entity::$spawnPlacementTypes[$entry->entityClass] ?? 0, $level, $pos1)){
-												$entity = null;
-												try{
-													$class = $entry->entityClass;
-													/** @var Living $entity */
-													$entity = new $class($level, Entity::createBaseNBT($pos1->add(0.5, 0, 0.5)));
-												}catch(\Exception $e){
-													return;
+													if($entry === null){
+														break;
+													}
 												}
 
-												if($entity instanceof Mob){
-													$entity->setImmobile(false);
-												}
+												if($level->canCreatureTypeSpawnHere($creatureType, $entry, $pos1) and self::canCreatureTypeSpawnAtLocation(Entity::$spawnPlacementTypes[$entry->entityClass] ?? 0, $level, $pos1)){
+													$entity = null;
+													try{
+														$class = $entry->entityClass;
+														/** @var Living $entity */
+														$entity = new $class($level, Entity::createBaseNBT($pos1->add(0.5, 0, 0.5)));
+													}catch(\Exception $e){
+														return;
+													}
 
-												$entity->setRotation($level->random->nextFloat() * 360, 0);
+													if($entity instanceof Mob){
+														$entity->setImmobile(false);
+													}
 
-												if($entity->canSpawnHere() and count($level->getCollidingEntities($entity->getBoundingBox(), $entity)) === 0){
-													// TODO: implement mob initial spawn
-													++$j2;
-													$entity->spawnToAll();
+													$entity->setRotation($level->random->nextFloat() * 360, 0);
 
-													if($j2 >= $entity->getMaxSpawnedInChunk()){
-														continue 4;
+													if($entity->canSpawnHere() and count($level->getCollidingEntities($entity->getBoundingBox(), $entity)) === 0){
+														// TODO: implement mob initial spawn
+														++$j2;
+														$entity->spawnToAll();
+
+														if($j2 >= $entity->getMaxSpawnedInChunk()){
+															continue 4;
+														}
 													}
 												}
 											}
@@ -222,7 +224,7 @@ class AnimalSpawner{
 		if(!empty($list)){
 			while($random->nextFloat() < $biome->getSpawningChance()){
 				/** @var SpawnListEntry $entry */
-				$entry = WeightedRandomItem::getRandomItem($random, $list, WeightedRandomItem::getTotalWeight($list));
+				$entry = WeightedRandomItem::getRandomItem($random, $list, WeightedRandomItem::getTotalWeight($list) + 2);
 				if($entry === null) continue;
 
 				$i = $random->nextBoundedInt($entry->minGroupCount + $random->nextBoundedInt(1 + $entry->maxGroupCount - $entry->minGroupCount));

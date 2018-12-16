@@ -278,8 +278,8 @@ class LevelSoundEventPacket extends DataPacket{
 	public $position;
 	/** @var int */
 	public $extraData = -1;
-	/** @var int */
-	public $pitch = 1;
+	/** @var string */
+	public $entityType = ":"; //???
 	/** @var bool */
 	public $isBabyMob = false; //...
 	/** @var bool */
@@ -289,7 +289,7 @@ class LevelSoundEventPacket extends DataPacket{
 		$this->sound = $this->getByte();
 		$this->position = $this->getVector3();
 		$this->extraData = $this->getVarInt();
-		$this->pitch = $this->getVarInt();
+		$this->entityType = $this->getString();
 		$this->isBabyMob = $this->getBool();
 		$this->disableRelativeVolume = $this->getBool();
 	}
@@ -298,7 +298,7 @@ class LevelSoundEventPacket extends DataPacket{
 		$this->putByte($this->sound);
 		$this->putVector3($this->position);
 		$this->putVarInt($this->extraData);
-		$this->putVarInt($this->pitch);
+		$this->putString($this->entityType);
 		$this->putBool($this->isBabyMob);
 		$this->putBool($this->disableRelativeVolume);
 	}

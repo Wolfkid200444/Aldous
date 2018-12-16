@@ -25,7 +25,6 @@ namespace pocketmine\block;
 
 use pocketmine\item\Item;
 use pocketmine\math\AxisAlignedBB;
-use pocketmine\math\Bearing;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
@@ -75,12 +74,12 @@ class Chest extends Transparent{
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
 		$chest = null;
 		if($player !== null){
-			$this->facing = Bearing::toFacing(Bearing::opposite($player->getDirection()));
+			$this->facing = Facing::opposite($player->getHorizontalFacing());
 		}
 
 		foreach([
-			Bearing::toFacing(Bearing::rotate($player->getDirection(), -1)),
-			Bearing::toFacing(Bearing::rotate($player->getDirection(), 1))
+			Facing::rotateY($player->getHorizontalFacing(), false),
+			Facing::rotateY($player->getHorizontalFacing(), true)
 		] as $side){
 			$c = $this->getSide($side);
 			if($c instanceof Chest and $c->isSameType($this) and $c->facing === $this->facing){
@@ -93,7 +92,10 @@ class Chest extends Transparent{
 		}
 
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
-			$tile = Tile::createTile(Tile::CHEST, $this->getLevel(), TileChest::createNBT($this, $item));
+			$tile = Tile::createFromItem(Tile::CHEST, $this->getLevel(), $this->asVector3(), $item);
+			if($tile !== null){
+				$this->level->addTile($tile);
+			}
 
 			if($chest instanceof TileChest and $tile instanceof TileChest){
 				$chest->pairWith($tile);

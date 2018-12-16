@@ -10,7 +10,7 @@ crash_dumps/*
 *.phar
 aldous.properties
 /aldous.yml
-/game_settings.yml
+/advanced_settings.yml
 memory_dumps/*
 resource_packs/
 maps/*

@@ -1650,6 +1650,10 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		return Bearing::fromAngle($this->yaw);
 	}
 
+	public function getHorizontalFacing() : int{
+		return Bearing::toFacing($this->getDirection());
+	}
+
 	/**
 	 * @return Vector3
 	 */
@@ -1797,11 +1801,12 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	public function mountEntity(Entity $entity, int $seatNumber = 0) : void{
 		if($this->ridingEntity == null and $entity !== $this and count($entity->passengers) < $entity->getSeatCount()){
 			if(!isset($entity->passengers[$seatNumber])){
+
 				if($seatNumber === 0){
 					$entity->setRiddenByEntity($this);
 
 					$this->setRiding(true);
-					$this->setGenericFlag(self::DATA_FLAG_WASD_CONTROLLED, true);
+					$entity->setGenericFlag(self::DATA_FLAG_WASD_CONTROLLED, true);
 				}
 
 				$this->setRotation($entity->yaw, $entity->pitch);
@@ -1863,7 +1868,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 				$this->entityRiderPitchDelta = 0;
 
 				$this->setRiding(false);
-				$entity->setDataFlag(Entity::DATA_FLAGS, Entity::DATA_FLAG_WASD_CONTROLLED, false);
+				$entity->setGenericFlag(Entity::DATA_FLAG_WASD_CONTROLLED, false);
 			}
 
 			$this->propertyManager->removeProperty(self::DATA_RIDER_SEAT_POSITION);

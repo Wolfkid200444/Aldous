@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace pocketmine\entity\behavior;
 
 use pocketmine\entity\passive\Horse;
-use pocketmine\level\sound\PlaySound;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 
 class HorseRiddenBehavior extends Behavior{
@@ -46,29 +45,27 @@ class HorseRiddenBehavior extends Behavior{
 
 	public function onTick() : void{
 		if($this->canStart()){ // a minor check
-			if(!$this->mob->isInLove()){
+			if(!$this->mob->isTamed()){
 				if($this->rideTime > 100 and !$this->mob->isRearing()){
-					if($this->mob->random->nextBoundedInt(4) === 0){
+					if($this->mob->random->nextBoundedInt(1) === 0){
 						$this->mob->setInLove(true);
+						$this->mob->setTamed(true);
 						$this->rideTime = 0;
 					}else{
 						$this->mob->setRearing(true);
-						$this->mob->level->addSound(new PlaySound($this->mob, "mob.horse.jump"));
 					}
 				}elseif($this->rideTime > 120){
 					$this->mob->broadcastEntityEvent(EntityEventPacket::TAME_FAIL);
-					$this->mob->getRiddenByEntity()->dismountEntity();
+					$this->mob->throwRider();
 					$this->mob->setRearing(false);
 				}
 
 				$this->rideTime++;
 				$this->mutexBits = 2;
 			}else{
-				if($this->mob->isRearing() and $this->mob->onGround){
-					$this->mob->setRearing(false);
+				if($this->mob->isSaddled()){
+					$this->mutexBits = 7; // This a nasty hack
 				}
-
-				$this->mutexBits = 7;
 			}
 		}
 	}
@@ -76,5 +73,6 @@ class HorseRiddenBehavior extends Behavior{
 	public function onEnd() : void{
 		$this->rideTime = 0;
 		$this->mob->setRearing(false);
+		$this->mob->throwRider();
 	}
 }

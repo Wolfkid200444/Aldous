@@ -23,7 +23,7 @@ developer:
   # Allows your server to load the folder plugin.
   folder-plugin-loader: true
   # Thanks to TuranicTeam who made Altay, you can use added commands like similar on DevTools.
-  # Example: "/makeserver", "/makeplugin", etc.
+  # Example: "/makeserver", "/makeplugin", and "/extractplugin".
   commands: true
   # Allows your server to load incompatible API plugin like similar to AllAPILoader.
   load-incompatible-api: true

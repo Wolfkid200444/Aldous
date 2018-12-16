@@ -1,23 +1,22 @@
 <?php
 
-/*
- *
- *  ____            _        _   __  __ _                  __  __ ____
- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author PocketMine Team
- * @link http://www.pocketmine.net/
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
- *
-*/
+ */
 
 declare(strict_types=1);
 
@@ -34,71 +33,72 @@ abstract class Achievement{
      * @var array[]
      */
     public static $list = [
-        /*"openInventory" => array(
-            "name" => "Taking Inventory",
-            "requires" => [],
-        ),*/
+        "openInventory" => array([
+            "name" => "Inventory Newbie",
+            "requires" => []
+        ]),
         "mineWood" => [
-            "name" => "Getting Wood",
-            "requires" => [ //"openInventory",
+            "name" => "Gather Wood",
+            "requires" => [ 
+				"openInventory",
             ]
         ],
         "buildWorkBench" => [
-            "name" => "Benchmarking",
+            "name" => "Craft Beginner",
             "requires" => [
                 "mineWood"
             ]
         ],
         "buildPickaxe" => [
-            "name" => "Time to Mine!",
+            "name" => "The New Miner",
             "requires" => [
                 "buildWorkBench"
             ]
         ],
         "buildFurnace" => [
-            "name" => "Hot Topic",
+            "name" => "The Cook Burner",
             "requires" => [
                 "buildPickaxe"
             ]
         ],
         "acquireIron" => [
-            "name" => "Acquire hardware",
+            "name" => "The Iron Hardware",
             "requires" => [
                 "buildFurnace"
             ]
         ],
         "buildHoe" => [
-            "name" => "Time to Farm!",
+            "name" => "Journey To The Farm",
             "requires" => [
                 "buildWorkBench"
             ]
         ],
         "makeBread" => [
-            "name" => "Bake Bread",
+            "name" => "Bread Maker",
             "requires" => [
                 "buildHoe"
             ]
         ],
         "bakeCake" => [
-            "name" => "The Lie",
+            "name" => "Cake Baker",
             "requires" => [
                 "buildHoe"
             ]
         ],
         "buildBetterPickaxe" => [
-            "name" => "Getting an Upgrade",
+            "name" => "The Upgraded Miner",
             "requires" => [
                 "buildPickaxe"
             ]
         ],
         "buildSword" => [
-            "name" => "Time to Strike!",
+            "name" => "Prepare To Combat",
             "requires" => [
                 "buildWorkBench"
             ]
         ],
         "diamonds" => [
-            "name" => "DIAMONDS!",
+            "name" => "Diamond Searcher",
             "requires" => [
                 "acquireIron"
             ]

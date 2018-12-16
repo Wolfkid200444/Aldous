@@ -1,22 +1,20 @@
 <?php
 
-/*
- *               _ _
- *         /\   | | |
- *        /  \  | | |_ __ _ _   _
- *       / /\ \ | | __/ _` | | | |
- *      / ____ \| | || (_| | |_| |
- *     /_/    \_|_|\__\__,_|\__, |
- *                           __/ |
- *                          |___/
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author TuranicTeam
- * @link https://github.com/TuranicTeam/Altay
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
  */
 
@@ -37,14 +35,14 @@ class MakePluginCommand extends VanillaCommand{
     public function __construct(string $name){
         parent::__construct(
             $name,
-            "Creates a Phar plugin from a unarchived",
-            '/makeplugin <pluginName>',
+            "Compress from ZIP to PHAR",
+            '/makeplugin <plugin-name>',
             ["mp"], [[
                 new CommandParameter("plugin", CommandParameter::ARG_TYPE_RAWTEXT, false)
             ]]
         );
 
-        $this->setPermission("altay.command.makeplugin");
+        $this->setPermission("aldous.command.makeplugin");
     }
 
     public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -58,19 +56,19 @@ class MakePluginCommand extends VanillaCommand{
 
         $pluginName = trim(implode(" ", $args));
         if($pluginName === "" or !(($plugin = Server::getInstance()->getPluginManager()->getPlugin($pluginName)) instanceof Plugin)){
-            $sender->sendMessage(TextFormat::RED . "Invalid plugin name, check the name case.");
+            $sender->sendMessage(TextFormat::RED . "An invalid plugin name, please check the name case.");
             return true;
         }
         $description = $plugin->getDescription();
 
         if(!($plugin->getPluginLoader() instanceof FolderPluginLoader)){
-            $sender->sendMessage(TextFormat::RED . "Plugin " . $description->getName() . " is not in folder structure.");
+            $sender->sendMessage(TextFormat::RED . "The plugin " . $description->getName() . " is not in folder structure.");
             return true;
         }
 
-        $pharPath  = Server::getInstance()->getPluginPath() . "Altay" . DIRECTORY_SEPARATOR . $description->getFullName() . ".phar";
+        $pharPath  = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $description->getFullName() . ".phar";
         if(file_exists($pharPath)){
-            $sender->sendMessage("Phar plugin already exists, overwriting...");
+            $sender->sendMessage("The PHAR plugin already exists, overwriting...");
             unlink($pharPath);
         }
 
@@ -87,7 +85,7 @@ class MakePluginCommand extends VanillaCommand{
             "creationDate" => time()
         ]);
 
-        $phar->setStub('<?php echo "Altay plugin ' . $description->getFullName() . '\nThis file has been generated using Turanic at ' . date("r") . '.\n----------------\n";if(extension_loaded("phar")){$phar = new \Phar(__FILE__);foreach($phar->getMetadata() as $key => $value){echo ucfirst($key).": ".(is_array($value) ? implode(", ", $value):$value)."\n";}} __HALT_COMPILER();');
+        $phar->setStub('<?php echo "Plugin: ' . $description->getFullName() . '\n\nThis file has been generated using Aldous at ' . date("r") . '.\n----------------\n";if(extension_loaded("phar")){$phar = new \Phar(__FILE__);foreach($phar->getMetadata() as $key => $value){echo ucfirst($key).": ".(is_array($value) ? implode(", ", $value):$value)."\n";}} __HALT_COMPILER();');
         $phar->setSignatureAlgorithm(\Phar::SHA1);
 
         $reflection = new \ReflectionClass("pocketmine\\plugin\\PluginBase");
@@ -110,19 +108,19 @@ class MakePluginCommand extends VanillaCommand{
         );
 
         $count = count($phar->buildFromDirectory($basePath, $regex));
-        $sender->sendMessage("[Altay] Added $count files");
+        $sender->sendMessage("[Aldous] Added $count files!");
 
-        $sender->sendMessage("[Altay] Checking for compressible files...");
+        $sender->sendMessage("[Aldous] Checking for compressible files...");
         foreach($phar as $file => $finfo){
             /** @var \PharFileInfo $finfo */
             if($finfo->getSize() > (1024 * 512)){
-                $sender->sendMessage("[Altay] Compressing " . $finfo->getFilename());
+                $sender->sendMessage("[Aldous] Compressing " . $finfo->getFilename());
                 $finfo->compress(\Phar::GZ);
             }
         }
         $phar->stopBuffering();
 
-        $sender->sendMessage("Phar plugin " . $description->getFullName() . " has been created on " . $pharPath);
+        $sender->sendMessage("The PHAR plugin " . $description->getFullName() . " has been successfully created on " . $pharPath);
 
         return true;
     }

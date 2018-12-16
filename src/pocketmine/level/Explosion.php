@@ -201,6 +201,7 @@ class Explosion{
 
 
 		$air = ItemFactory::get(Item::AIR);
+		$airBlock = BlockFactory::get(Block::AIR);
 
 		foreach($this->affectedBlocks as $block){
 			$yieldDrops = false;
@@ -213,7 +214,7 @@ class Explosion{
 				}
 			}
 
-			$this->level->setBlockIdAndDataAt($block->x, $block->y, $block->z, 0, 0);
+			$this->level->setBlockAt($block->x, $block->y, $block->z, $airBlock, false); //TODO: should updating really be disabled here?
 
 			$t = $this->level->getTileAt($block->x, $block->y, $block->z);
 			if($t instanceof Tile){

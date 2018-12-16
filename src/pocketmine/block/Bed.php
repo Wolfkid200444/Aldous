@@ -87,9 +87,12 @@ class Bed extends Transparent{
 	public function writeStateToWorld() : void{
 		parent::writeStateToWorld();
 		//extra block properties storage hack
-		$tile = Tile::createTile(Tile::BED, $this->getLevel(), TileBed::createNBT($this));
-		if($tile instanceof TileBed){
-			$tile->setColor($this->color);
+		$tile = Tile::create(Tile::BED, $this->getLevel(), $this->asVector3());
+		if($tile !== null){
+			if($tile instanceof TileBed){
+				$tile->setColor($this->color);
+			}
+			$this->level->addTile($tile);
 		}
 	}
 
@@ -192,7 +195,7 @@ class Bed extends Transparent{
 		$this->color = $item->getDamage(); //TODO: replace this with a proper colour getter
 		$down = $this->getSide(Facing::DOWN);
 		if(!$down->isTransparent()){
-			$this->facing = $player !== null ? Bearing::toFacing($player->getDirection()) : Facing::NORTH;
+			$this->facing = $player !== null ? $player->getHorizontalFacing() : Facing::NORTH;
 
 			$next = $this->getSide($this->getOtherHalfSide());
 			if($next->canBeReplaced() and !$next->getSide(Facing::DOWN)->isTransparent()){

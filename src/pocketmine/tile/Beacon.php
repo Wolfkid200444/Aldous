@@ -30,6 +30,7 @@ use pocketmine\entity\EffectInstance;
 use pocketmine\inventory\BeaconInventory;
 use pocketmine\inventory\InventoryHolder;
 use pocketmine\level\Level;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\Player;
@@ -46,7 +47,7 @@ class Beacon extends Spawnable implements Nameable, InventoryHolder{
 	/** @var BeaconInventory */
 	private $inventory;
 	/** @var int */
-	private $primary, $secondary;
+	private $primary = 0, $secondary = 0;
 	/** @var int */
 	protected $currentTick = 0;
 	/** @var array */
@@ -56,14 +57,17 @@ class Beacon extends Spawnable implements Nameable, InventoryHolder{
 		Block::EMERALD_BLOCK,
 		Block::DIAMOND_BLOCK
 	];
-
+	
+	public function __construct(Level $level, Vector3 $pos){
+		parent::__construct($level, $pos);
+		$this->inventory = new BeaconInventory($this);
+	}
+    
 	protected function readSaveData(CompoundTag $nbt) : void{
 		$this->primary = $nbt->getInt(self::TAG_PRIMARY, 0);
 		$this->secondary = $nbt->getInt(self::TAG_SECONDARY, 0);
 
 		$this->loadName($nbt);
-
-		$this->inventory = new BeaconInventory($this);
 		$this->loadItems($nbt);
 	}
 
@@ -150,7 +154,7 @@ class Beacon extends Spawnable implements Nameable, InventoryHolder{
 		for($i = 1; $i < 5; $i++){
 			for($x = -$i; $x < $i + 1; $x++){
 				for($z = -$i; $z < $i + 1; $z++){
-					$allMineral = $allMineral && in_array($this->level->getBlockIdAt($this->x + $x, $this->y - $i, $this->z + $z), $this->minerals);
+					$allMineral = $allMineral && in_array($this->level->getBlockAt($this->x + $x, $this->y - $i, $this->z + $z)->getId(), $this->minerals);
 					if(!$allMineral) return $i - 1;
 				}
 			}

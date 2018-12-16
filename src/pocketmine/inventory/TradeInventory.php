@@ -73,6 +73,7 @@ class TradeInventory extends ContainerInventory{
 			$pk->windowId = $who->getWindowId($this);
 			$pk->varint1 = 0;
 			$pk->varint2 = 0;
+			$pk->varint3 = 0;
 			$pk->isWilling = $this->holder->isWilling();
 			$pk->traderEid = $this->holder->getId();
 			$pk->playerEid = $who->getId();

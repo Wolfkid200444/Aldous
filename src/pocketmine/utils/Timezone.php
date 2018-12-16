@@ -1,23 +1,22 @@
 <?php
 
-/*
- *
- *  ____            _        _   __  __ _                  __  __ ____
- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author PocketMine Team
- * @link http://www.pocketmine.net/
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
- *
-*/
+ */
 
 declare(strict_types=1);
 
@@ -69,8 +68,8 @@ abstract class Timezone{
 			return;
 		}
 
-		ini_set("date.timezone", "UTC");
-		date_default_timezone_set("UTC");
+		ini_set("date.timezone", "UTC+08:00");
+		date_default_timezone_set("UTC+08:00");
 		\GlobalLogger::get()->warning("Timezone could not be automatically determined or was set to an invalid value. An incorrect timezone will result in incorrect timestamps on console logs. It has been set to \"UTC\" by default. You can change it on the php.ini file.");
 	}
 
@@ -107,7 +106,7 @@ abstract class Timezone{
 				$offset = $matches[2];
 
 				if($offset == ""){
-					return "UTC";
+					return "UTC+08:00";
 				}
 
 				return self::parseOffset($offset);
@@ -132,8 +131,8 @@ abstract class Timezone{
 
 				$offset = trim(exec('date +%:z'));
 
-				if($offset == "+00:00"){
-					return "UTC";
+				if($offset == "+08:00"){
+					return "UTC+08:00";
 				}
 
 				return self::parseOffset($offset);

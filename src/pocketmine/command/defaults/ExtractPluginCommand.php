@@ -1,5 +1,23 @@
 <?php
 
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
+ *
+ */
+
 namespace pocketmine\command\defaults;
 
 use pocketmine\command\CommandSender;
@@ -15,14 +33,14 @@ class ExtractPluginCommand extends VanillaCommand{
     public function __construct(string $name){
         parent::__construct(
             $name,
-            "Extracts the source code from a Phar plugin",
-            '/extractplugin <pluginName>',
+            "Extract from PHAR to ZIP",
+            '/extractplugin <plugin-name>',
             ["ep"], [[
                 new CommandParameter("plugin", CommandParameter::ARG_TYPE_RAWTEXT, false)
             ]]
         );
 
-        $this->setPermission("altay.command.extractphar");
+        $this->setPermission("aldous.command.extractphar");
     }
 
     public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -36,19 +54,19 @@ class ExtractPluginCommand extends VanillaCommand{
 
         $pluginName = trim(implode(" ", $args));
         if($pluginName === "" or !(($plugin = Server::getInstance()->getPluginManager()->getPlugin($pluginName)) instanceof Plugin)){
-            $sender->sendMessage(TextFormat::RED . "Invalid plugin name, check the name case.");
+            $sender->sendMessage(TextFormat::RED . "An invalid plugin name, please check the name case.");
             return true;
         }
         $description = $plugin->getDescription();
 
         if(!($plugin->getPluginLoader() instanceof PharPluginLoader)){
-            $sender->sendMessage(TextFormat::RED . "Plugin " . $description->getName() . " is not in Phar structure.");
+            $sender->sendMessage(TextFormat::RED . "The plugin " . $description->getName() . " is not in the PHAR structure.");
             return true;
         }
 
-        $folderPath = Server::getInstance()->getPluginPath() . "Altay" . DIRECTORY_SEPARATOR . $description->getFullName() . DIRECTORY_SEPARATOR;
+        $folderPath = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $description->getFullName() . DIRECTORY_SEPARATOR;
         if(file_exists($folderPath)){
-            $sender->sendMessage("Plugin already exists, overwriting...");
+            $sender->sendMessage("The plugin already exists, overwriting...");
         }else{
             @mkdir($folderPath);
         }
@@ -63,7 +81,7 @@ class ExtractPluginCommand extends VanillaCommand{
             @mkdir(dirname($folderPath . str_replace($pharPath, "", $path)), 0755, true);
             file_put_contents($folderPath . str_replace($pharPath, "", $path), file_get_contents($path));
         }
-        $sender->sendMessage("Source plugin " . $description->getFullName() . " has been created on " . $folderPath);
+        $sender->sendMessage("The source plugin " . $description->getFullName() . " has been successfully created on " . $folderPath);
 
         return true;
     }

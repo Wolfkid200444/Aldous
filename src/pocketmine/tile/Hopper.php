@@ -31,6 +31,7 @@ use pocketmine\inventory\HopperInventory;
 use pocketmine\inventory\InventoryHolder;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 
 class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
@@ -48,9 +49,10 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 
 	public const TAG_TRANSFER_COOLDOWN = "TransferCooldown";
 
-	public function __construct(Level $level, CompoundTag $nbt){
-		parent::__construct($level, $nbt);
-
+	public function __construct(Level $level, Vector3 $pos){
+		parent::__construct($level, $pos);
+		
+		$this->inventory = new HopperInventory($this);
 		$this->scheduleUpdate();
 	}
 
@@ -58,8 +60,6 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 		$this->transferCooldown = $nbt->getInt(self::TAG_TRANSFER_COOLDOWN, 8);
 
 		$this->loadName($nbt);
-
-		$this->inventory = new HopperInventory($this);
 		$this->loadItems($nbt);
 	}
 
@@ -91,8 +91,6 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 	}
 
 	protected  function addAdditionalSpawnData(CompoundTag $nbt): void{
-		$nbt->setInt(self::TAG_TRANSFER_COOLDOWN, $this->transferCooldown);
-
 		$this->addNameSpawnData($nbt);
 	}
 

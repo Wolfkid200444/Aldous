@@ -33,6 +33,7 @@ use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\ByteTag;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\Player;
+use pocketmine\level\Level;
 
 class ShulkerBox extends Spawnable implements InventoryHolder, Container, Nameable {
 	use NameableTrait{
@@ -50,6 +51,12 @@ class ShulkerBox extends Spawnable implements InventoryHolder, Container, Nameab
 
 	/** @var ShulkerBoxInventory */
 	protected $inventory;
+	
+	public function __construct(Level $level, Vector3 $pos){
+		parent::__construct($level, $pos);
+		
+		$this->inventory = new ShulkerBoxInventory($this);
+	}
 
 	/**
 	 * @param int $facing
@@ -103,8 +110,6 @@ class ShulkerBox extends Spawnable implements InventoryHolder, Container, Nameab
 		$this->isUndyed = $nbt->getByte(self::TAG_UNDYED, 1) == 1;
 
 		$this->loadName($nbt);
-
-		$this->inventory = new ShulkerBoxInventory($this);
 		$this->loadItems($nbt);
 	}
 

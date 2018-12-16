@@ -35,6 +35,8 @@ use pocketmine\entity\behavior\PanicBehavior;
 use pocketmine\entity\behavior\RandomLookAroundBehavior;
 use pocketmine\entity\behavior\TemptedBehavior;
 use pocketmine\entity\behavior\WanderBehavior;
+use pocketmine\entity\Effect;
+use pocketmine\entity\Entity;
 use pocketmine\entity\Tamable;
 use pocketmine\item\Saddle;
 use pocketmine\item\Item;
@@ -43,10 +45,14 @@ use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\IntTag;
+use pocketmine\network\mcpe\protocol\EntityEventPacket;
 use pocketmine\network\mcpe\protocol\RiderJumpPacket;
+use pocketmine\network\mcpe\protocol\UpdateAttributesPacket;
 use pocketmine\Player;
 
-class Horse extends Animal{
+class Horse extends Tamable{
+
+	//TODO: implement moveWithHeading function for riding, also remove onRidingUpdate function
 
 	public const NETWORK_ID = self::HORSE;
 
@@ -67,7 +73,28 @@ class Horse extends Animal{
 	public $width = 1.3965;
 	public $height = 1.6;
 
-	protected $jumpRearingCounter = 0;
+	protected $jumpPower = 0.0;
+	protected $rearingCounter = 0;
+
+	public function getJumpPower() : float{
+		return $this->jumpPower;
+	}
+
+	public function setJumpPower(float $jumpPowerIn) : void{
+		if($this->isSaddled()){
+			if($jumpPowerIn < 0){
+				$jumpPowerIn = 0;
+			}else{
+				$this->setRearing(true);
+			}
+
+			if($jumpPowerIn > 90){
+				$this->jumpPower = 1.0;
+			}else{
+				$this->jumpPower = 0.4 + 0.4 * $jumpPowerIn / 90;
+			}
+		}
+	}
 
 	protected function addBehaviors() : void{
 		$this->behaviorPool->setBehavior(0, new HorseRiddenBehavior($this));
@@ -82,9 +109,11 @@ class Horse extends Animal{
 	}
 
 	protected function initEntity(CompoundTag $nbt) : void{
-		$this->setMaxHealth(10);
-		$this->setMovementSpeed(0.3);
+		$this->setMaxHealth($this->getModifiedMaxHealth());
+		$this->setMovementSpeed($this->getModifiedMovementSpeed());
+		$this->setJumpStrength($this->getModifiedJumpStrength());
 		$this->setFollowRange(35);
+
 		$this->setSaddled(boolval($nbt->getByte("Saddle", 0)));
 
 		if($nbt->hasTag("Variant", IntTag::class)){
@@ -98,9 +127,31 @@ class Horse extends Animal{
 		$this->setVariant($variant - ($markVariant << 8));
 		$this->setMarkVariant($markVariant);
 
-		$this->setGenericFlag(self::DATA_FLAG_CAN_POWER_JUMP, true);
+		$this->propertyManager->setInt(self::DATA_STRENGTH, 8);
+		$this->propertyManager->setInt(self::DATA_MAX_STRENGTH, 11);
 
 		parent::initEntity($nbt);
+	}
+
+	/**
+	 * Returns randomized max health
+	 */
+	private function getModifiedMaxHealth() : int{
+		return 15 + $this->random->nextBoundedInt(8) + $this->random->nextBoundedInt(9);
+	}
+
+	/**
+	 * Returns randomized jump strength
+	 */
+	private function getModifiedJumpStrength() : float{
+		return 0.4000000059604645 + $this->random->nextFloat() * 0.2 + $this->random->nextFloat() * 0.2 + $this->random->nextFloat() * 0.2;
+	}
+
+	/**
+	 * Returns randomized movement speed
+	 */
+	private function getModifiedMovementSpeed() : float{
+		return (0.44999998807907104 + $this->random->nextFloat() * 0.3 + $this->random->nextFloat() * 0.3 + $this->random->nextFloat() * 0.3) * 0.25;
 	}
 
 	public function addAttributes() : void{
@@ -113,17 +164,36 @@ class Horse extends Animal{
 		return "Horse";
 	}
 
+	public function onBehaviorUpdate() : void{
+		parent::onBehaviorUpdate();
+
+		$this->sendAttributes();
+
+		if($this->rearingCounter > 0 and $this->onGround){
+			$this->rearingCounter--;
+
+			if($this->rearingCounter === 0){
+				$this->setRearing(false);
+			}
+		}
+	}
+
 	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
 		if(!$this->isImmobile()){
 			if($item instanceof Saddle){
 				if(!$this->isSaddled()){
-					$this->setSaddled(true);
-					if($player->isSurvival()){
-						$item->pop();
+					if($this->isTamed()){
+						$this->setSaddled(true);
+						if($player->isSurvival()){
+							$item->pop();
+						}
+					}else{
+						$this->rearingCounter = 10;
+						$this->setRearing(true);
 					}
 					return true;
 				}
-			}elseif($this->riddenByEntity === null){
+			}elseif(!$this->isBaby() and $this->riddenByEntity === null){
 				$player->mountEntity($this);
 				return true;
 			}
@@ -147,6 +217,7 @@ class Horse extends Animal{
 
 	public function setSaddled(bool $value = true) : void{
 		$this->setGenericFlag(self::DATA_FLAG_SADDLED, $value);
+		$this->setGenericFlag(self::DATA_FLAG_CAN_POWER_JUMP, $value);
 	}
 
 	public function saveNBT() : CompoundTag{
@@ -171,24 +242,47 @@ class Horse extends Animal{
 	}
 
 	public function setRearing(bool $value) : void{
-		$this->jumpRearingCounter = 0;
 		$this->setGenericFlag(self::DATA_FLAG_REARING, $value);
 	}
 
-	public function onRidingUpdate(Player $player, float $motX, float $motY, bool $jumping = false, bool $sneaking = false) : void{
-		if($this->isInLove()){
-			$this->yaw = $this->headYaw = $this->riddenByEntity->headYaw;
+	public function sendAttributes(bool $sendAll = false){
+		$entries = $sendAll ? $this->attributeMap->getAll() : $this->attributeMap->needSend();
+		if(count($entries) > 0){
+			$pk = new UpdateAttributesPacket();
+			$pk->entityRuntimeId = $this->id;
+			$pk->entries = $entries;
 
-			// TODO: Improve riding movement
-			if($motY > 0){
-				$this->moveForward(1.5);
-			}
+			$this->server->broadcastPacket($this->getViewers(), $pk);
 
-			if($jumping){
-				// TODO: not working
-				$player->getDataPropertyManager()->setInt(self::DATA_EXPERIENCE_VALUE, min(100, $this->jumpRearingCounter++));
-				$player->getDataPropertyManager()->setInt(10, $this->jumpRearingCounter);
+			foreach($entries as $entry){
+				$entry->markSynchronized();
 			}
 		}
+	}
+
+	public function getJumpStrength() : float{
+		return $this->attributeMap->getAttribute(Attribute::JUMP_STRENGTH)->getValue();
+	}
+
+	public function setJumpStrength(float $value) : void{
+		$this->attributeMap->getAttribute(Attribute::JUMP_STRENGTH)->setValue($value);
+	}
+
+	public function throwRider() : void{
+		if($this->riddenByEntity !== null){
+			$this->riddenByEntity->dismountEntity();
+		}
+	}
+
+	public function getJumpVelocity() : float{
+		$jumpBoost = $this->hasEffect(Effect::JUMP) ? ($this->getEffect(Effect::JUMP)->getEffectLevel() / 10) : 0;
+		return $this->jumpPower > 0 ? $this->jumpPower + $jumpBoost : $this->jumpVelocity + $jumpBoost;
+	}
+
+	public function jump() : void{
+		parent::jump();
+
+		$this->jumpPower = 0;
+		$this->rearingCounter = 20;
 	}
 }

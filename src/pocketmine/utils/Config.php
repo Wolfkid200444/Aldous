@@ -27,12 +27,12 @@ namespace pocketmine\utils;
  * Config Class for simple config manipulation of multiple formats.
  */
 class Config{
-
 	public const DETECT = -1; //Detect by file extension
 	public const PROPERTIES = 0; // .properties
 	public const CNF = Config::PROPERTIES; // .cnf
 	public const JSON = 1; // .js, .json
 	public const YAML = 2; // .yml, .yaml
+	//const EXPORT = 3; // .export, .xport
 	public const SERIALIZED = 4; // .sl
 	public const ENUM = 5; // .txt, .list, .enum
 	public const ENUMERATION = Config::ENUM;
@@ -61,7 +61,9 @@ class Config{
 		"js" => Config::JSON,
 		"yml" => Config::YAML,
 		"yaml" => Config::YAML,
-        "sl" => Config::SERIALIZED,
+		//"export" => Config::EXPORT,
+		//"xport" => Config::EXPORT,
+		"sl" => Config::SERIALIZED,
 		"serialize" => Config::SERIALIZED,
 		"txt" => Config::ENUM,
 		"list" => Config::ENUM,

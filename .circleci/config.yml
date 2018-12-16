@@ -31,10 +31,10 @@ jobs:
             git checkout c8cfacda84f21032d6014b53e72bf345ac901dac
       - run:
           name: Composer Installation
-          command: bin/php7/bin/php .circleci/bin/composer.phar install
+          command: bin/php7/bin/php tests/bin/composer.phar install
       - run:
           name: Create new Server Software PHAR
-          command: bin/php7/bin/php .circleci/bin/build.php
+          command: bin/php7/bin/php tests/bin/build.php
       - store_artifacts:
           path: plugins/Aldous
           destination: Generator

@@ -101,13 +101,9 @@ class BlockFactory{
 
 		self::registerBlock(new Bedrock());
 		self::registerBlock(new Water());
-		$b = new Water();
-		$b->setStill();
-		self::registerBlock($b); //flattening hack
+		self::registerBlock((new Water())->setStill()); //flattening hack
 		self::registerBlock(new Lava());
-		$b = new Lava();
-		$b->setStill();
-		self::registerBlock($b); //flattening hack
+		self::registerBlock((new Lava())->setStill()); //flattening hack
 
 		self::registerBlock(new Sand(Block::SAND, 0, "Sand"));
 		self::registerBlock(new Sand(Block::SAND, 1, "Red Sand"));
@@ -148,16 +144,16 @@ class BlockFactory{
 		//TODO: PISTON
 		//TODO: PISTONARMCOLLISION
 
-        foreach(Color::ALL as $color){
-            self::registerBlock(new Wool(Block::WOOL, $color, Color::NAMES[$color]." Wool"));
-            self::registerBlock(new HardenedClay(Block::STAINED_CLAY, $color, Color::NAMES[$color]." Stained Clay"));
-            self::registerBlock(new Glass(Block::STAINED_GLASS, $color, Color::NAMES[$color]." Stained Glass"));
-            self::registerBlock(new GlassPane(Block::STAINED_GLASS_PANE, $color, Color::NAMES[$color]." Stained Glass Pane"));
-            self::registerBlock(new Carpet(Block::CARPET, $color, Color::NAMES[$color]." Carpet"));
-            self::registerBlock(new Concrete(Block::CONCRETE, $color, Color::NAMES[$color]." Concrete"));
-            self::registerBlock(new ConcretePowder(Block::CONCRETE_POWDER, $color, Color::NAMES[$color]." Concrete Powder"));
-            self::registerBlock(new ShulkerBox(Block::SHULKER_BOX, $color, Color::NAMES[$color]." Shulker Box"));
-        }
+		foreach(Color::ALL as $color){
+			self::registerBlock(new Wool(Block::WOOL, $color, Color::NAMES[$color] . " Wool"));
+			self::registerBlock(new HardenedClay(Block::STAINED_CLAY, $color, Color::NAMES[$color] . " Stained Clay"));
+			self::registerBlock(new Glass(Block::STAINED_GLASS, $color, Color::NAMES[$color] . " Stained Glass"));
+			self::registerBlock(new GlassPane(Block::STAINED_GLASS_PANE, $color, Color::NAMES[$color] . " Stained Glass Pane"));
+			self::registerBlock(new Carpet(Block::CARPET, $color, Color::NAMES[$color] . " Carpet"));
+			self::registerBlock(new Concrete(Block::CONCRETE, $color, Color::NAMES[$color] . " Concrete"));
+			self::registerBlock(new ConcretePowder(Block::CONCRETE_POWDER, $color, Color::NAMES[$color] . " Concrete Powder"));
+			self::registerBlock(new ShulkerBox(Block::SHULKER_BOX, $color, Color::NAMES[$color] . " Shulker Box"));
+		}
 
 		self::registerBlock(new ShulkerBox(Block::UNDYED_SHULKER_BOX, 0, "Shulker Box"));
 
@@ -209,7 +205,7 @@ class BlockFactory{
 		self::registerBlock(new MonsterSpawner());
 		self::registerBlock(new WoodenStairs(Block::OAK_STAIRS, 0, "Oak Stairs"));
 		self::registerBlock(new Chest());
-		//TODO: REDSTONE_WIRE
+		self::registerBlock(new RedstoneWire());
 		self::registerBlock(new DiamondOre());
 		self::registerBlock(new Diamond());
 		self::registerBlock(new CraftingTable());
@@ -217,10 +213,7 @@ class BlockFactory{
 		self::registerBlock(new Farmland());
 
 		self::registerBlock(new Furnace());
-
-		$furnace = new Furnace();
-		$furnace->setLit();
-		self::registerBlock($furnace); //flattening hack
+		self::registerBlock((new Furnace())->setLit()); //flattening hack
 
 		self::registerBlock(new SignPost());
 		self::registerBlock(new WoodenDoor(Block::OAK_DOOR_BLOCK, 0, "Oak Door", Item::OAK_DOOR));
@@ -233,16 +226,9 @@ class BlockFactory{
 		self::registerBlock(new IronDoor());
 		self::registerBlock(new WoodenPressurePlate());
 		self::registerBlock(new RedstoneOre());
-
-		$litRedstone = new RedstoneOre();
-		$litRedstone->setLit();
-		self::registerBlock($litRedstone); //flattening hack
-
+		self::registerBlock((new RedstoneOre())->setLit()); //flattening hack
 		self::registerBlock(new RedstoneTorch());
-		$unlitRedstoneTorch = new RedstoneTorch();
-		$unlitRedstoneTorch->setLit(false);
-		self::registerBlock($unlitRedstoneTorch); //flattening hack
-
+		self::registerBlock((new RedstoneTorch())->setLit(false)); //flattening hack
 		self::registerBlock(new StoneButton());
 		self::registerBlock(new SnowLayer());
 		self::registerBlock(new Ice());
@@ -261,8 +247,8 @@ class BlockFactory{
 		self::registerBlock(new Portal());
 		self::registerBlock(new LitPumpkin());
 		self::registerBlock(new Cake());
-		//TODO: REPEATER_BLOCK
-		//TODO: POWERED_REPEATER
+		self::registerBlock(new RedstoneRepeater());
+		self::registerBlock((new RedstoneRepeater())->setPowered());
 		self::registerBlock(new InvisibleBedrock());
 		self::registerBlock(new Trapdoor());
 
@@ -303,10 +289,7 @@ class BlockFactory{
 		self::registerBlock(new EndStone());
 		self::registerBlock(new DragonEgg());
 		self::registerBlock(new RedstoneLamp());
-		$litLamp = new RedstoneLamp();
-		$litLamp->setLit();
-		self::registerBlock($litLamp); //flattening hack
-
+		self::registerBlock((new RedstoneLamp())->setLit()); //flattening hack
 		//TODO: DROPPER
 		self::registerBlock(new ActivatorRail());
 		self::registerBlock(new CocoaBlock());
@@ -341,9 +324,7 @@ class BlockFactory{
 		//TODO: COMPARATOR_BLOCK
 		//TODO: POWERED_COMPARATOR
 		self::registerBlock(new DaylightSensor());
-		$invertedSensor = new DaylightSensor();
-		$invertedSensor->setInverted();
-		self::registerBlock($invertedSensor); //flattening hack
+		self::registerBlock((new DaylightSensor())->setInverted()); //flattening hack
 
 		self::registerBlock(new Redstone());
 		self::registerBlock(new NetherQuartzOre());
@@ -522,8 +503,8 @@ class BlockFactory{
 	/**
 	 * Returns a new Block instance with the specified ID, meta and position.
 	 *
-	 * @param int      $id
-	 * @param int      $meta
+	 * @param int $id
+	 * @param int $meta
 	 * @param Position $pos
 	 *
 	 * @return Block
@@ -549,10 +530,7 @@ class BlockFactory{
 		}
 
 		if($pos !== null){
-			$block->x = $pos->getFloorX();
-			$block->y = $pos->getFloorY();
-			$block->z = $pos->getFloorZ();
-			$block->level = $pos->level;
+			$block->position($pos->getLevel(), $pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ());
 		}
 
 		return $block;
@@ -613,7 +591,10 @@ class BlockFactory{
 	 */
 	public static function fromStaticRuntimeId(int $runtimeId) : array{
 		$v = self::$legacyIdMap[$runtimeId];
-		return [$v >> 4, $v & 0xf];
+		return [
+			$v >> 4,
+			$v & 0xf
+		];
 	}
 
 	private static function registerMapping(int $staticRuntimeId, int $legacyId, int $legacyMeta) : void{

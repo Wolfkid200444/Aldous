@@ -23,8 +23,8 @@
 declare(strict_types=1);
 
 /**
- * Aldous is the Minecraft: BE multiplayer server software
- * Homepage: https://github.com/TuranicTeam/Aldous
+ * Altay is the Minecraft: BE multiplayer server software
+ * Homepage: https://github.com/TuranicTeam/Altay
  */
 
 namespace pocketmine;
@@ -317,7 +317,7 @@ class Server{
 	private $config;
 
 	/** @var Config */
-	private $AldousConfig;
+	private $aldousConfig;
 
 	/** @var Player[] */
 	private $players = [];
@@ -338,7 +338,7 @@ class Server{
 	/** @var Level */
 	private $endLevel = null;
 
-	/** Aldous CONFIG */
+	/** Aldous Config */
 
 	/** @var bool */
 	public $loadIncompatibleApi = true;
@@ -1252,7 +1252,7 @@ class Server{
 
 	public function getAldousProperty(string $variable, $defaultValue = null){
 		if(!array_key_exists($variable, $this->AldousPropertyCache)){
-			$this->AldousPropertyCache[$variable] = $this->AldousConfig->getNested($variable);
+			$this->AldousPropertyCache[$variable] = $this->aldousConfig->getNested($variable);
 		}
 
 		return $this->AldousPropertyCache[$variable] ?? $defaultValue;
@@ -1518,14 +1518,14 @@ class Server{
 			}
 			$this->config = new Config($this->dataPath . "aldous.yml", Config::YAML, []);
 
-			$this->logger->info("Loading Aldous server properties...");
+			$this->logger->info("Loading Aldous's server properties...");
 			$this->properties = new Config($this->dataPath . "aldous.properties", Config::PROPERTIES, [
 				"motd" => \pocketmine\NAME . " Server",
 				"port" => 19132,
 				"whitelist" => false,
 				"announce-player-achievements" => true,
 				"spawn-protection" => 16,
-				"maximum-players" => 50,
+				"maximum-players" => 20,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
 				"gamemode" => 0,
@@ -1567,15 +1567,13 @@ class Server{
 				$lang = $this->getLanguage()->getLang()
 			]));
 
-			if(file_exists(\pocketmine\RESOURCE_PATH . "game_settings.yml")){
-				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "game_settings.yml");
-			}else{
-				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "game_settings.yml");
+			if(file_exists(\pocketmine\RESOURCE_PATH . "advanced_settings.yml")){
+				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "advanced_settings.yml");
+            }
+			if(!file_exists($this->dataPath . "advanced_settings.yml")){
+				@file_put_contents($this->dataPath . "advanced_settings.yml", $content);
 			}
-			if(!file_exists($this->dataPath . "aldous.yml")){
-				@file_put_contents($this->dataPath . "aldous.yml", $content);
-			}
-			$this->AldousConfig = new Config($this->dataPath . "aldous.yml", Config::YAML, []);
+			$this->aldousConfig = new Config($this->dataPath . "advanced_settings.yml", Config::YAML, []);
 			$this->loadAldousConfig();
 
 			if(\pocketmine\IS_DEVELOPMENT_BUILD){
@@ -1584,7 +1582,7 @@ class Server{
 					$this->logger->emergency($this->language->translateString("pocketmine.server.devBuild.error2"));
 					$this->logger->emergency($this->language->translateString("pocketmine.server.devBuild.error3"));
 					$this->logger->emergency($this->language->translateString("pocketmine.server.devBuild.error4", ["settings.enable-dev-builds"]));
-					$this->logger->emergency($this->language->translateString("pocketmine.server.devBuild.error5", ["https://github.com/pmmp/PocketMine-MP/releases"]));
+					$this->logger->emergency($this->language->translateString("pocketmine.server.devBuild.error5", ["https://github.com/Implasher/Aldous/releases"]));
 					$this->forceShutdown();
 
 					return;
@@ -2179,7 +2177,7 @@ class Server{
 		PermissionManager::getInstance()->clearPermissions();
 		$this->commandMap->clearCommands();
 
-		$this->logger->info("Reloading Aldous server properties...");
+		$this->logger->info("Reloading Aldous's server properties...");
 		$this->loadAldousConfig();
 		$this->properties->reload();
 		$this->maxPlayers = $this->getConfigInt("maximum-players", 20);

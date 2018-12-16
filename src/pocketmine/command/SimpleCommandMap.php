@@ -1,22 +1,20 @@
 <?php
 
-/*
- *               _ _
- *         /\   | | |
- *        /  \  | | |_ __ _ _   _
- *       / /\ \ | | __/ _` | | | |
- *      / ____ \| | || (_| | |_| |
- *     /_/    \_|_|\__\__,_|\__, |
- *                           __/ |
- *                          |___/
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author TuranicTeam
- * @link https://github.com/TuranicTeam/Altay
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
  */
 
@@ -144,8 +142,9 @@ class SimpleCommandMap implements CommandMap{
 			new GameRuleCommand("gamerule")
 		]);
 
+        // This feature was originally added by Altay.
 		if($this->server->getAldousProperty("developer.commands", true)){
-			$this->registerAll("altay", [
+			$this->registerAll("advanced_settings", [
 				new ExtractPluginCommand("extractplugin"),
 				new MakePluginCommand("makeplugin"),
 				new MakeServerCommand("makeserver")

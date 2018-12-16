@@ -25,7 +25,6 @@ namespace pocketmine\block;
 
 use pocketmine\item\Item;
 use pocketmine\math\AxisAlignedBB;
-use pocketmine\math\Bearing;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
@@ -60,7 +59,7 @@ abstract class Stair extends Transparent{
 	public function readStateFromWorld() : void{
 		parent::readStateFromWorld();
 
-		$clockwise = Facing::rotate($this->facing, Facing::AXIS_Y, true);
+		$clockwise = Facing::rotateY($this->facing, true);
 		if(($backFacing = $this->getPossibleCornerFacing(false)) !== null){
 			$this->shape = $backFacing === $clockwise ? self::SHAPE_OUTER_RIGHT : self::SHAPE_OUTER_LEFT;
 		}elseif(($frontFacing = $this->getPossibleCornerFacing(true)) !== null){
@@ -83,13 +82,13 @@ abstract class Stair extends Transparent{
 		$topStep->trim(Facing::opposite($this->facing), 0.5);
 
 		if($this->shape === self::SHAPE_OUTER_LEFT or $this->shape === self::SHAPE_OUTER_RIGHT){
-			$topStep->trim(Facing::rotate($this->facing, Facing::AXIS_Y, $this->shape === self::SHAPE_OUTER_LEFT), 0.5);
+			$topStep->trim(Facing::rotateY($this->facing, $this->shape === self::SHAPE_OUTER_LEFT), 0.5);
 		}elseif($this->shape === self::SHAPE_INNER_LEFT or $this->shape === self::SHAPE_INNER_RIGHT){
 			//add an extra cube
 			$extraCube = new AxisAlignedBB(0, $minY, 0, 1, $minY + 0.5, 1);
 			$bbs[] = $extraCube
 				->trim($this->facing, 0.5) //avoid overlapping with main step
-				->trim(Facing::rotate($this->facing, Facing::AXIS_Y, $this->shape === self::SHAPE_INNER_LEFT), 0.5);
+				->trim(Facing::rotateY($this->facing, $this->shape === self::SHAPE_INNER_LEFT), 0.5);
 		}
 
 		$bbs[] = $topStep;
@@ -108,7 +107,7 @@ abstract class Stair extends Transparent{
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
 		if($player !== null){
-			$this->facing = Bearing::toFacing($player->getDirection());
+			$this->facing = $player->getHorizontalFacing();
 		}
 		$this->upsideDown = (($clickVector->y > 0.5 and $face !== Facing::UP) or $face === Facing::DOWN);
 

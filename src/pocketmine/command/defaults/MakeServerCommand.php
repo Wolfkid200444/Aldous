@@ -1,22 +1,20 @@
 <?php
 
-/*
- *               _ _
- *         /\   | | |
- *        /  \  | | |_ __ _ _   _
- *       / /\ \ | | __/ _` | | | |
- *      / ____ \| | || (_| | |_| |
- *     /_/    \_|_|\__\__,_|\__, |
- *                           __/ |
- *                          |___/
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author TuranicTeam
- * @link https://github.com/TuranicTeam/Altay
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
  */
 
@@ -31,8 +29,8 @@ use pocketmine\Server;
 class MakeServerCommand extends VanillaCommand{
 
 	public function __construct(string $name){
-		parent::__construct($name, "Creates a Altay Phar", "/makeserver", ["ms"]);
-		$this->setPermission("altay.command.makeserver");
+		parent::__construct($name, "Create the server Software PHAR file", "/makeserver", ["ms"]);
+		$this->setPermission("aldous.command.makeserver");
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -43,10 +41,10 @@ class MakeServerCommand extends VanillaCommand{
 		$server = $sender->getServer();
 		$pharPath = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
 		if(file_exists($pharPath)){
-			$sender->sendMessage("Phar file already exists, overwriting...");
+			$sender->sendMessage("The PHAR file already exists, overwriting...");
 			@unlink($pharPath);
 		}
-		$sender->sendMessage($server->getName() . ".phar is started to creating. This will take 2 minutes, may depending on your system.");
+		$sender->sendMessage($server->getName() . " has started to create the server software! This will take 1-2 minutes to create. It may depending with your devices!");
 		$phar = new \Phar($pharPath);
 		$phar->setMetadata([
 			"name" => $server->getName(),
@@ -117,7 +115,7 @@ class MakeServerCommand extends VanillaCommand{
 			}
 		}
 		$phar->stopBuffering();
-		$sender->sendMessage($server->getName() . " " . $server->getPocketMineVersion() . " file has been successfully created on " . $pharPath);
+		$sender->sendMessage($server->getName() . " has been successfully created on " . $pharPath);
 
 		return true;
 	}

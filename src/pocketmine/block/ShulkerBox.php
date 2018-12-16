@@ -46,8 +46,11 @@ class ShulkerBox extends Transparent{
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
 			/** @var TileShulkerBox $tile */
-			$tile = Tile::createTile(Tile::SHULKER_BOX, $this->getLevel(), TileShulkerBox::createNBT($this, $item));
+			$tile = Tile::createFromItem(Tile::SHULKER_BOX, $this->getLevel(), $this, $item);
 			$tile->setFacing($face);
+			if($tile !== null){
+				$this->level->addTile($tile);
+			}
 
 			return true;
 		}

@@ -192,6 +192,7 @@ class MobSpawner extends Spawnable{
 	 */
 	public function setMovable(bool $isMovable) : void{
 		$this->isMovable = $isMovable;
+		$this->onChanged();
 	}
 
 	protected function readSaveData(CompoundTag $nbt) : void{
@@ -223,13 +224,6 @@ class MobSpawner extends Spawnable{
 
 	public function addAdditionalSpawnData(CompoundTag $nbt) : void{
 		$nbt->setByte(self::TAG_IS_MOVABLE, intval($this->isMovable));
-		$nbt->setShort(self::TAG_DELAY, $this->delay);
-		$nbt->setShort(self::TAG_MAX_NEARBY_ENTITIES, $this->maxNearbyEntities);
-		$nbt->setShort(self::TAG_MAX_SPAWN_DELAY, $this->maxSpawnDelay);
-		$nbt->setShort(self::TAG_MIN_SPAWN_DELAY, $this->minSpawnDelay);
-		$nbt->setShort(self::TAG_REQUIRED_PLAYER_RANGE, $this->requiredPlayerRange);
-		$nbt->setShort(self::TAG_SPAWN_COUNT, $this->spawnCount);
-		$nbt->setShort(self::TAG_SPAWN_RANGE, $this->spawnRange);
 		$nbt->setInt(self::TAG_ENTITY_ID, $this->entityId);
 	}
 

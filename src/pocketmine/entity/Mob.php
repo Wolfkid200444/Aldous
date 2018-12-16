@@ -61,6 +61,8 @@ abstract class Mob extends Living{
 	/** @var int */
 	protected $livingSoundTime = 0;
 
+	protected $aiMoveSpeed = 1.0;
+
 	/**
 	 * @return Vector3
 	 */
@@ -82,6 +84,20 @@ abstract class Mob extends Living{
 	 */
 	public function setHomePosition(Vector3 $homePosition) : void{
 		$this->homePosition = $homePosition;
+	}
+
+	/**
+	 * @return float
+	 */
+	public function getAiMoveSpeed() : float{
+		return $this->aiMoveSpeed;
+	}
+
+	/**
+	 * @param float $aiMoveSpeed
+	 */
+	public function setAiMoveSpeed(float $aiMoveSpeed) : void{
+		$this->aiMoveSpeed = $aiMoveSpeed;
 	}
 
 	/**
@@ -251,7 +267,7 @@ abstract class Mob extends Living{
 	public function moveTo(Vector3 $dir, float $spm) : bool{
 		if($this->jumpCooldown > 0) $this->jumpCooldown--;
 
-		$sf = $this->getMovementSpeed() * $spm * 0.7;
+		$sf = $this->getMovementSpeed() * $spm * 0.7 * $this->getAiMoveSpeed();
 		$dir->y = 0;
 
 		$coord = $this->add($dir->multiply($sf)->add($dir->multiply($this->width * 0.5)));

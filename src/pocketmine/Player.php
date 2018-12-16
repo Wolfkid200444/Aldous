@@ -125,6 +125,7 @@ use pocketmine\network\mcpe\protocol\ModalFormRequestPacket;
 use pocketmine\network\mcpe\protocol\MoveEntityAbsolutePacket;
 use pocketmine\network\mcpe\protocol\MovePlayerPacket;
 use pocketmine\network\mcpe\protocol\ServerSettingsResponsePacket;
+use pocketmine\network\mcpe\protocol\NetworkChunkPublisherUpdatePacket;
 use pocketmine\network\mcpe\protocol\SetPlayerGameTypePacket;
 use pocketmine\network\mcpe\protocol\SetSpawnPositionPacket;
 use pocketmine\network\mcpe\protocol\SetTitlePacket;
@@ -372,7 +373,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 	public function setBanned(bool $value){
 		if($value){
 			$this->server->getNameBans()->addBan($this->getName(), null, null, null);
-			$this->kick("Sorry, you have been banned by operator.");
+			$this->kick("You have been banned");
 		}else{
 			$this->server->getNameBans()->remove($this->getName());
 		}
@@ -1175,6 +1176,14 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		}
 
 		$this->loadQueue = $newOrder;
+		if(!empty($this->loadQueue) or !empty($unloadChunks)){
+			$pk = new NetworkChunkPublisherUpdatePacket();
+			$pk->x = $this->getFloorX();
+			$pk->y = $this->getFloorY();
+			$pk->z = $this->getFloorZ();
+			$pk->radius = $this->viewDistance * 16; //blocks, not chunks >.>
+			$this->sendDataPacket($pk);
+		}
 
 		Timings::$playerChunkOrderTimer->stopTiming();
 	}
@@ -2082,9 +2091,13 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 		$target = $this->level->getEntity($packet->entityRuntimeId);
 		if($target === null) return false;
 
-		$target->setPositionAndRotation($packet->position, $packet->zRot, $packet->xRot);
+		// TODO: Remove this, we should move horse self
+		// This movement coming from client and this may be a hack
+		// so we should check this
+		if($this->isRiding() and $this->ridingEntity !== null and $this->ridingEntity->getId() === $target->getId()){
+			$target->setPositionAndRotation($packet->position, $packet->zRot, $packet->xRot);
+		}
 
-		$this->server->broadcastPacket($this->getViewers(), $packet);
 		return true;
 	}
 
@@ -2101,12 +2114,10 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 				$this->isTeleporting = false;
 			}
 
-			$packet->ridingEid = $this->ridingEntity !== null ? $this->ridingEntity->getId() : 0;
 			$packet->mode = ($packet->ridingEid == 0 ? MovePlayerPacket::MODE_NORMAL : MovePlayerPacket::MODE_PITCH);
 			$packet->onGround = !$this->isGliding() && $this->onGround;
 
 			$packet->yaw = fmod($packet->yaw, 360);
-			$packet->headYaw = fmod($packet->headYaw, 360);
 			$packet->pitch = fmod($packet->pitch, 360);
 
 			if($packet->yaw < 0){
@@ -2795,7 +2806,7 @@ class Player extends Human implements CommandSender, ChunkLoader, IPlayer{
 
 		return true;
 	}
- 
+
 	/**
 	 * @param DataPacket $packet
 	 * @param bool       $immediate

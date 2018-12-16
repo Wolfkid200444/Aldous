@@ -1,23 +1,22 @@
 <?php
 
-/*
- *
- *  ____            _        _   __  __ _                  __  __ ____
- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
+ /*
+ *              _     _                 
+ *        /\   | |   | |                
+ *       /  \  | | __| | ___  _   _ ___ 
+ *     / /\ \ | |/ _` |/ _ \| | | / __|
+ *    / ____ \| | (_| | (_) | |_| \__ \
+ *   /_/    \_\_|\__,_|\___/ \__,_|___/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * @author PocketMine Team
- * @link http://www.pocketmine.net/
+ * @author Implasher
+ * @link https://github.com/Implasher/Aldous
  *
- *
-*/
+ */
 
 declare(strict_types=1);
 
@@ -32,6 +31,14 @@ use pocketmine\utils\VersionString;
 use raklib\RakLib;
 
 class CrashDump{
+
+	/**
+	 * Crashdump data format version, used by the crash archive to decide how to decode the crashdump
+	 * This should be incremented when backwards incompatible changes are introduced, such as fields being removed or
+	 * having their content changed, version format changing, etc.
+	 * It is not necessary to increase this when adding new fields.
+	 */
+	private const FORMAT_VERSION = 1;
 
 	/** @var Server */
 	private $server;
@@ -54,6 +61,7 @@ class CrashDump{
 		if(!is_resource($this->fp)){
 			throw new \RuntimeException("Could not create Crash Dump");
 		}
+		$this->data["format_version"] = self::FORMAT_VERSION;
 		$this->data["time"] = $this->time;
 		$this->addLine($this->server->getName() . " Crash Dump " . date("D M j H:i:s T Y", $this->time));
 		$this->addLine();
@@ -121,9 +129,9 @@ class CrashDump{
 
 		if($this->server->getProperty("auto-report.send-settings", true) !== false){
 			$this->data["parameters"] = (array) $argv;
-			$this->data["server.properties"] = @file_get_contents($this->server->getDataPath() . "server.properties");
-			$this->data["server.properties"] = preg_replace("#^rcon\\.password=(.*)$#m", "rcon.password=******", $this->data["server.properties"]);
-			$this->data["pocketmine.yml"] = @file_get_contents($this->server->getDataPath() . "pocketmine.yml");
+			$this->data["aldous.properties"] = @file_get_contents($this->server->getDataPath() . "aldous.properties");
+			$this->data["aldous.properties"] = preg_replace("#^rcon\\.password=(.*)$#m", "rcon.password=******", $this->data["aldous.properties"]);
+			$this->data["aldous.yml"] = @file_get_contents($this->server->getDataPath() . "aldous.yml");
 		}else{
 			$this->data["pocketmine.yml"] = "";
 			$this->data["server.properties"] = "";
@@ -232,10 +240,10 @@ class CrashDump{
 		$version = new VersionString(\pocketmine\BASE_VERSION, \pocketmine\IS_DEVELOPMENT_BUILD, \pocketmine\BUILD_NUMBER);
 		$this->data["general"] = [];
 		$this->data["general"]["name"] = $this->server->getName();
-		$this->data["general"]["version"] = $version->getFullVersion(false);
-		$this->data["general"]["build"] = $version->getBuild();
+		$this->data["general"]["base_version"] = \pocketmine\BASE_VERSION;
+		$this->data["general"]["build"] = \pocketmine\BUILD_NUMBER;
+		$this->data["general"]["is_dev"] = \pocketmine\IS_DEVELOPMENT_BUILD;
 		$this->data["general"]["protocol"] = ProtocolInfo::CURRENT_PROTOCOL;
-		$this->data["general"]["api"] = \pocketmine\BASE_VERSION;
 		$this->data["general"]["git"] = \pocketmine\GIT_COMMIT;
 		$this->data["general"]["raklib"] = RakLib::VERSION;
 		$this->data["general"]["uname"] = php_uname("a");
