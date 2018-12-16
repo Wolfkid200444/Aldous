@@ -86,7 +86,6 @@ class AsyncPool{
 	 * @param \Closure $hook
 	 */
 	public function addWorkerStartHook(\Closure $hook) : void{
-		Utils::validateCallableSignature(function(int $worker) : void{}, $hook);
 		$this->workerStartHooks[spl_object_hash($hook)] = $hook;
 		foreach($this->workers as $i => $worker){
 			$hook($i);
