@@ -39,7 +39,7 @@ class MakeServerCommand extends VanillaCommand{
 		}
 
 		$server = $sender->getServer();
-		$pharPath = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $server->getName() . "_v" . $server->getApiVersion() . ".phar";
+		$pharPath = Server::getInstance()->getPluginPath() . "Aldous" . DIRECTORY_SEPARATOR . $server->getName() . ".phar";
 		if(file_exists($pharPath)){
 			$sender->sendMessage("The PHAR file already exists, overwriting...");
 			@unlink($pharPath);
