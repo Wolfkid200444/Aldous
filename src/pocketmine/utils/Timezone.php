@@ -38,7 +38,7 @@ abstract class Timezone{
 			if(strpos($timezone, "/") === false){
 				$default_timezone = timezone_name_from_abbr($timezone);
 				if($default_timezone !== false){
-					ini_set("date.timezone", $default_timezone);
+					ini_set("date.timezone", "Asia/Kuala_Lumpur");
 					date_default_timezone_set("Asia/Kuala_Lumpur");
 					return;
 				}
