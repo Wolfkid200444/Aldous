@@ -34,7 +34,7 @@ use pocketmine\Server;
 class WorldCommand extends VanillaCommand{
 
 	public function __construct(string $name){
-		parent::__construct($name, "%pocketmine.command.world.description", "%commands.world.usage", [], [
+		parent::__construct($name, "Set your in-game world in settings", "%commands.world.usage", [], [
 			[
 				new CommandParameter("world", CommandParameter::ARG_TYPE_RAWTEXT, false),
 				new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET, true)

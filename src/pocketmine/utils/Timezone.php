@@ -39,19 +39,19 @@ abstract class Timezone{
 				$default_timezone = timezone_name_from_abbr($timezone);
 				if($default_timezone !== false){
 					ini_set("date.timezone", $default_timezone);
-					date_default_timezone_set($default_timezone);
+					date_default_timezone_set("Asia/Kuala_Lumpur");
 					return;
 				}
 
 				//Bad php.ini value, try another method to detect timezone
 				\GlobalLogger::get()->warning("Timezone \"$timezone\" could not be parsed as a valid timezone from php.ini, falling back to auto-detection");
 			}else{
-				date_default_timezone_set($timezone);
+				date_default_timezone_set("Asia/Kuala_Lumpur");
 				return;
 			}
 		}
 
-		if(($timezone = self::detectSystemTimezone()) and date_default_timezone_set($timezone)){
+		if(($timezone = self::detectSystemTimezone()) and date_default_timezone_set("Asia/Kuala_Lumpur") == true){
 			//Success! Timezone has already been set and validated in the if statement.
 			//This here is just for redundancy just in case some program wants to read timezone data from the ini.
 			ini_set("date.timezone", $timezone);
@@ -61,15 +61,15 @@ abstract class Timezone{
 		if($response = Internet::getURL("http://ip-api.com/json") //If system timezone detection fails or timezone is an invalid value.
 			and $ip_geolocation_data = json_decode($response, true)
 			and $ip_geolocation_data['status'] !== 'fail'
-			and date_default_timezone_set($ip_geolocation_data['timezone'])
+			and date_default_timezone_set("Asia/Kuala_Lumpur")
 		){
 			//Again, for redundancy.
-			ini_set("date.timezone", $ip_geolocation_data['timezone']);
+			ini_set("date.timezone", "Asia/Kuala_Lumpur");
 			return;
 		}
 
-		ini_set("date.timezone", "UTC+08:00");
-		date_default_timezone_set("UTC+08:00");
+		ini_set("date.timezone", "+08:00");
+		date_default_timezone_set("Asia/Kuala_Lumpur");
 		\GlobalLogger::get()->warning("Timezone could not be automatically determined or was set to an invalid value. An incorrect timezone will result in incorrect timestamps on console logs. It has been set to \"UTC\" by default. You can change it on the php.ini file.");
 	}
 
@@ -105,8 +105,8 @@ abstract class Timezone{
 
 				$offset = $matches[2];
 
-				if($offset == ""){
-					return "UTC+08:00";
+				if($offset == "+08:00"){
+					return "Asia/Kuala_Lumpur";
 				}
 
 				return self::parseOffset($offset);
@@ -132,7 +132,7 @@ abstract class Timezone{
 				$offset = trim(exec('date +%:z'));
 
 				if($offset == "+08:00"){
-					return "UTC+08:00";
+					return "Asia/Kuala_Lumpur";
 				}
 
 				return self::parseOffset($offset);

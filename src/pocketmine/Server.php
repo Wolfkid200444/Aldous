@@ -648,7 +648,7 @@ class Server{
 	 * @return string
 	 */
 	public function getMotd() : string{
-		return $this->getConfigString("motd", \pocketmine\NAME . " Server");
+		return $this->getConfigString("motd", "My " . \pocketmine\NAME . " server.");
 	}
 
 	/**
@@ -1520,12 +1520,12 @@ class Server{
 
 			$this->logger->info("Loading Aldous's server properties...");
 			$this->properties = new Config($this->dataPath . "aldous.properties", Config::PROPERTIES, [
-				"motd" => \pocketmine\NAME . " Server",
+				"motd" => "My " . \pocketmine\NAME . " server.",
 				"port" => 19132,
 				"whitelist" => false,
 				"announce-player-achievements" => true,
 				"spawn-protection" => 16,
-				"maximum-players" => 20,
+				"maximum-players" => 50,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
 				"gamemode" => 0,
@@ -1683,7 +1683,7 @@ class Server{
 			$this->banByIP = new BanList($this->dataPath . "banned-ips.txt");
 			$this->banByIP->load();
 
-			$this->maxPlayers = $this->getConfigInt("maximum-players", 20);
+			$this->maxPlayers = $this->getConfigInt("maximum-players", 50);
 			$this->setAutoSave($this->getConfigBool("auto-save", true));
 
 			$this->onlineMode = $this->getConfigBool("xbox-auth", true);
@@ -2180,7 +2180,7 @@ class Server{
 		$this->logger->info("Reloading Aldous's server properties...");
 		$this->loadAldousConfig();
 		$this->properties->reload();
-		$this->maxPlayers = $this->getConfigInt("maximum-players", 20);
+		$this->maxPlayers = $this->getConfigInt("maximum-players", 50);
 
 		if($this->getConfigBool("hardcore", false) and $this->getDifficulty() < Level::DIFFICULTY_HARD){
 			$this->setConfigInt("difficulty", Level::DIFFICULTY_HARD);

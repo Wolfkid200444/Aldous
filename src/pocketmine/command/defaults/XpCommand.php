@@ -36,7 +36,7 @@ class XpCommand extends VanillaCommand{
     public function __construct(string $name){
         parent::__construct(
             $name,
-            "%altay.command.xp.description",
+            "Gives the specified player a certain amount of experience levels",
             'altay.command.xp.usage',
             [],
             [
