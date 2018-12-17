@@ -1,9 +1,9 @@
 <?php
 
  /*
- *              _     _                 
- *        /\   | |   | |                
- *       /  \  | | __| | ___  _   _ ___ 
+ *             _     _                 
+ *       /\   | |   | |                
+ *      /  \  | | __| | ___  _   _ ___ 
  *     / /\ \ | |/ _` |/ _ \| | | / __|
  *    / ____ \| | (_| | (_) | |_| \__ \
  *   /_/    \_\_|\__,_|\___/ \__,_|___/
@@ -32,7 +32,7 @@ use pocketmine\utils\Config;
 use pocketmine\utils\Internet;
 
 class Installer{
-	public const DEFAULT_NAME = "My " . \pocketmine\NAME . " server.";
+	public const DEFAULT_NAME = "Hello, " . \pocketmine\NAME . "!";
 	public const DEFAULT_PORT = 19132;
 	public const DEFAULT_PLAYERS = 50;
 	public const DEFAULT_GAMEMODE = 0;
@@ -79,7 +79,7 @@ class Installer{
 			return false;
 		}
 
-		if(strtolower($this->getInput($this->lang->get("skip_installer"), "n", "y/N")) === "y"){
+		if(strtolower($this->getInput("Are you sure to skip the installer?", "n", "y/N")) === "y"){
 			return true;
 		}
 
@@ -90,7 +90,7 @@ class Installer{
 
 		$this->networkFunctions();
 
-		$this->endWizard();
+		$this->endInstaller();
 
 		return true;
 	}
@@ -119,7 +119,7 @@ LICENSE;
 	private function welcome(){
 		$this->message($this->lang->get("setting_up_server_now"));
 		$this->message($this->lang->get("default_values_info"));
-		$this->message($this->lang->get("server_properties"));
+		$this->message("You can edit later on aldous.properties");
 	}
 
 	private function generateBaseConfig(){
@@ -221,11 +221,8 @@ LICENSE;
 		$this->readLine();
 	}
 
-	private function endWizard(){
-		$this->message($this->lang->get("you_have_finished"));
-		$this->message($this->lang->get("pocketmine_plugins"));
-		$this->message($this->lang->translateString("pocketmine_will_start", [\pocketmine\NAME]));
-
+	private function endInstaller(){
+		$this->message("You have finished setup your Aldous server and would be start for a seconds...");
 		$this->writeLine();
 		$this->writeLine();
 

@@ -37,7 +37,7 @@ namespace pocketmine {
 
 	const NAME = "Aldous";
 	const BASE_VERSION = "4.0.5";
-	const IS_DEVELOPMENT_BUILD = false;
+	const IS_DEVELOPMENT_BUILD = true;
 	const BUILD_NUMBER = 0;
 
 	const MIN_PHP_VERSION = "7.2.0";
@@ -237,8 +237,7 @@ namespace pocketmine {
 
 	$exitCode = 0;
 	do{
-        // Disable setup for first run, only feature with Aldous.
-		if(!file_exists(\pocketmine\DATA . "aldous.properties") and isset($opts["no-installer"])){
+		if(!file_exists(\pocketmine\DATA . "aldous.properties") and !isset($opts["no-installer"])){
 			$installer = new Installer();
 			if(!$installer->run()){
 				$exitCode = -1;

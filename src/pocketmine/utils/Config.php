@@ -492,7 +492,7 @@ class Config{
 	 * @return string
 	 */
 	private function writeProperties() : string{
-		$content = "# Aldous | Server Properties\r\n# Setup your own server!\r\n\n#Created on " . date("D M j H:i:s T Y") . "\r\n\n";
+		$content = "# Aldous | Server Properties\r\n# Setup your own server!\r\n\n# Generated on " . date("D M j H:i:s T Y") . "\r\n\n";
 		foreach($this->config as $k => $v){
 			if(is_bool($v)){
 				$v = $v ? "on" : "off";

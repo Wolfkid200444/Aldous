@@ -648,7 +648,7 @@ class Server{
 	 * @return string
 	 */
 	public function getMotd() : string{
-		return $this->getConfigString("motd", "My " . \pocketmine\NAME . " server.");
+		return $this->getConfigString("motd", "Hello, " . \pocketmine\NAME . "!");
 	}
 
 	/**
@@ -1520,8 +1520,9 @@ class Server{
 
 			$this->logger->info("Loading Aldous's server properties...");
 			$this->properties = new Config($this->dataPath . "aldous.properties", Config::PROPERTIES, [
-				"motd" => "My " . \pocketmine\NAME . " server.",
+				"motd" => "Hello, " . \pocketmine\NAME . "!",
 				"port" => 19132,
+                "language" => "eng",
 				"whitelist" => false,
 				"announce-player-achievements" => true,
 				"spawn-protection" => 16,
@@ -1542,8 +1543,7 @@ class Server{
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
 				"auto-save" => true,
 				"view-distance" => 8,
-				"xbox-auth" => true,
-				"language" => "eng"
+				"xbox-auth" => true
 			]);
 
 			define('pocketmine\DEBUG', (int) $this->getProperty("debug.level", 1));
@@ -2259,7 +2259,7 @@ class Server{
 			}
 
 			if($this->properties !== null and $this->properties->hasChanged()){
-				$this->getLogger()->debug("Saving properties");
+				$this->getLogger()->debug("Saving Aldous's properties");
 				$this->properties->save();
 			}
 
@@ -2403,10 +2403,10 @@ class Server{
 			if($this->getProperty("auto-report.enabled", true) !== false){
 				$report = true;
 
-				$stamp = $this->getDataPath() . "crashdumps/.last_crash";
+				$stamp = $this->getDataPath() . "crash_dumps/.last_crash";
 				$crashInterval = 120; //2 minutes
 				if(file_exists($stamp) and !($report = (filemtime($stamp) + $crashInterval < time()))){
-					$this->logger->debug("Not sending crashdump due to last crash less than $crashInterval seconds ago");
+					$this->logger->debug("Not sending crash dump due to last crash less than $crashInterval seconds ago");
 				}
 				@touch($stamp); //update file timestamp
 
