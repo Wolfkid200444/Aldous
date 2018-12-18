@@ -34,14 +34,14 @@ use pocketmine\Player;
 class GameRuleCommand extends VanillaCommand{
 
 	public function __construct(string $name){
-		parent::__construct($name, "%altay.command.gamerule.description", "%altay.command.gamerule.usage", [], [
+		parent::__construct($name, "Set the gamerule you needed in your server", "%altay.command.gamerule.usage", [], [
 			[
 				new CommandParameter("rule", CommandParameter::ARG_TYPE_STRING, false, new CommandEnum("BoolGameRule", $this->getKnownGameRules())),
 				new CommandParameter("value", CommandParameter::ARG_TYPE_VALUE),
 			]
 		]);
 
-		$this->setPermission("altay.command.gamerule");
+		$this->setPermission("aldous.command.gamerule");
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){

@@ -36,8 +36,8 @@ namespace pocketmine {
 	use pocketmine\Installer;
 
 	const NAME = "Aldous";
-	const BASE_VERSION = "4.0.5";
-	const IS_DEVELOPMENT_BUILD = true;
+	const BASE_VERSION = "4.0.6";
+	const IS_DEVELOPMENT_BUILD = false;
 	const BUILD_NUMBER = 0;
 
 	const MIN_PHP_VERSION = "7.2.0";

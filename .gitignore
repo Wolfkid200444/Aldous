@@ -11,6 +11,7 @@ crash_dumps/*
 *.phar
 aldous.properties
 /aldous.yml
+/discord.yml
 /advanced_settings.yml
 memory_dumps/*
 resource_packs/

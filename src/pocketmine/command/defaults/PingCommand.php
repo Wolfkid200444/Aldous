@@ -36,13 +36,13 @@ class PingCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.ping.description",
+			"Ping to see player's connection status",
 			"%commands.ping.usage",
 			[], [[
                 new CommandParameter("player", CommandParameter::ARG_TYPE_TARGET)
             ]]
 		);
-		$this->setPermission("altay.command.ping");
+		$this->setPermission("aldous.command.ping");
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -72,7 +72,7 @@ class PingCommand extends VanillaCommand{
 		}
 
 		$ping = $target->getPing();
-		$color = ($ping < 150 ? TextFormat::GREEN : ($ping < 250 ? TextFormat::GOLD : TextFormat::RED));
+		$color = ($ping < 150 ? TextFormat::GREEN : ($ping < 300 ? TextFormat::GOLD : TextFormat::RED));
 		$sender->sendMessage($target->getName()."'s Ping: ".$color.$ping."ms");
 
 		return true;

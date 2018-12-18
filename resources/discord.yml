@@ -1,0 +1,30 @@
+# The Discord log configuration for Aldous.
+# This is experimental feature, and it wasn't finished yet.
+
+# It may have bugs, glitches or errors when webhook has set.
+# Help us to finish this by adding or replace some functions.
+
+discord:
+  # Set this feature to "true" or "false".
+  active: false
+  # Set your Discord webhook URL. (Experimental)
+  webhook: ""
+  # Enter the Discord Username (Webhook required)
+  username: "Discord Bot"
+
+# The messages that shown for server startup/shutdown.
+load:
+  start: "The Aldous server has been started."
+  stop: "The Aldous server has been stopped."
+
+# The messages in shown in-game for player joined/quit/death.
+# Prefixes: {player}
+message:
+  join: "{player} has joined the server!"
+  quit: "{player} has left the server!"
+  death: "{player} killed!"
+
+# The chat message will shown on Discord log. (Experimental)
+community:
+  # Prefixes: {player}, {message}
+  chat: "{player} > {message}"

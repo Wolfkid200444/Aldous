@@ -21,8 +21,9 @@
 declare(strict_types=1);
 
 /**
- * Set-up wizard used on the first run
+ * Set-up wizard used on the first run.
  * Can be disabled with --no-installer
+ * Disabled causes IP cannot be checked.
  */
 namespace pocketmine;
 
@@ -45,7 +46,8 @@ class Installer{
 	}
 
 	public function run() : bool{
-		$this->message(\pocketmine\NAME . " installer.");
+		$this->message(\pocketmine\NAME . " installer!");
+        $this->message("This setup installer will be on English version.");
 
 		try{
 			$langs = Language::getLanguageList();
@@ -54,7 +56,7 @@ class Installer{
 			return false;
 		}
 
-		$this->message("Please select a language");
+		$this->message("Hello, please select a language before get started!");
 		foreach($langs as $short => $native){
 			$this->writeLine(" $native => $short");
 		}
@@ -62,7 +64,7 @@ class Installer{
 		do{
 			$lang = strtolower($this->getInput("Language", "eng"));
 			if(!isset($langs[$lang])){
-				$this->error("Couldn't find the language");
+				$this->error("Sorry, couldn't find the language!");
 				$lang = null;
 			}
 		}while($lang === null);
@@ -74,6 +76,7 @@ class Installer{
 		$this->lang = new Language($lang);
 
 		$this->message($this->lang->get("language_has_been_selected"));
+        $this->message("Remember this setup installer will be on English version!");
 
 		if(!$this->showLicense()){
 			return false;
@@ -85,18 +88,17 @@ class Installer{
 
 		$this->writeLine();
 		$this->welcome();
+        $this->ipFunctions();
 		$this->generateBaseConfig();
 		$this->generateUserFiles();
-
 		$this->networkFunctions();
-
 		$this->endInstaller();
 
 		return true;
 	}
 
 	private function showLicense() : bool{
-		$this->message($this->lang->translateString("welcome_to_pocketmine", [\pocketmine\NAME]));
+		$this->message($this->lang->translateString("Hello newbie, welcome to ", [\pocketmine\NAME]));
 		echo <<<LICENSE
 
   This program is free software: you can redistribute it and/or modify
@@ -117,10 +119,30 @@ LICENSE;
 	}
 
 	private function welcome(){
-		$this->message($this->lang->get("setting_up_server_now"));
-		$this->message($this->lang->get("default_values_info"));
-		$this->message("You can edit later on aldous.properties");
+		$this->message("You will setup your own server now!");
+		$this->message("If you don't want to change the default value, just press Enter!");
+		$this->message("You can edit later on aldous.properties file.");
 	}
+	
+    private function ipFunctions(){
+        $this->message("Checking the IP in 5 seconds...");
+        sleep(5);
+
+        $config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
+        $this->message($this->lang->get("ip_get"));
+        $externalIP = Internet::getIP();
+        if($externalIP === false){
+           $externalIP = "unknown (server offline)";
+        }
+        $internalIP = gethostbyname(trim(`hostname`));
+		$this->error($this->lang->translateString("ip_warning", ["EXTERNAL_IP" => $externalIP, "INTERNAL_IP" => $internalIP]));
+		$this->error($this->lang->get("ip_confirm"));
+        $this->readLine();
+		
+        $this->message("Your external IP will saved on aldous.properties file.");
+        $this->message("NOTE: Do not change the external IP or it may cause RakLib crash.");
+        $config->set("ip", ["EXTERNAL_IP" => $externalIP]);
+    }
 
 	private function generateBaseConfig(){
 		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
@@ -186,7 +208,6 @@ LICENSE;
 	}
 
 	private function networkFunctions(){
-		$config = new Config(\pocketmine\DATA . "aldous.properties", Config::PROPERTIES);
 		$this->error($this->lang->get("query_warning1"));
 		$this->error($this->lang->get("query_warning2"));
 		if(strtolower($this->getInput($this->lang->get("query_disable"), "n", "y/N")) === "y"){
@@ -204,25 +225,11 @@ LICENSE;
 		}else{
 			$config->set("rcon", false);
 		}
-
 		$config->save();
-
-
-		$this->message($this->lang->get("ip_get"));
-
-		$externalIP = Internet::getIP();
-		if($externalIP === false){
-			$externalIP = "unknown (server offline)";
-		}
-		$internalIP = gethostbyname(trim(`hostname`));
-
-		$this->error($this->lang->translateString("ip_warning", ["EXTERNAL_IP" => $externalIP, "INTERNAL_IP" => $internalIP]));
-		$this->error($this->lang->get("ip_confirm"));
-		$this->readLine();
 	}
 
 	private function endInstaller(){
-		$this->message("You have finished setup your Aldous server and would be start for a seconds...");
+		$this->message("You have finished setup your Aldous server and would be start for 4 seconds...");
 		$this->writeLine();
 		$this->writeLine();
 
