@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace pocketmine\discord;
 
-class Message implements \JsonSerializable {
+class DiscordMessage implements \JsonSerializable {
 
     protected $data = [];
     
