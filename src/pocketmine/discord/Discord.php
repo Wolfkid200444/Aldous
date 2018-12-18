@@ -22,6 +22,7 @@ declare(strict_types=1);
  
 namespace pocketmine\discord;
 
+use pocketmine\utils\Config;
 use pocketmine\Server;
 
 class Discord {
