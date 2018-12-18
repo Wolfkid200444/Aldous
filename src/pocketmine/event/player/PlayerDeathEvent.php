@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\event\player;
 
 use pocketmine\block\Block;
+use pocketmine\discord\Discord;
 use pocketmine\entity\Living;
 use pocketmine\event\entity\EntityDamageByBlockEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
@@ -52,6 +53,7 @@ class PlayerDeathEvent extends EntityDeathEvent{
 	public function __construct(Player $entity, array $drops, $deathMessage = null){
 		parent::__construct($entity, $drops);
 		$this->deathMessage = $deathMessage ?? self::deriveMessage($entity->getDisplayName(), $entity->getLastDamageCause());
+        Discord::discordDeath($entity);
 	}
 
 	/**
