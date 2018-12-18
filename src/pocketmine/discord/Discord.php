@@ -22,81 +22,94 @@ declare(strict_types=1);
  
 namespace pocketmine\discord;
 
-use pocketmine\command\ConsoleCommandSender;
-use pocketmine\utils\Config;
-use pocketmine\Player;
 use pocketmine\Server;
 
 class Discord {
 	
-    public static $webhook, $username;
-    public static $start, $stop; 
-    public static $joined, $quit, $death;
-    public static $chat;
+    public $webhook, $message;
+    private $embed;
 	
-    public static function setVars(){
-        $discordConfig = new Config(\pocketmine\RESOURCE_PATH .  "discord.yml", Config::YAML);
-        foreach($discordConfig->getAll() as $item){
-            if(Server::getInstance()->getAldousProperty("discord.active", true) && !isset($item) || $item === ""){
-              \GlobalLogger::get()->error("Something is wrong in Discord configuration. Please make sure it's correct rights!");
-              Server::getInstance()->setEnabled(false);
-              return;
+    public function __construct($webhook, $message, $embed){
+        $config = new Config(\pocketmine\RESOURCE_PATH .  "discord.yml", Config::YAML, []);
+
+        $this->webhook = new DiscordWebhook($config->getNested("discord.webhook"));
+        $this->message = new DiscordMessage();
+ 
+        if(Server::getInstance()->getAldousProperty("discord.active", true)){
+           $this->message->setUsername($config->getNested("discord.username"));
+           $this->message->setAvatarURL($config->getNested("discord.avatar");
+
+           // Discord Embed: Server Startup.
+           if(Server::getInstance()->setEnabled()){
+              $this->embed = new DiscordEmbed();
+              $this->embed->setDescription($config->getNested("startup-embed.description"));
+              $this->embed->setThumbnail("startup-embed.thumbnail");
+              $this->embed->setImage($config->getNested("startup-embed.image");
+              $this->embed->setColor($config->getNested("startup-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
+           }
+
+           // Discord Embed: Server Shutdown.
+           if(sleep(2) > !Server::getInstance()->setEnabled()){
+              $this->embed = new DiscordEmbed();
+              $this->embed->setDescription($config->getNested("shutdown-embed.description"));
+              $this->embed->setThumbnail("shutdown-embed.thumbnail");
+              $this->embed->setImage($config->getNested("shutdown-embed.image");
+              $this->embed->setColor($config->getNested("shutdown-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
+           }
+
+           if(sleep(2) < Server::getInstance()->setEnabled()){
+              // Discord Embed: Player's Join.
+              $this->embed = new DiscordEmbed();
+              $this->embed->setTitle($config->getNested("join-embed.title");
+              $this->embed->setDescription($config->getNested("join-embed.description", array(
+                     "%player" => Player::getName()
+                 ))); 
+              $this->embed->setThumbnail("join-embed.thumbnail");
+              $this->embed->setImage($config->getNested("join-embed.image");
+              $this->embed->setColor($config->getNested("join-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
+								  
+              // Discord Embed: Player's Quit.
+              $this->embed = new DiscordEmbed();
+              $this->embed->setTitle($config->getNested("quit-embed.title");
+              $this->embed->setDescription($config->getNested("quit-embed.description", array(
+                     "%player" => Player::getName()
+                 ))); 
+              $this->embed->setThumbnail("quit-embed.thumbnail");
+              $this->embed->setImage($config->getNested("quit-embed.image");
+              $this->embed->setColor($config->getNested("quit-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
+								  
+              // Discord Embed: Player's Death.
+              $this->embed = new DiscordEmbed();
+              $this->embed->setTitle($config->getNested("death-embed.title");
+              $this->embed->setDescription($config->getNested("death-embed.description", array(
+                     "%player" => Player::getName()
+                 ))); 
+              $this->embed->setThumbnail("death-embed.thumbnail");
+              $this->embed->setImage($config->getNested("death-embed.image");
+              $this->embed->setColor($config->getNested("death-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
+		
+              // Discord Embed: Player's Chat.
+              $this->embed = new DiscordEmbed();
+              $this->embed->setDescription($config->getNested("chat-embed.description", array(
+                     "%player" => Player::getName(),
+                     "%message" => Player::getMessage()
+                 ))); 
+              $this->embed->setThumbnail("chat-embed.thumbnail");
+              $this->embed->setImage($config->getNested("chat-embed.image");
+              $this->embed->setColor($config->getNested("chat-embed.color"));
+              $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
+              $this->message->addEmbed($this->embed);
             }
         }
-
-        if($this->getAldousProperty("discord.active", true)){
-           static::$webhook = $discordConfig->get('discord.webhook');
-           static::$username = $discordConfig->get('discord.username');
-           static::$start = $discordConfig->get('load.start');
-           static::$stop = $discordConfig->get('load.shutdown');
-           static::$joined = $discordConfig->get('message.join');
-           static::$quit = $discordConfig->get('message.quit');
-           static::$death = $discordConfig->get('message.death');
-           static::$chat = $discordConfig->get('community.chat');
-
-           if($discordConfig->get('discord.webhook') === "0"){
-              static::$username = static::$username;
-           }elseif($discordConfig->get('discord.username') !== "0"){
-              static::$username = $discordConfig->get('discord.username');
-           }elseif($discordConfig->get('discord.webhook') === "0"){
-              static::$webhook = static::$webhook;
-           }elseif($discordConfig->get('discord.webhook') !== "0") {
-              static::$chat = $discordConfig->get('discord.webhook');
-           }
-        }
-    }
-   
-    public static function notify($player, $result){
-        if($player === "LOG"){
-           return;
-        }elseif($player === "CONSOLE"){
-           $player = new ConsoleCommandSender();
-        }else{
-           $exact = Server::getPlayerExact($player);
-           if($exact === null) {
-              return;
-           }else{
-              $player = $exact;
-           }
-        }
-
-        if($result['success']){
-           $this->sendMessage("[Aldous] Successfully sent message to Discord.");
-        }else{
-           $this->sendMessage("[Aldous] Failed to send message to Discord.");
-        }
-    }
-
-    public static function sendMessage($webhook, $message, string $player = 'LOG', $username = null){
-        if(!isset($username)){
-           $username = static::$username;
-        }
-		
-        $curl_opts = [
-			"content" => $message, 
-			"username" => $username
-        ];
-        $curls = serialize($curl_opts);
-        Server::getInstance()->getAsyncPool()->submitTask(new DiscordAsyncTask($player, $webhook, $curls));
     }
 }
