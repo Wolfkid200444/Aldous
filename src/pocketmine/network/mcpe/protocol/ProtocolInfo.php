@@ -39,7 +39,7 @@ interface ProtocolInfo{
 	/**
 	 * Actual Minecraft: Bedrock Edition protocol version
 	 */
-	public const CURRENT_PROTOCOL = 313;
+	public const CURRENT_PROTOCOL = [312, 313];
 	/**
 	 * Current Minecraft: Bedrock Edition version reported by the server. This is usually the earliest currently supported version.
 	 */
