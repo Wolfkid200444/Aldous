@@ -29,14 +29,14 @@ class DiscordWebhook {
 	protected $url;
   
 	public function __construct(string $url){
-      $this->url = $url;
+        $this->url = $url;
 	}
   
 	public function getURL(): string{
-      return $this->url;
+        return $this->url;
 	}
   
 	public function send(DiscordMessage $message): void{
-      Server::getInstance()->getAsyncPool()->submitTask(new DiscordAsyncTask($message));
+        Server::getInstance()->getAsyncPool()->submitTask(new DiscordAsyncTask($message));
 	}
 }
