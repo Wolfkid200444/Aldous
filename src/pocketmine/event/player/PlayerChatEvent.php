@@ -62,7 +62,7 @@ class PlayerChatEvent extends PlayerEvent implements Cancellable{
 		}else{
 			$this->recipients = $recipients;
 		}
-        Discord::discordJoin();
+        Discord::discordChat();
 	}
 
 	/**
