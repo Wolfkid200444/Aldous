@@ -29,13 +29,14 @@ use pocketmine\Server;
 class Discord {
 	
     private $webhook, $message;
-    private $config = new Config(\pocketmine\RESOURCE_PATH . "discord.yml", Config::YAML);
+    private $config;
     private $embed;
 	
-    public function __construct($webhook, $message, $embed){
+    public function __construct($webhook, $message, $embed, Config $config){
+        $this->config = new Config(\pocketmine\RESOURCE_PATH . "discord.yml", Config::YAML);
         $this->webhook = new DiscordWebhook($this->config->getNested("discord.webhook"));
         $this->message = new DiscordMessage();
- 
+        
         if(Server::getInstance()->getAldousProperty("discord.active", true)){
            $this->message->setUsername($this->config->getNested("discord.username"));
            $this->message->setAvatarURL($this->config->getNested("discord.avatar"));
@@ -46,8 +47,8 @@ class Discord {
            $this->discordChat();
            
            if(empty($this->config->getNested("discord.webhook")) && empty($this->config->getNested("discord.username"))){
-               Server::getInstance()->logger->error("Please enter the Discord webhook and username correctly! Stopping the server...");
-               Server::getInstance()->forceShutdown();
+              Server::getInstance()->logger->error("Please enter the Discord webhook and username correctly! Stopping the server...");
+              Server::getInstance()->forceShutdown();
            }
 
            // Discord Embed: Server Startup.
