@@ -34,7 +34,7 @@ class Discord {
 	
     public function __construct(DiscordWebhook $webhook, DiscordMessage $message, DiscordEmbed $embed, Config $config){
         $this->config = new Config(\pocketmine\RESOURCE_PATH . "discord.yml", Config::YAML);
-        $this->webhook = $this->config->getNested("discord.webhook"));
+        $this->webhook = $this->config->getNested("discord.webhook");
         $this->message = $message;
         
         if(Server::getInstance()->getAldousProperty("discord.active", true)){
