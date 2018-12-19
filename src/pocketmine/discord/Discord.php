@@ -44,6 +44,11 @@ class Discord {
            $this->discordQuit();
            $this->discordDeath();
            $this->discordChat();
+           
+           if(empty($config->getNested("discord.webhook")) && empty($config->getNested("discord.username"))){
+               Server::getInstance()->logger->error("Please enter the Discord webhook and username correctly! Stopping the server...");
+               Server::getInstance()->forceShutdown();
+           }
 
            // Discord Embed: Server Startup.
            if(Server::getInstance()->setEnabled()){
@@ -58,7 +63,7 @@ class Discord {
            }
 
            // Discord Embed: Server Shutdown.
-           if(sleep(2) > !Server::getInstance()->setEnabled()){
+           if(Server::getInstance()->shutdown()){
               $this->embed = new DiscordEmbed();
               $this->embed->setTitle("Discord Log | Shutdown");
               $this->embed->setDescription($config->getNested("shutdown-embed.description"));
