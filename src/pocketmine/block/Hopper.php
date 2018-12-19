@@ -37,7 +37,7 @@ class Hopper extends Transparent{
 	protected $id = self::HOPPER_BLOCK;
 	protected $itemId = Item::HOPPER;
 
-	protected $enabled = false; // TODO: redstone
+	protected $enabled = false; // TODO: check redstone
 	protected $facing = Facing::DOWN;
 
 	public function __construct(){
@@ -94,21 +94,14 @@ class Hopper extends Transparent{
 	}
 
 	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null) : bool{
-		$faces = [
-			0 => Facing::DOWN,
-			1 => Facing::DOWN, // Not used
-			2 => Facing::SOUTH,
-			3 => Facing::NORTH,
-			4 => Facing::EAST,
-			5 => Facing::WEST
-		];
-		$this->facing = $faces[$face];
-
+		$this->facing = Facing::opposite($face);
+		if($this->facing === Facing::UP){
+			$this->facing = Facing::DOWN;
+		}
+		$this->enabled = true;
 		if(parent::place($item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
 			/** @var TileHopper $tile */
 			$tile = Tile::createFromItem(Tile::HOPPER, $this->getLevel(), $this, $item);
-			$tile->setPowered($this->enabled);
-
 			if($tile !== null){
 				$this->level->addTile($tile);
 			}
