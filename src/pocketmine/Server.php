@@ -1528,35 +1528,35 @@ class Server{
                 "name" => "My Server Name",
                 "ip" => "0.0.0.0",
 				"port" => 19132,
-                " " => "",
+                " " => " ",
                 "language" => "eng",
 				"whitelist" => false,
 				"announce-player-achievements" => true,
-                " " => "",
+                " " => " ",
 				"spawn-protection" => 16,
 				"maximum-players" => 50,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
-                " " => "",
+                " " => " ",
 				"gamemode" => 0,
 				"force-gamemode" => false,
 				"hardcore" => false,
 				"pvp" => true,
-                " " => "",
+                " " => " ",
 				"difficulty" => 1,
 				"generator-settings" => "",
 				"level-name" => "world",
 				"level-seed" => "",
 				"level-type" => "DEFAULT",
-                " " => "",
+                " " => " ",
 				"query" => true,
 				"rcon" => false,
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
-                " " => "",
+                " " => " ",
 				"auto-save" => true,
 				"view-distance" => 8,
 				"xbox-auth" => true,
-                " " => ""
+                " " => " "
 			]);
 
 			define('pocketmine\DEBUG', (int) $this->getProperty("debug.level", 1));
@@ -1596,7 +1596,21 @@ class Server{
             $this->aldousConfig = new Config($this->dataPath . "settings.yml", Config::YAML, []);
 			$this->aldousConfig = new Config($this->dataPath . "discord.yml", Config::YAML, []);
 			$this->loadAldousConfig();
-			
+
+            $this->discord = new Discord($this->dataPath . "discord.yml");
+
+            if($this->getAldousProperty("discord.active", true)){
+            	$this->discord;
+                if($this->discord === null){
+                	$this->logger->error("Something is problem with Discord Log. Please check your configuration or directory isn't exist.");
+                    $this->forceShutdown();
+                }
+            }else{
+            	if($this->isRunning() < 0){
+            	   $this->logger->notice("New Discord Log feature has been added!");
+                   $this->logger->notice("Let's go setup on discord.yml configuration file!");
+                }
+            }
 
 			if(\pocketmine\IS_DEVELOPMENT_BUILD){
 				if(!((bool) $this->getProperty("settings.enable-dev-builds", false))){
