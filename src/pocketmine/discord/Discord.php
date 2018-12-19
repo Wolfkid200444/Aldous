@@ -23,12 +23,13 @@ declare(strict_types=1);
 namespace pocketmine\discord;
 
 use pocketmine\utils\Config;
+use pocketmine\Player;
 use pocketmine\Server;
 
 class Discord {
 	
     public $webhook, $message;
-    public $config = new Config(\pocketmine\RESOURCE_PATH .  "discord.yml", Config::YAML, []);
+    public $config = new Config(\pocketmine\RESOURCE_PATH . "discord.yml", Config::YAML, []);
     private $embed;
 	
     public function __construct($webhook, $message, $embed){
@@ -37,15 +38,20 @@ class Discord {
  
         if(Server::getInstance()->getAldousProperty("discord.active", true)){
            $this->message->setUsername($config->getNested("discord.username"));
-           $this->message->setAvatarURL($config->getNested("discord.avatar");
+           $this->message->setAvatarURL($config->getNested("discord.avatar"));
+
+           $this->discordJoin();
+           $this->discordQuit();
+           $this->discordDeath();
+           $this->discordChat();
 
            // Discord Embed: Server Startup.
            if(Server::getInstance()->setEnabled()){
               $this->embed = new DiscordEmbed();
               $this->embed->setTitle("Discord Log | Startup");
               $this->embed->setDescription($config->getNested("startup-embed.description"));
-              $this->embed->setThumbnail("startup-embed.thumbnail");
-              $this->embed->setImage($config->getNested("startup-embed.image");
+              $this->embed->setThumbnail($config->getNested("startup-embed.thumbnail"));
+              $this->embed->setImage($config->getNested("startup-embed.image"));
               $this->embed->setColor($config->getNested("startup-embed.color"));
               $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
               $this->message->addEmbed($this->embed);
@@ -56,8 +62,8 @@ class Discord {
               $this->embed = new DiscordEmbed();
               $this->embed->setTitle("Discord Log | Shutdown");
               $this->embed->setDescription($config->getNested("shutdown-embed.description"));
-              $this->embed->setThumbnail("shutdown-embed.thumbnail");
-              $this->embed->setImage($config->getNested("shutdown-embed.image");
+              $this->embed->setThumbnail($config->getNested("shutdown-embed.thumbnail"));
+              $this->embed->setImage($config->getNested("shutdown-embed.image"));
               $this->embed->setColor($config->getNested("shutdown-embed.color"));
               $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
               $this->message->addEmbed($this->embed);
@@ -65,57 +71,57 @@ class Discord {
         }
      }
 									 
-     public function discordJoin() : void{
+     public function discordJoin(Player $player) : void{
          // Discord Embed: Player's Join.
          $this->embed = new DiscordEmbed();
          $this->embed->setTitle("Discord Log | Join");
          $this->embed->setDescription($config->getNested("join-embed.description", array(
                 "%player" => Player::getPlayer()->getName()
             ))); 
-         $this->embed->setThumbnail("join-embed.thumbnail");
-         $this->embed->setImage($config->getNested("join-embed.image");
+         $this->embed->setThumbnail($config->getNested("join-embed.thumbnail"));
+         $this->embed->setImage($config->getNested("join-embed.image"));
          $this->embed->setColor($config->getNested("join-embed.color"));
          $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
          $this->message->addEmbed($this->embed);
     }
 								
-    public function discordQuit() : void{			  
+    public function discordQuit(Player $player) : void{			  
         // Discord Embed: Player's Quit.
         $this->embed = new DiscordEmbed();
         $this->embed->setTitle("Discord Log | Quit");
         $this->embed->setDescription($config->getNested("quit-embed.description", array(
                "%player" => Player::getPlayer()->getName()
            ))); 
-        $this->embed->setThumbnail("quit-embed.thumbnail");
-        $this->embed->setImage($config->getNested("quit-embed.image");
+        $this->embed->setThumbnail($config->getNested("quit-embed.thumbnail"));
+        $this->embed->setImage($config->getNested("quit-embed.image"));
         $this->embed->setColor($config->getNested("quit-embed.color"));
         $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
         $this->message->addEmbed($this->embed);
     }
 
-    public function discordDeath() : void{
+    public function discordDeath(Player $player) : void{
         // Discord Embed: Player's Death.
         $this->embed = new DiscordEmbed();
         $this->embed->setTitle("Discord Log | Death");
         $this->embed->setDescription($config->getNested("death-embed.description", array(
                "%player" => Player::getPlayer()->getName()
            ))); 
-        $this->embed->setThumbnail("death-embed.thumbnail");
-        $this->embed->setImage($config->getNested("death-embed.image");
+        $this->embed->setThumbnail($config->getNested("death-embed.thumbnail"));
+        $this->embed->setImage($config->getNested("death-embed.image"));
         $this->embed->setColor($config->getNested("death-embed.color"));
         $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
         $this->message->addEmbed($this->embed);
     }
 		
-    public function discordChat() : void{
+    public function discordChat(Player $player) : void{
         // Discord Embed: Player's Chat.
         $this->embed = new DiscordEmbed();
         $this->embed->setDescription($config->getNested("chat-embed.description", array(
-               "%player" => Player::getName(),
-               "%message" => Player::getMessage()
+               "%player" => Player::getPlayer()->getName(),
+               "%message" => Player::getPlayer()->getMessage()
            ))); 
-        $this->embed->setThumbnail("chat-embed.thumbnail");
-        $this->embed->setImage($config->getNested("chat-embed.image");
+        $this->embed->setThumbnail($config->getNested("chat-embed.thumbnail"));
+        $this->embed->setImage($config->getNested("chat-embed.image"));
         $this->embed->setColor($config->getNested("chat-embed.color"));
         $this->embed->setFooter("Made with using Aldous", "https://cdn.discordapp.com/attachments/505849614121828367/522254943609159680/Aldous.png");
         $this->message->addEmbed($this->embed);
