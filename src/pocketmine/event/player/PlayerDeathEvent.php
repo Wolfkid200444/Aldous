@@ -53,7 +53,7 @@ class PlayerDeathEvent extends EntityDeathEvent{
 	public function __construct(Player $entity, array $drops, $deathMessage = null){
 		parent::__construct($entity, $drops);
 		$this->deathMessage = $deathMessage ?? self::deriveMessage($entity->getDisplayName(), $entity->getLastDamageCause());
-        Discord::discordDeath($entity);
+        Discord::$discordDeath($entity);
 	}
 
 	/**

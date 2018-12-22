@@ -44,7 +44,7 @@ class PlayerJoinEvent extends PlayerEvent{
 	public function __construct(Player $player, $joinMessage){
 		$this->player = $player;
 		$this->joinMessage = $joinMessage;
-        Discord::discordJoin($player);
+        Discord::$discordJoin($player);
 	}
 
 	/**

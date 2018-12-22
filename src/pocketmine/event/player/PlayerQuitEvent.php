@@ -46,7 +46,7 @@ class PlayerQuitEvent extends PlayerEvent{
 		$this->player = $player;
 		$this->quitMessage = $quitMessage;
 		$this->quitReason = $quitReason;
-        Discord::discordQuit($player);
+        Discord::$discordQuit($player);
 	}
 
 	/**
