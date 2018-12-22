@@ -19,7 +19,7 @@ before_script:
  - composer install
 
 script:
- - bash tests/bin/build.php -t4
+ - bin/php7/bin/php tests/bin/build.php
 
 notifications:
  email: false
