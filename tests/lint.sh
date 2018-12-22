@@ -10,13 +10,14 @@ while getopts "p:" OPTION 2> /dev/null; do
 	esac
 done
 
-echo Running PHP lint scans...
+echo Starting to running the lint scans...
 
 OUTPUT=`find ./src/pocketmine -name "*.php" -print0 | xargs -0 -n1 -P4 "$PHP_BINARY" -l`
 
 if [ $? -ne 0 ]; then
-	echo $OUTPUT | grep -v "No syntax errors"
+	echo $OUTPUT | grep -v "No syntax errors!"
 	exit 1
 fi
 
-echo Lint scan completed successfully.
+echo The lint scans has been completed successfully.
+echo All files have no syntax errors detected!
