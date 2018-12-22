@@ -131,11 +131,11 @@ class Installer {
 		$this->message("Enter with the number to choose the gamemode!");
 
 		do{
-			$gamemode = (int) $this->getInput("Like what I mean above the message, choose/set the default gamemode!"), (string) self::DEFAULT_GAMEMODE);
+			$gamemode = (int) $this->getInput("Like what I mean above the message, choose/set the default gamemode!", (string) self::DEFAULT_GAMEMODE);
 		}while($gamemode < 0 or $gamemode > 3);
 		$config->set("gamemode", $gamemode);
 
-		$config->set("maximum-players", (int) $this->getInput("Set the maximum number of players!"), (string) self::DEFAULT_PLAYERS));
+		$config->set("maximum-players", (int) $this->getInput("Set the maximum number of players!", (string) self::DEFAULT_PLAYERS));
 
 		$this->message("The spawn protection disallows placing/breaking blocks in the spawn zone except for OPs!");
 
