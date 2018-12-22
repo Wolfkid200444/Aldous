@@ -20,4 +20,4 @@ if [ $? -ne 0 ]; then
 fi
 
 echo The lint scans has been completed.
-echo All files have no syntax error!
+echo All files have no syntax errors!
