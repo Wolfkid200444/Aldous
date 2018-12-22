@@ -25,5 +25,5 @@ notifications:
  email: false
 
 before_deploy:
-- mv plugins/Aldous/Aldous*.phar plugins/Aldous/Aldous.phar
+- mv plugins/Aldous/Aldous.phar plugins/Aldous/Aldous.phar
 - chmod +x *
