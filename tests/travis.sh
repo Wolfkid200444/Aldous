@@ -17,17 +17,18 @@ done
 bash tests/lint.sh -p "$PHP_BINARY"
 
 if [ $? -ne 0 ]; then
-	echo The lint scans has failed!
+	echo The lint scans has failed.
 	exit 1
 fi
 
 rm console.log 2> /dev/null
 mkdir -p ./plugins
 
-echo -e "\nversion\nmakeserver\nstop\n" | "$PHP_BINARY" src/pocketmine/PocketMine.php --no-installer --disable-ansi --disable-readline --debug.level=2  --settings.async-workers="$PM_WORKERS" --settings.enable-dev-builds=1
-if ls plugins/Aldous/Aldous*.phar >/dev/null 2>&1; then
-    echo Successfully created Aldous | Server Software PHAR file!
+echo -e "version\nmakeserver\nstop\n\n" | "$PHP_BINARY" src/pocketmine/PocketMine.php --no-installer --disable-ansi --disable-readline --debug.level=2  --settings.async-workers="$PM_WORKERS" --settings.enable-dev-builds=1
+if ls plugins/Aldous/Aldous.phar >/dev/null 2>&1; then
+    echo Successfully created Aldous | Server Software PHAR file.
+    exit 0
 else
-    echo Creating Aldous | Server Software PHAR file is unsuccessful!
+    echo Creating Aldous | Server Software PHAR file is unsuccessful.
     exit 1
 fi
