@@ -14,7 +14,7 @@ while getopts "p:t:" OPTION 2> /dev/null; do
 	esac
 done
 
-bash ci/lint.sh -p "$PHP_BINARY"
+bash tests/lint.sh -p "$PHP_BINARY"
 
 if [ $? -ne 0 ]; then
 	echo The lint scans has failed!
