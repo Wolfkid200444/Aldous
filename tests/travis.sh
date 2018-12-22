@@ -21,7 +21,7 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-rm server.log 2> /dev/null
+rm console.log 2> /dev/null
 mkdir -p ./plugins
 
 echo -e "\nversion\nmakeserver\nstop\n" | "$PHP_BINARY" src/pocketmine/PocketMine.php --no-installer --disable-ansi --disable-readline --debug.level=2  --settings.async-workers="$PM_WORKERS" --settings.enable-dev-builds=1
