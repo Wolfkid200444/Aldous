@@ -19,4 +19,5 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo Lint scan completed successfully.
+echo The lint scans has been completed.
+echo All files have no syntax error!
