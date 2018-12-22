@@ -8,7 +8,7 @@ while getopts "p:f:l" OPTION 2> /dev/null; do
 			PHP_BINARY="$OPTARG"
 			;;
 		f)
-			POCKETMINE_FILE="$OPTARG"
+			ALDOUS_FILE="$OPTARG"
 			;;
 		l)
 			DO_LOOP="yes"

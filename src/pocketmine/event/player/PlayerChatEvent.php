@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace pocketmine\event\player;
 
 use pocketmine\event\Cancellable;
+use pocketmine\discord\Discord;
 use pocketmine\permission\PermissionManager;
 use pocketmine\Player;
 use pocketmine\Server;
@@ -61,6 +62,7 @@ class PlayerChatEvent extends PlayerEvent implements Cancellable{
 		}else{
 			$this->recipients = $recipients;
 		}
+        Discord::discordChat($player);
 	}
 
 	/**

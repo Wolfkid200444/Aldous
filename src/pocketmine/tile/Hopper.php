@@ -44,8 +44,6 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 	protected $inventory;
 	/** @var int */
 	protected $transferCooldown = 8;
-	/** @var bool */
-	protected $isPowered = false;
 
 	public const TAG_TRANSFER_COOLDOWN = "TransferCooldown";
 
@@ -126,10 +124,6 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 			}
 		}
 
-		if($this->isPowered){
-			return true;
-		}
-
 		if($this->transferCooldown !== 0){
 			$this->transferCooldown--;
 			return true;
@@ -165,13 +159,5 @@ class Hopper extends Spawnable implements Container, Nameable, InventoryHolder{
 
 	public function resetTransferCooldown(){
 		$this->transferCooldown = 8;
-	}
-
-	public function isPowered(): bool{
-		return $this->isPowered;
-	}
-
-	public function setPowered(bool $value): void{
-		$this->isPowered = $value;
 	}
 }

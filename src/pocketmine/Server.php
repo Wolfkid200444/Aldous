@@ -1525,38 +1525,30 @@ class Server{
 			$this->logger->info("Loading Aldous's server properties...");
 			$this->properties = new Config($this->dataPath . "aldous.properties", Config::PROPERTIES, [
 				"motd" => "Hello, " . \pocketmine\NAME . "!",
-                "name" => "My Server Name",
                 "ip" => "0.0.0.0",
 				"port" => 19132,
-                " " => "",
                 "language" => "eng",
 				"whitelist" => false,
 				"announce-player-achievements" => true,
-                " " => "",
 				"spawn-protection" => 16,
 				"maximum-players" => 50,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
-                " " => "",
 				"gamemode" => 0,
 				"force-gamemode" => false,
 				"hardcore" => false,
 				"pvp" => true,
-                " " => "",
 				"difficulty" => 1,
 				"generator-settings" => "",
 				"level-name" => "world",
 				"level-seed" => "",
 				"level-type" => "DEFAULT",
-                " " => "",
 				"query" => true,
 				"rcon" => false,
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
-                " " => "",
 				"auto-save" => true,
 				"view-distance" => 8,
-				"xbox-auth" => true,
-                " " => ""
+				"xbox-auth" => true
 			]);
 
 			define('pocketmine\DEBUG', (int) $this->getProperty("debug.level", 1));
@@ -1580,6 +1572,7 @@ class Server{
 				$lang = $this->getLanguage()->getLang()
 			]));
 
+            $this->logger->info("Loading settings.yml...");
 			if(file_exists(\pocketmine\RESOURCE_PATH . "settings.yml")){
 				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "settings.yml");
             }
@@ -1587,6 +1580,7 @@ class Server{
 				@file_put_contents($this->dataPath . "settings.yml", $content);
 			}
 			
+            $this->logger->info("Loading discord.yml...");
             if(file_exists(\pocketmine\RESOURCE_PATH . "discord.yml")){
 				$content = file_get_contents(\pocketmine\RESOURCE_PATH . "discord.yml");
             }
@@ -1596,7 +1590,14 @@ class Server{
             $this->aldousConfig = new Config($this->dataPath . "settings.yml", Config::YAML, []);
 			$this->aldousConfig = new Config($this->dataPath . "discord.yml", Config::YAML, []);
 			$this->loadAldousConfig();
-			
+
+            $this->discord = new Discord($this->dataPath . "discord.yml");
+
+            if($this->getAldousProperty("discord.active", false)){
+               if($this->isRunning(true)){
+            	  $this->logger->notice("[Aldous] New Discord Log feature has been added!");
+               }
+            }
 
 			if(\pocketmine\IS_DEVELOPMENT_BUILD){
 				if(!((bool) $this->getProperty("settings.enable-dev-builds", false))){

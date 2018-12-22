@@ -172,7 +172,7 @@ class RakLibInterface implements ServerInstance, AdvancedNetworkInterface{
 		$this->interface->sendOption("name", implode(";", [
 				"MCPE",
 				rtrim(addcslashes($name, ";"), '\\'),
-				ProtocolInfo::CURRENT_PROTOCOL,
+                ProtocolInfo::CURRENT_PROTOCOL,
 				ProtocolInfo::MINECRAFT_VERSION_NETWORK,
 				$info->getPlayerCount(),
 				$info->getMaxPlayerCount(),

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace pocketmine\event\player;
 
+use pocketmine\discord\Discord;
 use pocketmine\lang\TextContainer;
 use pocketmine\Player;
 
@@ -43,6 +44,7 @@ class PlayerJoinEvent extends PlayerEvent{
 	public function __construct(Player $player, $joinMessage){
 		$this->player = $player;
 		$this->joinMessage = $joinMessage;
+        Discord::discordJoin($player);
 	}
 
 	/**

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace pocketmine\event\player;
 
+use pocketmine\discord\Discord;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\Player;
 
@@ -45,6 +46,7 @@ class PlayerQuitEvent extends PlayerEvent{
 		$this->player = $player;
 		$this->quitMessage = $quitMessage;
 		$this->quitReason = $quitReason;
+        Discord::discordQuit($player);
 	}
 
 	/**
