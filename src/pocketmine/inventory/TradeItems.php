@@ -268,9 +268,11 @@ class TradeItems{
 		}
 
 		$new = [];
-		foreach($arr as $a){
-			foreach($a as $value){
-				$new[] = $value;
+		if($arr !== null){
+			foreach($arr as $a){
+				foreach($a as $value){
+					$new[] = $value;
+				}
 			}
 		}
 
