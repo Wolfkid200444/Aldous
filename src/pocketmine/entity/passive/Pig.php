@@ -72,22 +72,18 @@ class Pig extends Animal{
 		return "Pig";
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
+		if(parent::onInteract($player, $item, $clickPos)){
+			return true;
+		}
+
 		if(!$this->isImmobile()){
-			if($item instanceof Saddle){
-				if(!$this->isSaddled()){
-					$this->setSaddled(true);
-					if($player->isSurvival()){
-						$item->pop();
-					}
-					return true;
-				}
-			}elseif($this->isSaddled() and $this->riddenByEntity === null){
+			if($this->isSaddled() and $this->riddenByEntity === null){
 				$player->mountEntity($this);
 				return true;
 			}
 		}
-		return parent::onInteract($player, $item, $clickPos, $slot);
+		return false;
 	}
 
 	public function getXpDropAmount() : int{

@@ -30,16 +30,7 @@ use pocketmine\Player;
 
 abstract class Vehicle extends Entity implements Rideable{
 
-	public function onRiderLeave(Entity $rider) : void {
-
-	}
-
-	public function onRiderMount(Entity $rider) : void {
-
-	}
-
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
-		$player->mountEntity($this);
-		return true;
+	public function onFirstInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
+		return $player->mountEntity($this);
 	}
 }

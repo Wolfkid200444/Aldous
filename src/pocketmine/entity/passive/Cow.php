@@ -71,7 +71,7 @@ class Cow extends Animal{
 		return "Cow";
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		if(!$this->isImmobile()){
 			if($item instanceof Bucket and $item->getDamage() === 0){
 				$item->pop();
@@ -80,7 +80,7 @@ class Cow extends Animal{
 			}
 		}
 
-		return parent::onInteract($player, $item, $clickPos, $slot);
+		return parent::onInteract($player, $item, $clickPos);
 	}
 
 	public function getXpDropAmount() : int{

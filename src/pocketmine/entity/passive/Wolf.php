@@ -79,7 +79,7 @@ class Wolf extends Tamable{
 		return "Wolf";
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		if(!$this->isImmobile()){
 			if($this->isTamed()){
 				if($this->getOwningEntityId() == $player->id){
@@ -109,7 +109,7 @@ class Wolf extends Tamable{
 			}
 		}
 
-		return parent::onInteract($player, $item, $clickPos, $slot);
+		return parent::onInteract($player, $item, $clickPos);
 	}
 
 	public function setTargetEntity(?Entity $target) : void{

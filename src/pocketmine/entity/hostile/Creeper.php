@@ -186,7 +186,7 @@ class Creeper extends Monster implements Ageable{
 		}
 	}
 
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		if($item instanceof FlintSteel){
 			$this->level->broadcastLevelSoundEvent($this, LevelSoundEventPacket::SOUND_IGNITE);
 			$player->animate(AnimatePacket::ACTION_SWING_ARM);
@@ -198,7 +198,7 @@ class Creeper extends Monster implements Ageable{
 				return true;
 			}
 		}
-		return false;
+		return parent::onInteract($player, $item, $clickPos);
 	}
 
 	protected function isValidLightLevel() : bool{

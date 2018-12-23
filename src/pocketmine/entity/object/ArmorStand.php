@@ -102,7 +102,7 @@ class ArmorStand extends Living{
 		return $this->propertyManager->getInt(self::DATA_ARMOR_STAND_POSE_INDEX);
 	}
 
-	public function onInteract(Player $player, Item $itemstack, Vector3 $clickPos, int $slot) : bool{
+	public function onFirstInteract(Player $player, Item $itemstack, Vector3 $clickPos) : bool{
 		if($player->isSneaking()){
 			if($this->getPose() >= 12){
 				$this->setPose(0);

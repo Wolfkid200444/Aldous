@@ -1109,24 +1109,22 @@ abstract class Living extends Entity implements Damageable{
 		}
 	}
 
-	/**
-	 * @param Player  $player
-	 * @param Item    $item
-	 * @param Vector3 $clickPos
-	 * @param int     $slot
-	 *
-	 * @return bool
-	 */
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onFirstInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		if($this->isLeashed() and $this->leashedToEntity === $player){
 			$this->clearLeashed(true, !$player->isCreative());
+			return true;
 		}else{
 			if($item instanceof Lead and $this->allowLeashing()){
 				$this->setLeashedToEntity($player);
 				$item->pop();
+				return true;
 			}
 		}
-		return parent::onInteract($player, $item, $clickPos, $slot);
+		return $this->onInteract($player, $item, $clickPos) ? true : parent::onFirstInteract($player, $item, $clickPos);
+	}
+
+	public function onInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
+		return false;
 	}
 
 	/**

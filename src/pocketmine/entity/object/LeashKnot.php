@@ -123,11 +123,10 @@ class LeashKnot extends Entity{
 	 * @param Player  $player
 	 * @param Item    $item
 	 * @param Vector3 $clickPos
-	 * @param int     $slot
 	 *
 	 * @return bool
 	 */
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onFirstInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		$flag = false;
 
 		if($item instanceof Lead){

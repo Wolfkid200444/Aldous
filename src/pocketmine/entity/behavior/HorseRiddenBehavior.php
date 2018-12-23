@@ -24,16 +24,16 @@ declare(strict_types=1);
 
 namespace pocketmine\entity\behavior;
 
-use pocketmine\entity\passive\Horse;
+use pocketmine\entity\passive\AbstractHorse;
 use pocketmine\network\mcpe\protocol\EntityEventPacket;
 
 class HorseRiddenBehavior extends Behavior{
 
 	protected $rideTime = 0;
-	/** @var Horse */
+	/** @var AbstractHorse */
 	protected $mob;
 
-	public function __construct(Horse $mob){
+	public function __construct(AbstractHorse $mob){
 		parent::__construct($mob);
 
 		$this->mutexBits = 2;

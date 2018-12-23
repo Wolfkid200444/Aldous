@@ -1798,7 +1798,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		}
 	}
 
-	public function mountEntity(Entity $entity, int $seatNumber = 0) : void{
+	public function mountEntity(Entity $entity, int $seatNumber = 0) : bool{
 		if($this->ridingEntity == null and $entity !== $this and count($entity->passengers) < $entity->getSeatCount()){
 			if(!isset($entity->passengers[$seatNumber])){
 
@@ -1820,8 +1820,11 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 				$entity->sendLink($entity->getViewers(), $this, EntityLink::TYPE_RIDER);
 
 				$entity->onRiderMount($this);
+
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -1855,7 +1858,7 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 		return $this->height * 0.65;
 	}
 
-	public function dismountEntity(bool $immediate = false) : void{
+	public function dismountEntity(bool $immediate = false) : bool{
 		if($this->ridingEntity !== null){
 			$entity = $this->ridingEntity;
 
@@ -1879,7 +1882,10 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 			$entity->sendLink($entity->getViewers(), $this, EntityLink::TYPE_REMOVE, $immediate);
 
 			$entity->onRiderLeave($this);
+
+			return true;
 		}
+		return false;
 	}
 
 	public function getRiderSeatPosition(int $seatNumber = 0) : Vector3{
@@ -2638,11 +2644,10 @@ abstract class Entity extends Location implements Metadatable, EntityIds{
 	 * @param Player  $player
 	 * @param Item    $item
 	 * @param Vector3 $clickPos
-	 * @param int     $slot
 	 *
 	 * @return bool
 	 */
-	public function onInteract(Player $player, Item $item, Vector3 $clickPos, int $slot) : bool{
+	public function onFirstInteract(Player $player, Item $item, Vector3 $clickPos) : bool{
 		return false;
 	}
 
