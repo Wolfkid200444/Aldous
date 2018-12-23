@@ -3,9 +3,9 @@ Server software in Asia for Minecraft: Bedrock/Windows 10 Edition.
 
 ------------       
 
-| Circle-CI | Discord |
+| Travis | Discord |
 | :---: | :---: |
-[![Circle-CI](https://circleci.com/gh/Implasher/Aldous/tree/master.svg?style=svg)](https://circleci.com/gh/Implasher/Aldous/tree/master) | [![Discord](https://img.shields.io/discord/501373727565676544.svg?style=flat-square&label=discord&colorB=7289da)](https://discord.gg/4dMTw2H)
+[![Travis](https://img.shields.io/travis/Implasher/Aldous/master.svg?style=flat-square)](https://travis-ci.org/Implasher/Aldous) | [![Discord](https://img.shields.io/discord/501373727565676544.svg?style=flat-square&label=discord&colorB=7289da)](https://discord.gg/4dMTw2H)
 
 ------------
 
